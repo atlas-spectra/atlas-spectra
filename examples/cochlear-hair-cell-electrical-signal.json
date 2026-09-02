@@ -1,0 +1,143 @@
+{
+  "schema_version": "0.1.0",
+  "id": "hearing.cochlea.hair-cell-electrical-signal",
+  "name": "Cochlear hair-cell electrical response",
+  "summary": "Sound-driven motion of the cochlea bends hair-cell stereocilia, opens mechanically gated channels, and creates an electrical signal. Atlas treats this as a transduced signal rather than as a 440 Hz electrical replica of the acoustic carrier.",
+  "domains": [
+    "hearing",
+    "neuroscience",
+    "acoustics",
+    "biology"
+  ],
+  "system": {
+    "id": "system.cochlea.sensory-hair-cells",
+    "name": "Cochlear sensory hair cells",
+    "type": "mechanosensory-receptor"
+  },
+  "observable": {
+    "id": "observable.cochlea.hair-cell-electrical-response",
+    "name": "Hair-cell electrical response",
+    "quantity_kind": "electrical-signal",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "unknown",
+    "axis": {
+      "kind": "temporal_frequency",
+      "notes": "Electrical output of cochlear mechanotransduction; the acoustic carrier frequency is not assumed to be preserved one-to-one."
+    },
+    "constraints": [
+      "depends on cochlear mechanics and hair-cell transduction",
+      "no carrier-frequency identity is asserted by this manifest"
+    ]
+  },
+  "mechanisms": [
+    {
+      "id": "mechanism.cochlea.stereocilia-mechanotransduction",
+      "type": "mechanotransduction",
+      "status": "established",
+      "description": "Sound-induced cochlear motion bends stereocilia, opens pore-like channels, and produces an electrical signal in sensory hair cells."
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship.a4.transduces-to-hair-cell-signal",
+      "type": "TRANSDUCES_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "acoustics.standard-pitch.a4-440hz",
+        "scope": "atlas",
+        "label": "Standard tuning pitch A4"
+      },
+      "target_ref": {
+        "id": "hearing.cochlea.hair-cell-electrical-signal"
+      },
+      "description": "A 440 Hz acoustic input is one possible sound stimulus; cochlear mechanics and hair-cell mechanotransduction convert sound-driven motion into an electrical response without implying an identical electrical carrier.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nidcd.how-we-hear"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "id": "relationship.hair-cell-signal-to-auditory-nerve",
+      "type": "GENERATES",
+      "category": "physical",
+      "source_ref": {
+        "id": "hearing.cochlea.hair-cell-electrical-signal"
+      },
+      "target_ref": {
+        "id": "hearing.auditory-nerve.electrical-signal",
+        "scope": "atlas",
+        "label": "Auditory nerve electrical signal"
+      },
+      "description": "Hair-cell transduction produces electrical signaling that is conveyed onward by the auditory nerve.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nidcd.how-we-hear"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.nidcd.how-we-hear",
+      "type": "web",
+      "title": "How Do We Hear?",
+      "publisher": "National Institute on Deafness and Other Communication Disorders (NIDCD), NIH",
+      "url": "https://www.nidcd.nih.gov/health/how-do-we-hear",
+      "issued": "2022-03-16",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/mechanisms/0",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nidcd.how-we-hear"
+          }
+        ],
+        "locator": "Steps 4–6 of the hearing pathway",
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nidcd.how-we-hear"
+          }
+        ],
+        "derivation": "NIDCD describes a mechanical-to-electrical transduction chain. Atlas therefore leaves the downstream electrical spectrum unspecified instead of copying the acoustic carrier frequency.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "cochlea",
+    "hair-cell",
+    "mechanotransduction",
+    "electrical-response",
+    "carrier-change"
+  ]
+}
