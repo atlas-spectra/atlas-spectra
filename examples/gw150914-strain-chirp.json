@@ -1,0 +1,201 @@
+{
+  "schema_version": "0.1.0",
+  "id": "astrophysics.gw150914.strain-chirp",
+  "name": "GW150914 gravitational-wave strain chirp",
+  "summary": "The measured transient gravitational-wave strain signal GW150914, whose observed frequency swept upward through the LIGO band during the binary-black-hole merger. This is a genuinely measured nonstationary frequency track rather than a population reference range.",
+  "domains": [
+    "astrophysics",
+    "gravitational-waves",
+    "time-series"
+  ],
+  "system": {
+    "id": "system.gw150914.ligo-observation",
+    "name": "GW150914 observed by Advanced LIGO",
+    "type": "gravitational-wave-observation"
+  },
+  "observable": {
+    "id": "observable.gw150914.strain",
+    "name": "Gravitational-wave strain h(t)",
+    "quantity_kind": "dimensionless-strain",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "time_varying",
+    "axis": {
+      "kind": "temporal_frequency"
+    },
+    "range": {
+      "lower": 35,
+      "upper": 250,
+      "unit": "Hz",
+      "quantity_kind": "frequency"
+    },
+    "representation": "frequency_track",
+    "data_ref": "https://gwosc.org/events/GW150914/",
+    "estimator": "time-frequency analysis of calibrated interferometer strain h(t)"
+  },
+  "detectors": [
+    {
+      "id": "detector.ligo.h1-gw150914",
+      "name": "LIGO Hanford H1",
+      "type": "laser-interferometer",
+      "observes": [
+        {
+          "id": "observable.gw150914.strain"
+        }
+      ]
+    },
+    {
+      "id": "detector.ligo.l1-gw150914",
+      "name": "LIGO Livingston L1",
+      "type": "laser-interferometer",
+      "observes": [
+        {
+          "id": "observable.gw150914.strain"
+        }
+      ]
+    }
+  ],
+  "measurements": [
+    {
+      "id": "measurement.gw150914.h1-strain",
+      "method": "laser-interferometric strain measurement",
+      "observable_ref": {
+        "id": "observable.gw150914.strain"
+      },
+      "detector_ref": {
+        "id": "detector.ligo.h1-gw150914"
+      },
+      "sampling": {
+        "rate": {
+          "value": 4096,
+          "unit": "Hz",
+          "quantity_kind": "sampling-frequency"
+        },
+        "duration": {
+          "value": 32,
+          "unit": "s",
+          "quantity_kind": "time"
+        }
+      }
+    },
+    {
+      "id": "measurement.gw150914.l1-strain",
+      "method": "laser-interferometric strain measurement",
+      "observable_ref": {
+        "id": "observable.gw150914.strain"
+      },
+      "detector_ref": {
+        "id": "detector.ligo.l1-gw150914"
+      },
+      "sampling": {
+        "rate": {
+          "value": 4096,
+          "unit": "Hz",
+          "quantity_kind": "sampling-frequency"
+        },
+        "duration": {
+          "value": 32,
+          "unit": "s",
+          "quantity_kind": "time"
+        }
+      }
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim.gw150914.chirp-duration",
+      "subject_ref": {
+        "id": "astrophysics.gw150914.strain-chirp"
+      },
+      "predicate": "has-approximate-observed-chirp-duration",
+      "object": {
+        "value": 0.2,
+        "unit": "s",
+        "quantity_kind": "time"
+      },
+      "evidence": {
+        "basis": "direct_measurement",
+        "review_status": "verified",
+        "source_refs": [
+          {
+            "id": "source.ligo.gw150914-discovery"
+          }
+        ],
+        "locator": "GW150914 signal evolution discussion",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.ligo.gw150914-discovery",
+      "type": "paper",
+      "title": "Observation of Gravitational Waves from a Binary Black Hole Merger",
+      "authors": [
+        "LIGO Scientific Collaboration",
+        "Virgo Collaboration"
+      ],
+      "publisher": "Physical Review Letters",
+      "url": "https://dcc.ligo.org/P150914/public",
+      "doi": "10.1103/PhysRevLett.116.061102",
+      "issued": "2016-02-11",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.gwosc.gw150914-strain",
+      "type": "dataset",
+      "title": "GW150914 Gravitational-Wave Strain Data",
+      "publisher": "Gravitational Wave Open Science Center",
+      "url": "https://gwosc.org/events/GW150914/",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "direct_measurement",
+        "review_status": "verified",
+        "source_refs": [
+          {
+            "id": "source.ligo.gw150914-discovery"
+          },
+          {
+            "id": "source.gwosc.gw150914-strain"
+          }
+        ],
+        "locator": "Discovery-paper abstract and released calibrated strain time series",
+        "derivation": "The LIGO discovery paper reports the observed signal sweeping upward from 35 to 250 Hz; GWOSC publishes the underlying calibrated strain time series for H1 and L1.",
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "target": "/measurements",
+      "evidence": {
+        "basis": "direct_measurement",
+        "review_status": "verified",
+        "source_refs": [
+          {
+            "id": "source.gwosc.gw150914-strain"
+          }
+        ],
+        "locator": "Strain Data at 4096 Hz, 32-second files",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "gw150914",
+    "gravitational-wave",
+    "chirp",
+    "time-varying",
+    "ligo"
+  ]
+}
