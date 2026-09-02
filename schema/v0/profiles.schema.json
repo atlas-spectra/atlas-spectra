@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-spectra.org/schema/v0/profiles.schema.json",
+  "title": "Atlas Spectra v0 profiles definitions",
+  "$defs": {
+    "periodicProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "fundamental"],
+      "properties": {
+        "type": {"const": "periodic"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "fundamental": {"$ref": "./common.schema.json#/$defs/quantity"},
+        "harmonics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["order", "frequency"],
+            "properties": {
+              "order": {"type": "integer", "minimum": 2},
+              "frequency": {"$ref": "./common.schema.json#/$defs/quantity"},
+              "relative_amplitude": {"type": "number", "minimum": 0}
+            }
+          }
+        }
+      }
+    },
+    "quasiPeriodicProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "center", "range"],
+      "properties": {
+        "type": {"const": "quasi_periodic"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "center": {"$ref": "./common.schema.json#/$defs/quantity"},
+        "range": {"$ref": "./common.schema.json#/$defs/quantityRange"},
+        "variability": {"type": "string"}
+      }
+    },
+    "discreteLinesProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "lines"],
+      "properties": {
+        "type": {"const": "discrete_lines"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["position"],
+            "properties": {
+              "position": {"$ref": "./common.schema.json#/$defs/quantity"},
+              "relative_strength": {"type": "number", "minimum": 0},
+              "label": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "continuousSpectrumProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "range", "representation"],
+      "properties": {
+        "type": {"const": "continuous_spectrum"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "range": {"$ref": "./common.schema.json#/$defs/quantityRange"},
+        "representation": {"enum": ["amplitude_spectrum", "power_spectrum", "power_spectral_density", "spectral_density", "other"]},
+        "data_ref": {"type": "string", "format": "uri"}
+      }
+    },
+    "frequencyBandProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "range"],
+      "properties": {
+        "type": {"const": "frequency_band"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "range": {"$ref": "./common.schema.json#/$defs/quantityRange"},
+        "definition": {"type": "string"}
+      }
+    },
+    "timeVaryingProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "range", "representation"],
+      "properties": {
+        "type": {"const": "time_varying"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "range": {"$ref": "./common.schema.json#/$defs/quantityRange"},
+        "representation": {"enum": ["frequency_track", "spectrogram", "wavelet_transform", "other"]},
+        "data_ref": {"type": "string", "format": "uri"},
+        "estimator": {"type": "string"}
+      }
+    },
+    "nonnegativeQuantity": {
+      "allOf": [
+        {"$ref": "./common.schema.json#/$defs/quantity"},
+        {"properties": {"value": {"minimum": 0}}}
+      ]
+    },
+    "nonnegativeQuantityRange": {
+      "allOf": [
+        {"$ref": "./common.schema.json#/$defs/quantityRange"},
+        {"properties": {"lower": {"minimum": 0}, "upper": {"minimum": 0}}}
+      ]
+    },
+    "eventRateProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "rate"],
+      "properties": {
+        "type": {"const": "event_rate"},
+        "axis": {
+          "allOf": [
+            {"$ref": "./common.schema.json#/$defs/axis"},
+            {"properties": {"kind": {"const": "event_rate"}}}
+          ]
+        },
+        "rate": {
+          "oneOf": [
+            {"$ref": "#/$defs/nonnegativeQuantity"},
+            {"$ref": "#/$defs/nonnegativeQuantityRange"}
+          ]
+        },
+        "process_model": {"type": "string"},
+        "aggregation_window": {"$ref": "./common.schema.json#/$defs/quantity"}
+      }
+    },
+    "stochasticProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "representation"],
+      "properties": {
+        "type": {"const": "stochastic_process"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "representation": {"enum": ["power_spectral_density", "autocorrelation", "rate_distribution", "other"]},
+        "range": {"$ref": "./common.schema.json#/$defs/quantityRange"},
+        "process_model": {"type": "string"},
+        "data_ref": {"type": "string", "format": "uri"}
+      }
+    },
+    "quantumTransitionProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "transition_frequency", "lower_state", "upper_state"],
+      "properties": {
+        "type": {"const": "quantum_transition"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "transition_frequency": {"$ref": "./common.schema.json#/$defs/quantity"},
+        "energy_difference": {"$ref": "./common.schema.json#/$defs/quantity"},
+        "lower_state": {"type": "string", "minLength": 1},
+        "upper_state": {"type": "string", "minLength": 1}
+      }
+    },
+    "transientProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis", "characteristic_band"],
+      "properties": {
+        "type": {"const": "transient"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "characteristic_band": {"$ref": "./common.schema.json#/$defs/quantityRange"},
+        "duration": {"$ref": "./common.schema.json#/$defs/quantity"},
+        "data_ref": {"type": "string", "format": "uri"}
+      }
+    },
+    "unknownProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "axis"],
+      "properties": {
+        "type": {"const": "unknown"},
+        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "constraints": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "frequencyProfile": {
+      "oneOf": [
+        {"$ref": "#/$defs/periodicProfile"},
+        {"$ref": "#/$defs/quasiPeriodicProfile"},
+        {"$ref": "#/$defs/discreteLinesProfile"},
+        {"$ref": "#/$defs/continuousSpectrumProfile"},
+        {"$ref": "#/$defs/frequencyBandProfile"},
+        {"$ref": "#/$defs/timeVaryingProfile"},
+        {"$ref": "#/$defs/eventRateProfile"},
+        {"$ref": "#/$defs/stochasticProfile"},
+        {"$ref": "#/$defs/quantumTransitionProfile"},
+        {"$ref": "#/$defs/transientProfile"},
+        {"$ref": "#/$defs/unknownProfile"}
+      ]
+    }
+  }
+}

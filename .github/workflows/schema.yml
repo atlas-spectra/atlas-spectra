@@ -1,0 +1,37 @@
+name: schema
+
+on:
+  pull_request:
+    paths:
+      - "schema/**"
+      - "examples/**"
+      - "scripts/validate-schema.py"
+      - "tests/**"
+      - "requirements-schema.txt"
+      - ".github/workflows/schema.yml"
+  push:
+    branches: [main]
+    paths:
+      - "schema/**"
+      - "examples/**"
+      - "scripts/validate-schema.py"
+      - "tests/**"
+      - "requirements-schema.txt"
+      - ".github/workflows/schema.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-schema.txt
+      - run: pip install -r requirements-schema.txt
+      - run: python scripts/validate-schema.py
+      - run: python -m unittest discover -s tests -v

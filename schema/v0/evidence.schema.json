@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-spectra.org/schema/v0/evidence.schema.json",
+  "title": "Atlas Spectra v0 evidence definitions",
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basis", "review_status"],
+      "properties": {
+        "basis": {"enum": ["direct_measurement", "established_reference", "model_derived", "computed_derivation", "statistical_correlation", "hypothesis", "subjective_report", "traditional_association", "disputed", "refuted"]},
+        "review_status": {"enum": ["imported", "machine_derived", "unreviewed", "reviewed", "verified", "disputed", "superseded", "rejected"]},
+        "source_refs": {"type": "array", "items": {"$ref": "./common.schema.json#/$defs/reference"}},
+        "locator": {"type": "string"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "mechanism_status": {"enum": ["known", "proposed", "none", "not_applicable", "unknown"]},
+        "derivation": {"type": "string"},
+        "condition_refs": {"type": "array", "items": {"$ref": "./common.schema.json#/$defs/reference"}},
+        "verified_on": {"type": "string", "format": "date"}
+      }
+    },
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spdx": {"type": "string"},
+        "url": {"type": "string", "format": "uri"},
+        "status": {"enum": ["licensed", "public_domain", "terms_apply", "unknown"]}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "title"],
+      "properties": {
+        "id": {"$ref": "./common.schema.json#/$defs/id"},
+        "type": {"enum": ["standard", "dataset", "paper", "book", "web", "documentation", "other"]},
+        "title": {"type": "string", "minLength": 1},
+        "authors": {"type": "array", "items": {"type": "string"}},
+        "publisher": {"type": "string"},
+        "url": {"type": "string", "format": "uri"},
+        "doi": {"type": "string"},
+        "issued": {"type": "string"},
+        "accessed": {"type": "string", "format": "date"},
+        "license": {"$ref": "#/$defs/license"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "evidence"],
+      "properties": {
+        "target": {"type": "string", "pattern": "^/"},
+        "evidence": {"$ref": "#/$defs/evidence"}
+      }
+    }
+  }
+}
