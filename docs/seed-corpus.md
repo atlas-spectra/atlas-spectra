@@ -13,13 +13,14 @@ The seed corpus is intentionally small and heterogeneous. Its job is to pressure
 | Standard tuning pitch A4 | periodic | temporal frequency |
 | Carbon dioxide bending mode | discrete line | wavenumber |
 | CIE 2006 LMS cone fundamentals, 2° | continuous response curve | wavelength |
+| Incident optical stimulus at a cone photoreceptor | unresolved optical spectrum | wavelength |
 | Cone photoreceptor electrical response | unresolved downstream signal | temporal frequency |
 | Cone synaptic glutamate output | unresolved downstream signal | temporal frequency |
 | Cochlear hair-cell electrical response | unresolved downstream signal | temporal frequency |
 | Auditory nerve electrical signal | unresolved downstream signal | temporal frequency |
 | Resting adult ventricular electrical activation | event rate | event rate |
-| Resting adult arterial pulse wave | time-varying frequency track | temporal frequency |
-| Resting adult PPG pulse waveform | time-varying frequency track | temporal frequency |
+| Resting adult arterial pulse events | event rate | event rate |
+| Resting adult PPG pulse observations | event rate | event rate |
 
 ## Schema pressure discovered
 
@@ -41,15 +42,19 @@ The visual and auditory chains make the carrier change explicit. Optical radiati
 
 For these first qualitative downstream stages, `frequency_profile.type: unknown` means **the temporal spectrum is intentionally unspecified**, not that the transduction mechanism itself is unknown. The manifest constraints and provenance explain why a carrier frequency is not copied across the transformation.
 
-### Different cardiac observables should remain separate
+The CIE LMS standard-observer response curve remains a descriptive sensitivity model. It is not treated as the physical optical source of phototransduction; the incident-photon stimulus is represented as its own phenomenon.
 
-The cardiac chain separates ventricular electrical activation, arterial pulse propagation, and PPG optical observation. These signals are physically coupled but are not simultaneous or interchangeable: electrical activation precedes contraction/ejection, and the peripheral pulse arrives after pre-ejection and propagation delays. The arterial and PPG examples therefore use time-varying pulse-frequency tracks rather than collapsing ECG, pressure, and optical sensing into one generic heart frequency.
+### Population reference ranges are not time series
+
+The AHA 60–100 bpm resting-adult range is a population-level event-rate reference. The ventricular activation, arterial pulse, and PPG records retain that semantics as event-rate ranges when they reuse the reference. Atlas does not reinterpret the range as evidence that one signal traces a 1.0–1.6667 Hz beat-to-beat frequency track over time.
+
+The cardiac chain still keeps ventricular electrical activation, arterial pulse propagation, and PPG optical observation as separate phenomena because their observables, mechanisms, and timing differ. Electrical activation precedes contraction/ejection, and the peripheral pulse arrives after pre-ejection and propagation delays.
 
 ## Still missing from the initial target set
 
-- an explicit optical-source entry ahead of the cone-response / phototransduction chain
 - retinal-network and perceived-color stages beyond the cone synapse
 - central auditory / perceived-pitch stages beyond the auditory nerve
+- a genuinely measured time-varying or nonstationary spectral example
 - an explicit weak numerical coincidence used to test non-causal matching
 
 Those examples should continue to change the schema when the real data demands it; the schema should not force them into the current shapes.
