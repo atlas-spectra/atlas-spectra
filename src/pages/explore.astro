@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import FrequencyExplorer from "../components/FrequencyExplorer";
+import { explorerItems, lanes } from "../lib/corpus";
+---
+<BaseLayout title="Explore" description="Explore the Atlas Spectra seed corpus on a logarithmic display coordinate.">
+  <section class="explorer-page">
+    <div class="page-intro">
+      <div>
+        <p class="eyebrow">Logarithmic explorer</p>
+        <h1>Across orders of magnitude</h1>
+      </div>
+      <p>
+        Position on the x-axis is a navigation aid. Event rates, wavelength, wavenumber, and perceptual
+        references retain their original semantics and show their display transform in the detail panel.
+      </p>
+    </div>
+    <FrequencyExplorer client:load items={explorerItems} lanes={lanes} />
+  </section>
+</BaseLayout>

@@ -1,0 +1,29 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { explorerItems, type ExplorerItem } from "../../lib/corpus";
+
+export function getStaticPaths() {
+  return explorerItems.map((item) => ({ params: { id: item.id }, props: { item } }));
+}
+
+interface Props { item: ExplorerItem; }
+const { item } = Astro.props;
+const display = item.display;
+---
+<BaseLayout title={item.name} description={item.summary}>
+  <article class="phenomenon-page">
+    <a class="back-link" href={`/explore/?entity=${encodeURIComponent(item.id)}`}>← Back to explorer</a>
+    <p class="eyebrow">{item.lane}</p>
+    <h1>{item.name}</h1>
+    <p class="lead">{item.summary}</p>
+    <section class="data-grid" aria-label="Phenomenon summary">
+      <div><span class="data-label">Representation</span><strong>{item.profileType.replaceAll("_", " ")}</strong></div>
+      <div><span class="data-label">Native axis</span><strong>{item.axisKind.replaceAll("_", " ")}</strong></div>
+      <div><span class="data-label">Explorer position</span><strong>{display?.nativeLabel ?? "Unpositioned"}</strong>{display && <small>{display.note}</small>}</div>
+      <div><span class="data-label">Domains</span><strong>{item.domains.join(" · ")}</strong></div>
+    </section>
+    {item.relationships.length > 0 && <section class="content-section"><h2>Relationships</h2><div class="relationship-list">{item.relationships.map((relationship) => <div class={`relationship relationship-${relationship.category}`}><div><span class="relationship-type">{relationship.type.replaceAll("_", " ")}</span><span>{relationship.direction === "outgoing" ? "→" : "←"} {relationship.peerName}</span></div><small>{relationship.category}{relationship.evidence?.mechanism_status ? ` · mechanism ${relationship.evidence.mechanism_status}` : ""}</small></div>)}</div></section>}
+    <section class="content-section"><h2>Evidence & provenance</h2>{item.provenance.length ? <div class="provenance-list">{item.provenance.map((entry) => <div class="provenance-entry"><code>{entry.target}</code><strong>{entry.evidence.basis?.replaceAll("_", " ") ?? "evidence"}</strong><span>{entry.evidence.review_status?.replaceAll("_", " ") ?? "unreviewed"}</span>{entry.evidence.locator && <small>{entry.evidence.locator}</small>}</div>)}</div> : <p>No field-level provenance entries are attached to this manifest.</p>}</section>
+    <section class="content-section"><h2>Sources</h2><ul class="source-list">{item.sources.map((source) => <li>{source.url ? <a href={source.url}>{source.title}</a> : source.title}{source.publisher && <span> — {source.publisher}</span>}{source.doi && <small> DOI {source.doi}</small>}</li>)}</ul></section>
+  </article>
+</BaseLayout>

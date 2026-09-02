@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { explorerItems } from "../lib/corpus";
+
+const positioned = explorerItems.filter((item) => item.display !== null).length;
+---
+<BaseLayout>
+  <section class="hero">
+    <p class="eyebrow">Open scientific atlas</p>
+    <h1>Understand frequency across scales.</h1>
+    <p class="hero-copy">
+      Explore oscillations, spectra, rhythms, rates, and resonances without confusing numerical proximity
+      for physical connection.
+    </p>
+    <div class="hero-actions">
+      <a class="button primary" href="/explore/">Open the explorer</a>
+      <a class="button secondary" href="https://github.com/atlas-spectra/atlas-spectra">View the data model</a>
+    </div>
+    <dl class="hero-stats">
+      <div><dt>{explorerItems.length}</dt><dd>seed phenomena</dd></div>
+      <div><dt>{positioned}</dt><dd>positionable now</dd></div>
+      <div><dt>v0</dt><dd>evidence-aware ontology</dd></div>
+    </dl>
+  </section>
+</BaseLayout>

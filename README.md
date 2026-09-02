@@ -8,13 +8,38 @@ The project combines a rigorous schema-driven dataset with a zoomable explorer a
 
 ## Foundation
 
-The first implementation work is intentionally data-first:
+The data foundation is now implemented and pressure-tested by the seed corpus:
 
 - [Ontology and v0 schema](https://github.com/atlas-spectra/atlas-spectra/issues/1) — canonical representation of frequency-bearing phenomena
 - [Provenance and evidence](https://github.com/atlas-spectra/atlas-spectra/issues/5) — per-claim sources, uncertainty, derivation, and review semantics
 - [Seed corpus](https://github.com/atlas-spectra/atlas-spectra/issues/2) — cross-domain reference manifests that pressure-test the model
 
 The product north star and phased roadmap live in [GitHub issue #7](https://github.com/atlas-spectra/atlas-spectra/issues/7).
+
+## Web explorer
+
+The first interactive prototype is built with Astro, TypeScript, a React island, and Canvas 2D. The checked-in `examples/*.json` manifests remain the source of truth; the web layer derives its view model at build time.
+
+Requirements:
+
+- Node.js 22.12 or newer
+- npm
+
+Run locally:
+
+```bash
+npm install
+npm run check
+npm run dev
+```
+
+Create a production build with:
+
+```bash
+npm run build
+```
+
+The interaction/rendering contract is documented in [docs/explorer-architecture.md](docs/explorer-architecture.md). Explorer implementation is tracked in [issue #3](https://github.com/atlas-spectra/atlas-spectra/issues/3).
 
 ## Principles
 
