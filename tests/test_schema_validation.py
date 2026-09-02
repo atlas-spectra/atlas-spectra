@@ -21,6 +21,12 @@ class SchemaValidationTests(unittest.TestCase):
     def failures_for(self, document):
         return VALIDATOR_MODULE.validate_document(document, self.validator)
 
+    def document_with_profile(self, profile):
+        document = copy.deepcopy(self.heart)
+        document["frequency_profile"] = profile
+        document["provenance"][0]["target"] = "/conditions"
+        return document
+
     def test_relationship_type_requires_matching_category(self):
         document = copy.deepcopy(self.cesium)
         document["relationships"] = [
@@ -118,6 +124,141 @@ class SchemaValidationTests(unittest.TestCase):
         document["provenance"][0]["target"] = "/conditions"
         failures = self.failures_for(document)
         self.assertTrue(any("primary quantitative profile value lacks traceable provenance" in failure for failure in failures))
+
+    def test_all_profile_quantitative_paths_require_provenance(self):
+        quantity = lambda value=1: {"value": value, "unit": "Hz"}
+        quantity_range = lambda lower=1, upper=2: {"lower": lower, "upper": upper, "unit": "Hz"}
+        temporal_axis = {"kind": "temporal_frequency"}
+
+        cases = {
+            "periodic_with_harmonic": (
+                {
+                    "type": "periodic",
+                    "axis": temporal_axis,
+                    "fundamental": quantity(10),
+                    "harmonics": [
+                        {"order": 2, "frequency": quantity(20)}
+                    ],
+                },
+                [
+                    "/frequency_profile/fundamental",
+                    "/frequency_profile/harmonics/0/frequency",
+                ],
+            ),
+            "quasi_periodic": (
+                {
+                    "type": "quasi_periodic",
+                    "axis": temporal_axis,
+                    "center": quantity(10),
+                    "range": quantity_range(9, 11),
+                },
+                [
+                    "/frequency_profile/center",
+                    "/frequency_profile/range",
+                ],
+            ),
+            "discrete_lines": (
+                {
+                    "type": "discrete_lines",
+                    "axis": temporal_axis,
+                    "lines": [{"position": quantity(10)}],
+                },
+                ["/frequency_profile/lines/0/position"],
+            ),
+            "continuous_spectrum": (
+                {
+                    "type": "continuous_spectrum",
+                    "axis": temporal_axis,
+                    "range": quantity_range(),
+                    "representation": "power_spectral_density",
+                },
+                ["/frequency_profile/range"],
+            ),
+            "frequency_band": (
+                {
+                    "type": "frequency_band",
+                    "axis": temporal_axis,
+                    "range": quantity_range(),
+                },
+                ["/frequency_profile/range"],
+            ),
+            "time_varying": (
+                {
+                    "type": "time_varying",
+                    "axis": temporal_axis,
+                    "range": quantity_range(),
+                    "representation": "frequency_track",
+                },
+                ["/frequency_profile/range"],
+            ),
+            "event_rate": (
+                {
+                    "type": "event_rate",
+                    "axis": {"kind": "event_rate"},
+                    "rate": {"value": 60, "unit": "bpm"},
+                },
+                ["/frequency_profile/rate"],
+            ),
+            "stochastic_process_with_range": (
+                {
+                    "type": "stochastic_process",
+                    "axis": temporal_axis,
+                    "representation": "power_spectral_density",
+                    "range": quantity_range(),
+                },
+                ["/frequency_profile/range"],
+            ),
+            "quantum_transition_with_energy_difference": (
+                {
+                    "type": "quantum_transition",
+                    "axis": temporal_axis,
+                    "transition_frequency": quantity(10),
+                    "energy_difference": {"value": 1, "unit": "J"},
+                    "lower_state": "lower",
+                    "upper_state": "upper",
+                },
+                [
+                    "/frequency_profile/transition_frequency",
+                    "/frequency_profile/energy_difference",
+                ],
+            ),
+            "transient_with_duration": (
+                {
+                    "type": "transient",
+                    "axis": temporal_axis,
+                    "characteristic_band": quantity_range(),
+                    "duration": {"value": 1, "unit": "s"},
+                },
+                [
+                    "/frequency_profile/characteristic_band",
+                    "/frequency_profile/duration",
+                ],
+            ),
+        }
+
+        for name, (profile, expected_pointers) in cases.items():
+            with self.subTest(profile=name):
+                document = self.document_with_profile(profile)
+                failures = self.failures_for(document)
+                for pointer in expected_pointers:
+                    self.assertTrue(
+                        any(
+                            failure.startswith(
+                                f"{pointer}: primary quantitative profile value lacks traceable provenance"
+                            )
+                            for failure in failures
+                        ),
+                        f"missing negative provenance coverage for {pointer}: {failures}",
+                    )
+
+    def test_unknown_profile_has_no_required_quantitative_provenance(self):
+        document = self.document_with_profile(
+            {
+                "type": "unknown",
+                "axis": {"kind": "temporal_frequency"},
+            }
+        )
+        self.assertEqual(self.failures_for(document), [])
 
     def test_primary_quantitative_provenance_requires_traceable_evidence(self):
         document = copy.deepcopy(self.heart)
