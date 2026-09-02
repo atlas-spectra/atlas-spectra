@@ -1,78 +1,80 @@
-# Explorer architecture
+# Logarithmic explorer architecture
 
-The first Atlas Spectra explorer is deliberately built directly on the checked-in seed corpus.
+Issue #3 defines the primary interactive Atlas Spectra experience: a zoomable logarithmic explorer backed directly by the scientific corpus.
 
 ## Stack
 
-- **Astro** owns routing, static generation, metadata, and phenomenon detail pages.
-- **React** is used only for the interactive explorer island.
-- **Canvas 2D** renders the logarithmic lanes and marks.
-- **DOM** remains responsible for controls, detail content, links, and accessible alternatives.
-- `examples/*.json` remains the scientific source of truth. `src/lib/corpus.ts` is a build-time view adapter, not a second dataset.
+- **Astro** owns routes, layouts, static phenomenon pages, SEO, and build-time corpus loading.
+- **React + TypeScript** owns the hydrated explorer island and interaction state.
+- **Canvas 2D** renders the frequency plot and scales to large mark counts without creating one DOM node per plotted object.
+- **DOM** remains responsible for controls, accessible detail content, provenance, sources, and relationship metadata.
 
-## Display coordinate
+The site deploys as a GitHub Pages project site at `https://atlas-spectra.github.io/atlas-spectra/`; application links are base-path aware.
 
-The explorer's horizontal axis is a navigation coordinate expressed as equivalent cycles per second. It must not be interpreted as a universal physical ontology.
+## Corpus contract
 
-Native temporal-frequency quantities map directly. Event rates are normalized to events per second without being reclassified as oscillators. Wavelength and wavenumber may be mapped to equivalent vacuum electromagnetic frequency using explicit physical transforms. Frequency-like claim references can be positioned as references, with a distinct mark style.
+`examples/*.json` remains the only scientific source of truth. The web build derives a compact `ExplorerItem` view model directly from those manifests. No web-specific database, CMS, or duplicate scientific schema is introduced.
 
-Spatial frequency and other coordinates remain unpositioned unless a scientifically justified transformation is available.
+The adapter preserves the manifest's native profile and axis while separately computing an optional display coordinate for navigation.
 
-Every transformed or reference position carries a human-readable mapping note shown in the detail panel and record page.
+## Display coordinate is not ontology
 
-## Rendering model
+The x-axis is an **equivalent cycles/second display coordinate**, not a claim that all plotted quantities are physically identical.
 
-The Canvas renderer uses:
+- temporal frequency in Hz is native;
+- event rate is normalized to events/s while remaining an event process;
+- angular frequency is divided by `2π` when the unit is supported;
+- wavelength is transformed with `f = c / λ`;
+- wavenumber is transformed with `f = c·k` after unit normalization;
+- selected frequency-like perceptual claim references may be shown as dashed reference marks;
+- unsupported or unresolved coordinates remain unpositioned.
 
-1. a log10 view window (`center`, `span`) measured in decades;
-2. fixed semantic lanes;
-3. different mark grammars for points, bands, discrete lines, spectra, chirps, and claim references;
-4. hit regions generated during the same draw pass;
-5. labels only at closer zoom levels or for the selected item.
+Every transformed mark retains a human-readable explanation of the mapping for the detail panel.
 
-This keeps the draw loop proportional to visible marks and avoids a DOM node per plotted primitive.
+## Marks
 
-## URL state
+The first renderer distinguishes:
 
-Explorer state is deep-linkable through query parameters:
+- scalar point;
+- range or band;
+- discrete spectral lines;
+- continuous spectrum / response range;
+- time-varying/chirp range;
+- frequency-like reference mark.
 
-- `center`: log10 center of the visible display coordinate;
-- `span`: visible width in decades;
-- `entity`: selected Atlas phenomenon ID.
+Visual proximity alone must never be rendered as evidence of causal relation.
 
-Example:
+## Interaction
 
-```text
-/explore/?center=2.643&span=5.000&entity=acoustics.standard-pitch.a4
-```
+The initial interaction model supports:
 
-Canonical static record pages use:
+- wheel zoom anchored at the pointer;
+- drag pan;
+- keyboard pan/zoom;
+- search filtering;
+- mark selection;
+- progressive labels as the visible span narrows;
+- deep-linked `center`, `span`, and selected `entity` query state.
 
-```text
-/phenomena/<atlas-id>/
-```
+A selected mark opens a DOM detail panel containing its native axis, native representation, display transform, provenance summary, and typed relationships. Static full records live under `/phenomena/<id>/` relative to the configured Astro base.
 
 ## Performance baseline
 
-The seed corpus is intentionally tiny, so raw frame timing is not meaningful yet. The architecture baseline for the next catalog scale is:
+The Canvas renderer performs one paint pass for the visible marks and keeps DOM complexity roughly constant with catalog size. The seed corpus is intentionally too small to establish a meaningful upper bound, so #3 still requires a synthetic large-catalog benchmark before closure.
 
-- one Canvas surface for marks and grid;
-- one draw pass over filtered/visible explorer items;
-- no React component per mark;
-- no DOM label per mark;
-- memoized corpus and lane indexes;
-- progressive label disclosure by zoom.
+Target for the next benchmark pass:
 
-Before catalog ingestion in #6, add a synthetic benchmark at 10k and 100k marks and use spatial bucketing or level-of-detail aggregation if full scans become a bottleneck.
+- 10,000 plotted marks;
+- interactive pan/zoom near 60 fps on a contemporary laptop;
+- no DOM-per-mark architecture;
+- hit testing optimized or indexed if the linear scan becomes material.
 
-## Prototype boundaries
+## Follow-up work for #3
 
-This first vertical slice does not attempt to close #3. Still needed:
-
-- richer waveform/spectrum mini-views;
-- relationship overlay/filter controls;
-- explicit axis/transform controls;
-- denser progressive-disclosure rules;
-- touch interaction refinement;
-- synthetic large-catalog benchmark;
-- visual design iteration with real browser screenshots.
+- relationship overlay and relationship/evidence filters;
+- richer waveform/spectrum mini-views in detail;
+- collision-aware progressive labels;
+- touch/pinch interaction refinement;
+- synthetic 10k+ performance benchmark;
+- screenshot-driven visual iteration;
+- explicit transformed-axis legend and filtering.
