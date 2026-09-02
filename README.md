@@ -20,8 +20,6 @@ The product north star and phased roadmap live in [GitHub issue #7](https://gith
 
 The first interactive prototype is built with Astro, TypeScript, a React island, and Canvas 2D. The checked-in `examples/*.json` manifests remain the source of truth; the web layer derives its view model at build time.
 
-GitHub Pages publishes the product site at <https://atlas-spectra.github.io/atlas-spectra/>. The organization root site at <https://atlas-spectra.github.io/> is a small redirect only.
-
 Requirements:
 
 - Node.js 22.12 or newer
@@ -42,6 +40,8 @@ npm run build
 ```
 
 The interaction/rendering contract is documented in [docs/explorer-architecture.md](docs/explorer-architecture.md). Explorer implementation is tracked in [issue #3](https://github.com/atlas-spectra/atlas-spectra/issues/3).
+
+The product deploys through GitHub Pages at <https://atlas-spectra.github.io/atlas-spectra/>. The organization root <https://atlas-spectra.github.io/> is a tiny redirect managed by the separate `atlas-spectra.github.io` Pages repository. See [docs/github-pages.md](docs/github-pages.md).
 
 ## Principles
 
