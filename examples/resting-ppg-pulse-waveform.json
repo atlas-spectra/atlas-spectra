@@ -1,22 +1,22 @@
 {
   "schema_version": "0.1.0",
   "id": "wearable.ppg.resting-adult-pulse",
-  "name": "Resting adult PPG pulse observations",
-  "summary": "Photoplethysmography observes cardiac-synchronous peripheral blood-volume changes optically. This record represents the resulting pulse observations with a population-level resting-adult event-rate range, not a beat-to-beat frequency track.",
+  "name": "Resting adult electrical PPG pulse observations",
+  "summary": "A PPG photodetector transduces cardiac-synchronous optical intensity variations into an electrical signal. This record represents the resulting electrical pulse observations with a population-level resting-adult event-rate range, not a beat-to-beat frequency track.",
   "domains": [
     "wearables",
     "cardiology",
-    "optics",
+    "electronics",
     "biomedical-sensing"
   ],
   "system": {
-    "id": "system.ppg.peripheral-optical-sensor",
-    "name": "Peripheral photoplethysmography sensor and tissue bed",
-    "type": "optical-biomedical-sensor"
+    "id": "system.ppg.photodetector-signal-chain",
+    "name": "PPG photodetector and electrical signal chain",
+    "type": "optoelectronic-biomedical-sensor"
   },
   "observable": {
-    "id": "observable.ppg.pulse-event-count",
-    "name": "Cardiac-synchronous PPG pulse-event count",
+    "id": "observable.ppg.electrical-pulse-event-count",
+    "name": "Cardiac-synchronous electrical PPG pulse-event count",
     "quantity_kind": "event-count",
     "independent_coordinate": "time"
   },
@@ -53,22 +53,10 @@
   ],
   "mechanisms": [
     {
-      "id": "mechanism.ppg.optical-blood-volume-transduction",
-      "type": "optical-plethysmography",
+      "id": "mechanism.ppg.photodetection",
+      "type": "optical-to-electrical-transduction",
       "status": "established",
-      "description": "A light source illuminates perfused tissue and a photodetector measures transmitted or reflected light; cardiac-synchronous blood-volume changes modulate the detected optical signal."
-    }
-  ],
-  "detectors": [
-    {
-      "id": "detector.ppg.photodetector",
-      "name": "PPG photodetector",
-      "type": "photodetector",
-      "observes": [
-        {
-          "id": "observable.ppg.pulse-event-count"
-        }
-      ]
+      "description": "The photodetector converts received optical intensity into an electrical photocurrent or voltage; subsequent electronics condition that electrical signal for PPG analysis."
     }
   ],
   "sources": [
@@ -138,7 +126,7 @@
             "id": "condition.ppg.adult"
           }
         ],
-        "derivation": "The AHA 60–100 beats/minute resting-adult range is retained as a population-level event-rate interval for cardiac-synchronous PPG pulse observations. The PPG review establishes the optical pulse mechanism; Atlas does not promote the population reference interval into a time-varying frequency track.",
+        "derivation": "The AHA 60–100 beats/minute resting-adult range is retained as a population-level event-rate interval for cardiac-synchronous electrical PPG pulse observations. The PPG review establishes the photodetector's optical-to-electrical sensing mechanism; Atlas does not promote the population reference interval into a time-varying frequency track.",
         "mechanism_status": "known"
       }
     }
@@ -146,7 +134,7 @@
   "tags": [
     "ppg",
     "wearable",
-    "optical-sensing",
+    "electrical-sensing",
     "pulse-wave",
     "event-rate",
     "transduction-chain"
