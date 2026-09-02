@@ -1,0 +1,128 @@
+{
+  "schema_version": "0.1.0",
+  "id": "vision.postreceptoral.color-opponent-signal",
+  "name": "Post-receptoral color-opponent neural signal",
+  "summary": "A neural processing stage in which cone-derived signals are compared in opponent channels. This stage contributes to color vision but is not a wavelength-to-color lookup or a physical oscillator at an optical carrier frequency.",
+  "domains": [
+    "vision",
+    "neuroscience",
+    "color-science"
+  ],
+  "system": {
+    "id": "system.visual.postreceptoral-color-processing",
+    "name": "Post-receptoral primate color-processing pathways",
+    "type": "neural-processing-system"
+  },
+  "observable": {
+    "id": "observable.visual.color-opponent-neural-response",
+    "name": "Color-opponent neural response",
+    "quantity_kind": "neural-response",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "unknown",
+    "axis": {
+      "kind": "temporal_frequency",
+      "notes": "Temporal spectrum of post-receptoral neural activity; no optical carrier identity is assumed."
+    },
+    "constraints": [
+      "opponent processing compares cone-derived signals rather than assigning one color to one wavelength",
+      "temporal spectrum depends on stimulus timing, adaptation, retinal circuitry, and downstream processing"
+    ]
+  },
+  "relationships": [
+    {
+      "id": "relationship.cone-output-to-color-opponency",
+      "type": "COUPLES_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "vision.cone-synapse.glutamate-output",
+        "scope": "atlas",
+        "label": "Cone photoreceptor synaptic glutamate output"
+      },
+      "target_ref": {
+        "id": "vision.postreceptoral.color-opponent-signal"
+      },
+      "description": "Cone-derived signals feed post-receptoral neural processing in which opponent comparisons emerge; the relationship is not a one-wavelength-to-one-color mapping.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.webvision.color-perception-opponency"
+          }
+        ],
+        "locator": "Theories of Color Vision and Stage Theory",
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "id": "relationship.color-opponency-to-hue-perception",
+      "type": "COUPLES_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "vision.postreceptoral.color-opponent-signal"
+      },
+      "target_ref": {
+        "id": "perception.color.hue",
+        "scope": "atlas",
+        "label": "Human hue perception"
+      },
+      "description": "Opponent neural processing contributes to the visual processing underlying hue perception, without implying that one opponent-channel value uniquely determines a percept in every context.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.webvision.color-perception-opponency"
+          }
+        ],
+        "locator": "Opponent Color Theory and Stage Theory",
+        "mechanism_status": "proposed"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.webvision.color-perception-opponency",
+      "type": "book",
+      "title": "The Perception of Color",
+      "authors": [
+        "Michael Kalloniatis",
+        "Charles Luu"
+      ],
+      "publisher": "Webvision / NCBI Bookshelf",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK11538/",
+      "issued": "2007-07-09",
+      "accessed": "2026-09-02",
+      "license": {
+        "spdx": "CC-BY-NC-4.0",
+        "url": "https://creativecommons.org/licenses/by-nc/4.0/",
+        "status": "licensed"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.webvision.color-perception-opponency"
+          }
+        ],
+        "derivation": "Webvision describes post-receptoral opponent processing as a neural stage of color vision. Atlas therefore records the downstream temporal spectrum as unresolved rather than copying optical wavelength or frequency onto the neural signal.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "color-opponency",
+    "postreceptoral",
+    "retina",
+    "neural-encoding",
+    "color-vision"
+  ]
+}

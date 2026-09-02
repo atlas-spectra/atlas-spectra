@@ -1,0 +1,85 @@
+{
+  "schema_version": "0.1.0",
+  "id": "neuroscience.eeg.alpha-band",
+  "name": "EEG alpha band",
+  "summary": "The International Federation of Clinical Neurophysiology terminology defines the EEG alpha band as 8–13 Hz inclusive. The band is a frequency classification and should not be conflated with the more specifically conditioned posterior alpha rhythm.",
+  "domains": [
+    "neuroscience",
+    "eeg",
+    "clinical-neurophysiology"
+  ],
+  "system": {
+    "id": "system.human-scalp-eeg",
+    "name": "Human scalp electroencephalogram",
+    "type": "electrophysiological-observation-system"
+  },
+  "observable": {
+    "id": "observable.eeg.frequency-content",
+    "name": "EEG signal frequency content",
+    "quantity_kind": "electrical-signal-frequency",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "frequency_band",
+    "axis": {
+      "kind": "temporal_frequency"
+    },
+    "range": {
+      "lower": 8,
+      "upper": 13,
+      "unit": "Hz",
+      "quantity_kind": "frequency"
+    },
+    "definition": "IFCN alpha band: frequency band of 8–13 Hz inclusive. This record represents the band definition, not the diagnostic/physiological criteria for alpha rhythm."
+  },
+  "sources": [
+    {
+      "id": "source.ifcn.eeg-glossary-2017",
+      "type": "paper",
+      "title": "A revised glossary of terms most commonly used by clinical electroencephalographers and updated proposal for the report format of the EEG findings. Revision 2017",
+      "authors": [
+        "Nick Kane",
+        "Jayant Acharya",
+        "Sándor Beniczky",
+        "Luis Caboclo",
+        "Simon Finnigan",
+        "Peter W. Kaplan",
+        "Hermann Stefan",
+        "William Trinka",
+        "Walter van Emde Boas"
+      ],
+      "publisher": "Clinical Neurophysiology Practice / International Federation of Clinical Neurophysiology",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6123891/",
+      "doi": "10.1016/j.cnp.2017.07.002",
+      "issued": "2017-08-04",
+      "accessed": "2026-09-02",
+      "license": {
+        "spdx": "CC-BY-NC-ND-4.0",
+        "url": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+        "status": "licensed"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "verified",
+        "source_refs": [
+          {
+            "id": "source.ifcn.eeg-glossary-2017"
+          }
+        ],
+        "locator": "Glossary entry: Alpha band",
+        "mechanism_status": "not_applicable"
+      }
+    }
+  ],
+  "tags": [
+    "eeg",
+    "alpha-band",
+    "frequency-band",
+    "neuroscience"
+  ]
+}

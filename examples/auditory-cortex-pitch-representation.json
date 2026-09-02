@@ -1,0 +1,143 @@
+{
+  "schema_version": "0.1.0",
+  "id": "hearing.auditory-cortex.pitch-representation",
+  "name": "Auditory cortical pitch representation",
+  "summary": "A cortical neural representation of perceptual pitch that can integrate different acoustic cues. It is modeled as neural activity carrying pitch information, not as a hidden oscillator whose carrier must equal the sound's fundamental frequency.",
+  "domains": [
+    "hearing",
+    "neuroscience",
+    "perception"
+  ],
+  "system": {
+    "id": "system.auditory-cortex.pitch-network",
+    "name": "Human auditory cortical pitch network",
+    "type": "cortical-neural-system"
+  },
+  "observable": {
+    "id": "observable.auditory-cortex.pitch-encoding",
+    "name": "Neural encoding of pitch",
+    "quantity_kind": "neural-representation",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "unknown",
+    "axis": {
+      "kind": "temporal_frequency",
+      "notes": "Temporal spectrum of cortical neural activity; pitch information is encoded in the response, but no carrier-frequency identity with the acoustic stimulus is asserted."
+    },
+    "constraints": [
+      "pitch representations can generalize across acoustic cue types",
+      "fundamental frequency, harmonic spacing, and context can all contribute to pitch",
+      "the neural representation is not assumed to oscillate at the perceived pitch frequency"
+    ]
+  },
+  "relationships": [
+    {
+      "id": "relationship.auditory-nerve-to-cortical-pitch",
+      "type": "COUPLES_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "hearing.auditory-nerve.electrical-signal",
+        "scope": "atlas",
+        "label": "Auditory nerve electrical signal"
+      },
+      "target_ref": {
+        "id": "hearing.auditory-cortex.pitch-representation"
+      },
+      "description": "Auditory-nerve activity carries cochlear information toward the brain, where cortical responses encode pitch-relevant information.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nidcd.pitch-pathway"
+          },
+          {
+            "id": "source.abrams.pitch-cortex-2025"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "id": "relationship.cortical-pitch-to-pitch-percept",
+      "type": "COUPLES_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "hearing.auditory-cortex.pitch-representation"
+      },
+      "target_ref": {
+        "id": "perception.pitch.a4-reference",
+        "scope": "atlas",
+        "label": "A4-like 440 Hz pitch percept"
+      },
+      "description": "A shared cortical representation of pitch contributes to the stable pitch percept elicited by different acoustic cues; the precise neural mechanism remains an active research question.",
+      "evidence": {
+        "basis": "direct_measurement",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.abrams.pitch-cortex-2025"
+          }
+        ],
+        "locator": "Abstract, Significance Statement, and Introduction",
+        "mechanism_status": "proposed"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.nidcd.pitch-pathway",
+      "type": "web",
+      "title": "How Do We Hear?",
+      "publisher": "National Institute on Deafness and Other Communication Disorders (NIDCD), NIH",
+      "url": "https://www.nidcd.nih.gov/health/how-do-we-hear",
+      "issued": "2022-03-16",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.abrams.pitch-cortex-2025",
+      "type": "paper",
+      "title": "Dynamics of Pitch Perception in the Auditory Cortex",
+      "authors": [
+        "Ellie Bean Abrams",
+        "Alec Marantz",
+        "Isaac Krementsov",
+        "Laura Gwilliams"
+      ],
+      "publisher": "The Journal of Neuroscience",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11924889/",
+      "doi": "10.1523/JNEUROSCI.1111-24.2025",
+      "issued": "2025-03-19",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.abrams.pitch-cortex-2025"
+          }
+        ],
+        "derivation": "The study decodes pitch from cortical neural responses across multiple acoustic cue types. Atlas therefore represents pitch as encoded neural information while leaving the neural signal's own temporal spectrum unresolved.",
+        "mechanism_status": "proposed"
+      }
+    }
+  ],
+  "tags": [
+    "pitch",
+    "auditory-cortex",
+    "neural-representation",
+    "perception"
+  ]
+}

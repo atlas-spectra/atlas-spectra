@@ -1,0 +1,77 @@
+{
+  "schema_version": "0.1.0",
+  "id": "perception.color.hue",
+  "name": "Human hue perception",
+  "summary": "Hue is a perceptual attribute of human color vision related to wavelength and cone/opponent processing, but it is not itself a physical wavelength or oscillation and is not determined by a one-to-one wavelength lookup.",
+  "domains": [
+    "vision",
+    "perception",
+    "color-science"
+  ],
+  "system": {
+    "id": "system.human-visual-system.hue-perception",
+    "name": "Human visual system",
+    "type": "perceptual-system"
+  },
+  "observable": {
+    "id": "observable.color.perceived-hue",
+    "name": "Perceived hue",
+    "quantity_kind": "perceptual-hue",
+    "independent_coordinate": "other"
+  },
+  "frequency_profile": {
+    "type": "unknown",
+    "axis": {
+      "kind": "other",
+      "notes": "Hue is a perceptual attribute related to spectral input but is not a physical frequency coordinate of an internal oscillator."
+    },
+    "constraints": [
+      "hue depends on cone signals and post-receptoral processing",
+      "context, luminance, adaptation, and mixtures can alter perceived color",
+      "non-spectral colors and metameric matches rule out a one-to-one wavelength-to-hue identity"
+    ]
+  },
+  "sources": [
+    {
+      "id": "source.webvision.hue-perception",
+      "type": "book",
+      "title": "The Perception of Color",
+      "authors": [
+        "Michael Kalloniatis",
+        "Charles Luu"
+      ],
+      "publisher": "Webvision / NCBI Bookshelf",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK11538/",
+      "issued": "2007-07-09",
+      "accessed": "2026-09-02",
+      "license": {
+        "spdx": "CC-BY-NC-4.0",
+        "url": "https://creativecommons.org/licenses/by-nc/4.0/",
+        "status": "licensed"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.webvision.hue-perception"
+          }
+        ],
+        "locator": "Color Specification, Color Discrimination Functions, and Stage Theory",
+        "derivation": "Webvision treats hue as a perceptual color attribute related to wavelength while also describing trichromatic matching, opponent processing, mixtures, and contextual dependencies. Atlas therefore does not assign hue a physical carrier-frequency profile.",
+        "mechanism_status": "proposed"
+      }
+    }
+  ],
+  "tags": [
+    "hue",
+    "color-perception",
+    "perception",
+    "color-vision"
+  ]
+}

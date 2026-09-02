@@ -49,6 +49,36 @@
       "value": "adult"
     }
   ],
+  "relationships": [
+    {
+      "id": "relationship.heart-lower-bound-to-quartz-one-hz",
+      "type": "SAME_NUMERICAL_FREQUENCY_AS",
+      "category": "numerical",
+      "source_ref": {
+        "id": "biology.heart.resting-adult-rate"
+      },
+      "target_ref": {
+        "id": "timekeeping.quartz-wristwatch.one-second-tick",
+        "scope": "atlas",
+        "label": "Quartz wristwatch one-second tick"
+      },
+      "description": "The lower endpoint of the 60–100 bpm resting-adult reference range converts to 1 event/s, numerically matching the 1 Hz quartz clock output. This is explicitly a numerical coincidence, not evidence of coupling, resonance, entrainment, or a shared mechanism.",
+      "evidence": {
+        "basis": "computed_derivation",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.aha.resting-heart-rate"
+          },
+          {
+            "id": "source.nist.quartz-one-hz-comparison"
+          }
+        ],
+        "derivation": "60 beats/minute × (1 minute / 60 seconds) = 1 event/second; compare that numerical magnitude with the quartz divider's 1 Hz output.",
+        "mechanism_status": "none"
+      }
+    }
+  ],
   "sources": [
     {
       "id": "source.aha.resting-heart-rate",
@@ -56,6 +86,17 @@
       "title": "Target Heart Rates Chart",
       "publisher": "American Heart Association",
       "url": "https://www.heart.org/en/healthy-living/exercise-and-physical-activity/fitness-basics/target-heart-rates",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.nist.quartz-one-hz-comparison",
+      "type": "documentation",
+      "title": "Timekeeping and clocks FAQs",
+      "publisher": "National Institute of Standards and Technology",
+      "url": "https://www.nist.gov/pml/time-and-frequency-division/timekeeping-and-clocks-faqs",
       "accessed": "2026-09-02",
       "license": {
         "status": "terms_apply"
@@ -88,6 +129,7 @@
   "tags": [
     "heart-rate",
     "event-rate",
-    "biology"
+    "biology",
+    "numerical-coincidence"
   ]
 }
