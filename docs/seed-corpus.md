@@ -18,7 +18,7 @@ The seed corpus is intentionally small and heterogeneous. Its job is to pressure
 
 ### Wavelength is a native spectral coordinate
 
-Authoritative color-science datasets are naturally tabulated in wavelength. The CIE 2006 LMS cone fundamentals are published from 390 nm to 830 nm in 5 nm increments. v0 therefore permits a wavelength axis for continuous spectra rather than requiring an eager conversion to temporal frequency.
+Authoritative color-science datasets are naturally tabulated in wavelength. The CIE 2006 LMS cone fundamentals CSV is published from 390 nm to 830 nm in 1 nm increments (441 samples). v0 therefore permits a wavelength axis for continuous spectra rather than requiring an eager conversion to temporal frequency.
 
 ### A spectral object can be a response curve
 
