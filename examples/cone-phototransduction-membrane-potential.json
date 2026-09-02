@@ -40,18 +40,18 @@
   ],
   "relationships": [
     {
-      "id": "relationship.cone.spectral-response-to-voltage",
+      "id": "relationship.cone.optical-stimulus-to-voltage",
       "type": "TRANSDUCES_TO",
       "category": "physical",
       "source_ref": {
-        "id": "vision.cie-2006.lms-cone-fundamentals-2deg",
+        "id": "vision.cone-phototransduction.incident-optical-stimulus",
         "scope": "atlas",
-        "label": "CIE 2006 LMS cone spectral response"
+        "label": "Incident optical stimulus at a cone photoreceptor"
       },
       "target_ref": {
         "id": "vision.cone-phototransduction.membrane-potential"
       },
-      "description": "The LMS response curve describes wavelength-dependent cone sensitivity; absorbed photons are transduced into a graded electrical membrane response rather than an electrical signal at the optical carrier frequency.",
+      "description": "Incident photons are physically transduced by the cone phototransduction cascade into a graded electrical membrane response. The CIE LMS curve remains a descriptive response model, not the physical source node.",
       "evidence": {
         "basis": "established_reference",
         "review_status": "reviewed",
