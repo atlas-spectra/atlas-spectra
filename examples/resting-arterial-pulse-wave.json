@@ -1,8 +1,8 @@
 {
   "schema_version": "0.1.0",
   "id": "cardiology.arterial-pulse.resting-adult",
-  "name": "Resting adult arterial pulse wave",
-  "summary": "The pressure/flow pulse launched by cardiac ejection and propagated through the arterial system, represented here by its time-varying pulse frequency over the typical resting-adult range.",
+  "name": "Resting adult arterial pulse events",
+  "summary": "Cardiac ejection launches arterial pulse waves that propagate through the vascular system. This record represents their population-level resting-adult recurrence as an event-rate range rather than inventing a beat-to-beat frequency track.",
   "domains": [
     "cardiology",
     "hemodynamics",
@@ -14,24 +14,27 @@
     "type": "vascular-system"
   },
   "observable": {
-    "id": "observable.arterial-pulse.arrival-timing",
-    "name": "Arterial pulse-wave arrival timing",
-    "quantity_kind": "pulse-arrival-events",
+    "id": "observable.arterial-pulse.arrival-count",
+    "name": "Arterial pulse-wave arrival count",
+    "quantity_kind": "event-count",
     "independent_coordinate": "time"
   },
   "frequency_profile": {
-    "type": "time_varying",
+    "type": "event_rate",
     "axis": {
-      "kind": "temporal_frequency"
+      "kind": "event_rate"
     },
-    "range": {
-      "lower": 1,
-      "upper": 1.6666666667,
-      "unit": "Hz",
-      "quantity_kind": "pulse-frequency"
+    "rate": {
+      "lower": 60,
+      "upper": 100,
+      "unit": "bpm",
+      "quantity_kind": "arterial-pulse-rate"
     },
-    "representation": "frequency_track",
-    "estimator": "inverse pulse-to-pulse interval"
+    "aggregation_window": {
+      "value": 60,
+      "unit": "s",
+      "quantity_kind": "time"
+    }
   },
   "conditions": [
     {
@@ -58,9 +61,9 @@
       "target_ref": {
         "id": "wearable.ppg.resting-adult-pulse",
         "scope": "atlas",
-        "label": "Resting adult PPG pulse waveform"
+        "label": "Resting adult PPG pulse observations"
       },
-      "description": "Peripheral arterial blood-volume changes alter optical absorption/reflection and are transduced by a PPG sensor into an optical intensity waveform.",
+      "description": "Peripheral arterial blood-volume changes alter optical absorption/reflection and are transduced by a PPG sensor into a cardiac-synchronous optical signal from which pulse events can be observed.",
       "evidence": {
         "basis": "established_reference",
         "review_status": "reviewed",
@@ -106,9 +109,9 @@
   ],
   "provenance": [
     {
-      "target": "/frequency_profile/range",
+      "target": "/frequency_profile/rate",
       "evidence": {
-        "basis": "computed_derivation",
+        "basis": "model_derived",
         "review_status": "reviewed",
         "source_refs": [
           {
@@ -126,7 +129,7 @@
             "id": "condition.arterial-pulse.adult"
           }
         ],
-        "derivation": "Convert the typical resting-adult rate of 60–100 beats/minute to 1.0–1.6667 cycles/second for the pulse-frequency track. The PPG review distinguishes peripheral pulse-wave timing from ECG electrical timing.",
+        "derivation": "The AHA 60–100 beats/minute resting-adult range is retained as a population-level event-rate interval for cardiac-synchronous arterial pulse arrivals. Atlas does not interpret that reference range as an observed beat-to-beat frequency track.",
         "mechanism_status": "known"
       }
     }
@@ -135,7 +138,7 @@
     "arterial-pulse",
     "pulse-wave",
     "hemodynamics",
-    "time-varying",
+    "event-rate",
     "transduction-chain"
   ]
 }
