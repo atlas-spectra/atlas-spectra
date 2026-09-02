@@ -52,18 +52,18 @@
   ],
   "relationships": [
     {
-      "id": "relationship.arterial-pulse-to-ppg",
-      "type": "TRANSDUCES_TO",
+      "id": "relationship.arterial-pulse-modulates-ppg-optical",
+      "type": "MODULATES",
       "category": "physical",
       "source_ref": {
         "id": "cardiology.arterial-pulse.resting-adult"
       },
       "target_ref": {
-        "id": "wearable.ppg.resting-adult-pulse",
+        "id": "wearable.ppg.resting-adult-optical-variation",
         "scope": "atlas",
-        "label": "Resting adult PPG pulse observations"
+        "label": "Resting adult PPG optical intensity modulation"
       },
-      "description": "Peripheral arterial blood-volume changes alter optical absorption/reflection and are transduced by a PPG sensor into a cardiac-synchronous optical signal from which pulse events can be observed.",
+      "description": "Cardiac-synchronous peripheral blood-volume changes modulate tissue optical absorption and therefore the intensity of light transmitted through or reflected from the tissue.",
       "evidence": {
         "basis": "established_reference",
         "review_status": "reviewed",
