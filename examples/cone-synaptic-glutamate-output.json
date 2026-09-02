@@ -1,0 +1,69 @@
+{
+  "schema_version": "0.1.0",
+  "id": "vision.cone-synapse.glutamate-output",
+  "name": "Cone photoreceptor synaptic glutamate output",
+  "summary": "Cone photoreceptors continuously release glutamate in darkness; light-evoked hyperpolarization reduces that release. This is a downstream neural encoding stage rather than an optical-frequency oscillation.",
+  "domains": [
+    "vision",
+    "neuroscience",
+    "biology"
+  ],
+  "system": {
+    "id": "system.retina.cone-synaptic-terminal",
+    "name": "Cone photoreceptor synaptic terminal",
+    "type": "photoreceptor-synapse"
+  },
+  "observable": {
+    "id": "observable.cone.glutamate-release",
+    "name": "Cone glutamate release",
+    "quantity_kind": "neurotransmitter-release",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "unknown",
+    "axis": {
+      "kind": "temporal_frequency",
+      "notes": "Graded synaptic output after phototransduction; no single carrier frequency is assigned."
+    },
+    "constraints": [
+      "release is modulated by photoreceptor membrane potential",
+      "temporal spectrum depends on stimulus and retinal adaptation"
+    ]
+  },
+  "sources": [
+    {
+      "id": "source.ncbi.webvision-phototransduction",
+      "type": "book",
+      "title": "Phototransduction in Rods and Cones",
+      "publisher": "Webvision / NCBI Bookshelf, National Library of Medicine",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK52768/",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.ncbi.webvision-phototransduction"
+          }
+        ],
+        "derivation": "Webvision describes light-evoked hyperpolarization decreasing or terminating dark glutamate release. Atlas records this as a downstream graded signal and intentionally does not inherit the optical carrier frequency.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "cone",
+    "retina",
+    "glutamate",
+    "synapse",
+    "neural-encoding",
+    "carrier-change"
+  ]
+}
