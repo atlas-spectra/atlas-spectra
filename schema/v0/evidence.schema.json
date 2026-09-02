@@ -3,6 +3,68 @@
   "$id": "https://atlas-spectra.org/schema/v0/evidence.schema.json",
   "title": "Atlas Spectra v0 evidence definitions",
   "$defs": {
+    "extraction": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "method": {"enum": ["manual", "imported", "machine_extracted", "computed"]},
+        "raw_value": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "number"},
+            {"type": "boolean"}
+          ]
+        },
+        "raw_unit": {"type": "string", "minLength": 1},
+        "excerpt": {"type": "string", "minLength": 1},
+        "notes": {"type": "string"}
+      }
+    },
+    "evidenceUncertainty": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value", "unit"],
+          "properties": {
+            "type": {"const": "absolute"},
+            "value": {"type": "number", "minimum": 0},
+            "unit": {"type": "string", "minLength": 1},
+            "unit_uri": {"type": "string", "format": "uri"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "minus", "plus", "unit"],
+          "properties": {
+            "type": {"const": "asymmetric"},
+            "minus": {"type": "number", "minimum": 0},
+            "plus": {"type": "number", "minimum": 0},
+            "unit": {"type": "string", "minLength": 1},
+            "unit_uri": {"type": "string", "format": "uri"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": {"const": "relative"},
+            "value": {"type": "number", "minimum": 0}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": {"const": "unknown"}
+          }
+        }
+      ]
+    },
     "evidence": {
       "type": "object",
       "additionalProperties": false,
@@ -12,6 +74,8 @@
         "review_status": {"enum": ["imported", "machine_derived", "unreviewed", "reviewed", "verified", "disputed", "superseded", "rejected"]},
         "source_refs": {"type": "array", "items": {"$ref": "./common.schema.json#/$defs/reference"}},
         "locator": {"type": "string"},
+        "extraction": {"$ref": "#/$defs/extraction"},
+        "uncertainty": {"$ref": "#/$defs/evidenceUncertainty"},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "mechanism_status": {"enum": ["known", "proposed", "none", "not_applicable", "unknown"]},
         "derivation": {"type": "string"},

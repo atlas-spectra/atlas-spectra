@@ -81,6 +81,17 @@
           }
         ],
         "locator": "πu, mode 2, Bend; selected frequency 667.38 cm^-1; rating A (0–1 cm^-1 uncertainty)",
+        "extraction": {
+          "method": "manual",
+          "raw_value": 667.38,
+          "raw_unit": "cm^-1",
+          "notes": "Selected gas-phase ν2 bending-mode frequency from the NIST WebBook table."
+        },
+        "uncertainty": {
+          "type": "absolute",
+          "value": 1,
+          "unit": "cm^-1"
+        },
         "mechanism_status": "known"
       }
     }
