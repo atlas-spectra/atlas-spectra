@@ -1,0 +1,140 @@
+{
+  "schema_version": "0.1.0",
+  "id": "vision.cone-phototransduction.membrane-potential",
+  "name": "Cone photoreceptor electrical response to light",
+  "summary": "Absorbed light drives the cone phototransduction cascade, closing cGMP-gated cation channels and hyperpolarizing the photoreceptor membrane. The downstream electrical response does not reproduce the optical carrier frequency.",
+  "domains": [
+    "vision",
+    "neuroscience",
+    "biology"
+  ],
+  "system": {
+    "id": "system.retina.cone-outer-segment",
+    "name": "Cone photoreceptor outer segment",
+    "type": "photoreceptor-compartment"
+  },
+  "observable": {
+    "id": "observable.cone.membrane-potential-response",
+    "name": "Light-evoked cone membrane-potential response",
+    "quantity_kind": "electric-potential",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "unknown",
+    "axis": {
+      "kind": "temporal_frequency",
+      "notes": "Electrical response after phototransduction; the optical carrier frequency is not preserved as an electrical oscillation."
+    },
+    "constraints": [
+      "graded transient response rather than a copy of the optical carrier",
+      "spectral content depends on stimulus timing, adaptation state, and retinal physiology"
+    ]
+  },
+  "mechanisms": [
+    {
+      "id": "mechanism.cone.cgmp-phototransduction",
+      "type": "cgmp-phototransduction",
+      "status": "established",
+      "description": "Photon absorption activates the photopigment/transducin/PDE cascade, lowers cGMP, closes cGMP-gated cation channels, and hyperpolarizes the photoreceptor."
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship.cone.spectral-response-to-voltage",
+      "type": "TRANSDUCES_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "vision.cie-2006.lms-cone-fundamentals-2deg",
+        "scope": "atlas",
+        "label": "CIE 2006 LMS cone spectral response"
+      },
+      "target_ref": {
+        "id": "vision.cone-phototransduction.membrane-potential"
+      },
+      "description": "The LMS response curve describes wavelength-dependent cone sensitivity; absorbed photons are transduced into a graded electrical membrane response rather than an electrical signal at the optical carrier frequency.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.ncbi.neuroscience-phototransduction"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "id": "relationship.cone.voltage-modulates-glutamate",
+      "type": "MODULATES",
+      "category": "physical",
+      "source_ref": {
+        "id": "vision.cone-phototransduction.membrane-potential"
+      },
+      "target_ref": {
+        "id": "vision.cone-synapse.glutamate-output",
+        "scope": "atlas",
+        "label": "Cone synaptic glutamate output"
+      },
+      "description": "Light-induced photoreceptor hyperpolarization reduces transmitter release at the photoreceptor synapse.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.ncbi.neuroscience-phototransduction"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.ncbi.neuroscience-phototransduction",
+      "type": "book",
+      "title": "Phototransduction",
+      "publisher": "NCBI Bookshelf, National Library of Medicine",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK10806/",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/mechanisms/0",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.ncbi.neuroscience-phototransduction"
+          }
+        ],
+        "locator": "Phototransduction discussion and Figures 11.5–11.7",
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.ncbi.neuroscience-phototransduction"
+          }
+        ],
+        "derivation": "The source describes a biochemical transduction cascade producing a graded membrane-potential response; Atlas therefore does not assign the optical carrier frequency to the electrical output.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "phototransduction",
+    "cone",
+    "retina",
+    "electrical-response",
+    "carrier-change"
+  ]
+}
