@@ -234,13 +234,17 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
         regions.push({ id: item.id, x1: x1 - 5, x2: x2 + 5, y1: cy - 16, y2: cy + 16 });
       } else if (item.markKind === "lines" && item.display.positionsHz?.length) {
         const xs = item.display.positionsHz.map((value) => x(Math.log10(value))).filter((xx) => xx >= left && xx <= right);
+        if (!xs.length) {
+          ctx.restore();
+          continue;
+        }
         for (const xx of xs) {
           ctx.beginPath();
           ctx.moveTo(xx, cy - 12);
           ctx.lineTo(xx, cy + 12);
           ctx.stroke();
         }
-        regions.push({ id: item.id, x1: Math.max(left, Math.min(...xs, x1) - 8), x2: Math.min(right, Math.max(...xs, x2) + 8), y1: cy - 16, y2: cy + 16 });
+        regions.push({ id: item.id, x1: Math.max(left, Math.min(...xs) - 8), x2: Math.min(right, Math.max(...xs) + 8), y1: cy - 16, y2: cy + 16 });
       } else {
         const markWidth = Math.max(3, x2 - x1);
         const height = item.markKind === "spectrum" ? 18 : item.markKind === "chirp" ? 14 : 10;
@@ -346,7 +350,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
       <div className="explorer-count">{countLabel}</div>
     </div>
     <div className="canvas-frame">
-      <canvas ref={canvasRef} className="frequency-canvas" aria-label="Logarithmic frequency explorer. Drag to pan, use the mouse wheel or zoom buttons to zoom, and click a mark to inspect it." tabIndex={0} onWheel={wheel} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { drag.current = null; }} onKeyDown={key} />
+      <canvas ref={canvasRef} className="frequency-canvas" aria-label="Logarithmic frequency explorer. Drag to pan, use the mouse wheel or zoom buttons to zoom, and click a mark to inspect it. Use the visible Find control to select any Atlas record, including unpositioned records." tabIndex={0} onWheel={wheel} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { drag.current = null; }} onKeyDown={key} />
     </div>
     <div className="explorer-footer"><span>{formatHz(10 ** (view.center - view.span / 2))}</span><span>{view.span.toFixed(1)} decades visible</span><span>{formatHz(10 ** (view.center + view.span / 2))}</span></div>
     <div className="explorer-detail" aria-live="polite">{selected ? <>
@@ -363,6 +367,5 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
       <div className="detail-section evidence-summary"><h3>Evidence</h3>{selected.provenance.length ? <p>{selected.provenance[0].evidence.basis?.replaceAll("_", " ")} · {selected.provenance[0].evidence.review_status?.replaceAll("_", " ")}</p> : <p>See relationship or claim evidence in the full record.</p>}</div>
       <a className="button primary detail-link" href={`../phenomena/${selected.id}/`}>Open full record</a>
     </> : <div className="empty-detail"><span className="detail-lane">Inspect</span><h2>Select a phenomenon</h2><p>The plot separates display position from scientific relationship. Search also exposes records that cannot be placed on the shared display coordinate.</p></div>}</div>
-    <div className="sr-only"><p>Atlas phenomena:</p><ul>{items.map((item) => <li key={item.id}><button type="button" onClick={() => selectItem(item.id)}>{item.name}{item.display ? "" : " (unpositioned)"}</button></li>)}</ul></div>
   </div>;
 }
