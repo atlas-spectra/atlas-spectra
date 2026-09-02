@@ -113,6 +113,31 @@ class SchemaValidationTests(unittest.TestCase):
         failures = self.failures_for(document)
         self.assertTrue(any("duplicate id source.aha.resting-heart-rate" in failure for failure in failures))
 
+    def test_primary_quantitative_profile_requires_provenance(self):
+        document = copy.deepcopy(self.heart)
+        document["provenance"][0]["target"] = "/conditions"
+        failures = self.failures_for(document)
+        self.assertTrue(any("primary quantitative profile value lacks provenance" in failure for failure in failures))
+
+    def test_ancestor_provenance_target_covers_profile_quantity(self):
+        document = copy.deepcopy(self.heart)
+        document["provenance"][0]["target"] = "/frequency_profile"
+        self.assertEqual(self.failures_for(document), [])
+
+    def test_evidence_supports_extraction_and_uncertainty(self):
+        document = copy.deepcopy(self.heart)
+        evidence = document["provenance"][0]["evidence"]
+        evidence["extraction"] = {
+            "method": "manual",
+            "raw_value": 60,
+            "raw_unit": "bpm"
+        }
+        evidence["uncertainty"] = {
+            "type": "absolute",
+            "value": 1
+        }
+        self.assertEqual(self.failures_for(document), [])
+
     def test_json_pointer_preserves_empty_leading_token(self):
         document = {"frequency_profile": {"rate": 1}}
         with self.assertRaises(KeyError):

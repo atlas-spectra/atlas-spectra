@@ -131,6 +131,45 @@ def id_indexes(document):
     return typed, local, duplicates
 
 
+def primary_quantitative_pointers(document):
+    """Return the primary quantitative objects that must have field-level provenance."""
+    profile = document.get("frequency_profile", {})
+    profile_type = profile.get("type")
+    pointers = []
+
+    if profile_type == "periodic":
+        pointers.append("/frequency_profile/fundamental")
+        for index, _ in enumerate(profile.get("harmonics", [])):
+            pointers.append(f"/frequency_profile/harmonics/{index}/frequency")
+    elif profile_type == "quasi_periodic":
+        pointers.extend(["/frequency_profile/center", "/frequency_profile/range"])
+    elif profile_type == "discrete_lines":
+        for index, _ in enumerate(profile.get("lines", [])):
+            pointers.append(f"/frequency_profile/lines/{index}/position")
+    elif profile_type in {"continuous_spectrum", "frequency_band", "time_varying"}:
+        pointers.append("/frequency_profile/range")
+    elif profile_type == "event_rate":
+        pointers.append("/frequency_profile/rate")
+    elif profile_type == "stochastic_process":
+        if "range" in profile:
+            pointers.append("/frequency_profile/range")
+    elif profile_type == "quantum_transition":
+        pointers.append("/frequency_profile/transition_frequency")
+        if "energy_difference" in profile:
+            pointers.append("/frequency_profile/energy_difference")
+    elif profile_type == "transient":
+        pointers.append("/frequency_profile/characteristic_band")
+        if "duration" in profile:
+            pointers.append("/frequency_profile/duration")
+
+    return pointers
+
+
+def provenance_covers(target, pointer):
+    normalized = target.rstrip("/")
+    return normalized == pointer or pointer.startswith(normalized + "/")
+
+
 def semantic_checks(document):
     problems = []
     typed_ids, local_ids, duplicate_problems = id_indexes(document)
@@ -240,12 +279,18 @@ def semantic_checks(document):
                 "object reference",
             )
 
+    provenance_targets = []
     for index, provenance in enumerate(document.get("provenance", [])):
         target = provenance["target"]
         try:
             resolve_pointer(document, target)
+            provenance_targets.append(target)
         except (KeyError, IndexError, ValueError, TypeError):
             problems.append(f"/provenance/{index}/target: JSON pointer does not resolve: {target}")
+
+    for pointer in primary_quantitative_pointers(document):
+        if not any(provenance_covers(target, pointer) for target in provenance_targets):
+            problems.append(f"{pointer}: primary quantitative profile value lacks provenance")
 
     return problems
 
