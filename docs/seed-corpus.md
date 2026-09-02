@@ -20,7 +20,8 @@ The seed corpus is intentionally small and heterogeneous. Its job is to pressure
 | Auditory nerve electrical signal | unresolved downstream signal | temporal frequency |
 | Resting adult ventricular electrical activation | event rate | event rate |
 | Resting adult arterial pulse events | event rate | event rate |
-| Resting adult PPG pulse observations | event rate | event rate |
+| Resting adult PPG optical intensity modulation | event rate | event rate |
+| Resting adult electrical PPG pulse observations | event rate | event rate |
 
 ## Schema pressure discovered
 
@@ -38,17 +39,19 @@ The quartz examples intentionally separate the 32,768 Hz resonator and the deriv
 
 ### Transduction does not imply carrier-frequency identity
 
-The visual and auditory chains make the carrier change explicit. Optical radiation is converted by phototransduction into graded membrane-potential and synaptic signals; acoustic/mechanical motion is converted by cochlear hair cells into electrical activity carried by the auditory nerve. Those downstream signals have temporal spectra, but Atlas does not assign them the optical or acoustic carrier frequency unless a source actually supports that claim.
+The visual and auditory chains make changes in the **physical observable** explicit: optical radiation drives photoreceptor electrical/chemical responses, and acoustic/mechanical motion drives cochlear electrical and neural responses. The downstream temporal spectra are intentionally left unresolved unless a source supports a more specific representation.
 
-For these first qualitative downstream stages, `frequency_profile.type: unknown` means **the temporal spectrum is intentionally unspecified**, not that the transduction mechanism itself is unknown. The manifest constraints and provenance explain why a carrier frequency is not copied across the transformation.
+Atlas therefore does **not assume** that an input carrier frequency should simply be copied onto a downstream electrical or neural signal. That is weaker than claiming that no stimulus-locked component can remain: an unresolved downstream spectrum may still contain components related to stimulus timing or frequency, and those should be added when supported by evidence.
+
+For these first qualitative downstream stages, `frequency_profile.type: unknown` means **the temporal spectrum is intentionally unspecified**, not that the transduction mechanism itself is unknown.
 
 The CIE LMS standard-observer response curve remains a descriptive sensitivity model. It is not treated as the physical optical source of phototransduction; the incident-photon stimulus is represented as its own phenomenon.
 
 ### Population reference ranges are not time series
 
-The AHA 60–100 bpm resting-adult range is a population-level event-rate reference. The ventricular activation, arterial pulse, and PPG records retain that semantics as event-rate ranges when they reuse the reference. Atlas does not reinterpret the range as evidence that one signal traces a 1.0–1.6667 Hz beat-to-beat frequency track over time.
+The AHA 60–100 bpm resting-adult range is a population-level event-rate reference. The ventricular activation, arterial pulse, PPG optical modulation, and electrical PPG records retain that semantics as event-rate ranges when they reuse the reference. Atlas does not reinterpret the range as evidence that one signal traces a 1.0–1.6667 Hz beat-to-beat frequency track over time.
 
-The cardiac chain still keeps ventricular electrical activation, arterial pulse propagation, and PPG optical observation as separate phenomena because their observables, mechanisms, and timing differ. Electrical activation precedes contraction/ejection, and the peripheral pulse arrives after pre-ejection and propagation delays.
+The cardiac sensing chain also separates two PPG stages that are easy to conflate: arterial blood-volume changes **modulate the tissue optical signal**, and the photodetector then **transduces that optical variation into an electrical PPG signal**. Ventricular electrical activation, arterial propagation, tissue optical modulation, and detector output therefore remain separate phenomena with different observables and mechanisms.
 
 ## Still missing from the initial target set
 
