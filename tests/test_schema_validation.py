@@ -117,7 +117,33 @@ class SchemaValidationTests(unittest.TestCase):
         document = copy.deepcopy(self.heart)
         document["provenance"][0]["target"] = "/conditions"
         failures = self.failures_for(document)
-        self.assertTrue(any("primary quantitative profile value lacks provenance" in failure for failure in failures))
+        self.assertTrue(any("primary quantitative profile value lacks traceable provenance" in failure for failure in failures))
+
+    def test_primary_quantitative_provenance_requires_traceable_evidence(self):
+        document = copy.deepcopy(self.heart)
+        evidence = document["provenance"][0]["evidence"]
+        del evidence["source_refs"]
+        failures = self.failures_for(document)
+        self.assertTrue(any("must include source_refs or derivation" in failure for failure in failures))
+        self.assertTrue(any("lacks traceable provenance" in failure for failure in failures))
+
+        document = copy.deepcopy(self.heart)
+        evidence = document["provenance"][0]["evidence"]
+        del evidence["source_refs"]
+        evidence["derivation"] = "Derived from a documented upstream value using a deterministic conversion."
+        self.assertEqual(self.failures_for(document), [])
+
+    def test_extraction_without_source_does_not_make_provenance_traceable(self):
+        document = copy.deepcopy(self.heart)
+        evidence = document["provenance"][0]["evidence"]
+        del evidence["source_refs"]
+        evidence["extraction"] = {
+            "method": "manual",
+            "raw_value": 60,
+            "raw_unit": "bpm"
+        }
+        failures = self.failures_for(document)
+        self.assertTrue(any("must include source_refs or derivation" in failure for failure in failures))
 
     def test_ancestor_provenance_target_covers_profile_quantity(self):
         document = copy.deepcopy(self.heart)
@@ -134,9 +160,18 @@ class SchemaValidationTests(unittest.TestCase):
         }
         evidence["uncertainty"] = {
             "type": "absolute",
-            "value": 1
+            "value": 1,
+            "unit": "bpm"
         }
         self.assertEqual(self.failures_for(document), [])
+
+    def test_evidence_absolute_uncertainty_requires_unit(self):
+        document = copy.deepcopy(self.heart)
+        document["provenance"][0]["evidence"]["uncertainty"] = {
+            "type": "absolute",
+            "value": 1
+        }
+        self.assertTrue(self.failures_for(document))
 
     def test_json_pointer_preserves_empty_leading_token(self):
         document = {"frequency_profile": {"rate": 1}}
