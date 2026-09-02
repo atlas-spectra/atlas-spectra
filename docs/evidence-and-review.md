@@ -52,7 +52,9 @@ A provenance target may cover a whole object:
 }
 ```
 
-An ancestor target such as `/frequency_profile` also covers quantitative descendants of that object. CI requires provenance coverage for the primary quantitative content of every known frequency-profile representation. Relationships and claims carry their evidence inline instead.
+An ancestor target such as `/frequency_profile` also covers quantitative descendants of that object. CI requires **traceable** provenance coverage for the primary quantitative content of every known frequency-profile representation. A pointer alone is not provenance: a field-level provenance entry must contain at least one `source_ref` or a non-empty `derivation` trail before CI counts it as coverage.
+
+Extraction metadata does not substitute for origin. `extraction` describes how a value was captured from a source and therefore should accompany `source_refs`; an extraction object without a source reference does not make a provenance entry traceable. Relationships and claims carry their evidence inline instead and are not subject to this field-provenance coverage rule.
 
 ## Sources and extraction metadata
 
@@ -71,11 +73,12 @@ Do not duplicate large source passages in `excerpt`; it exists for compact value
 
 `uncertainty` and `confidence` are different concepts.
 
-- `uncertainty` describes uncertainty in the value or evidence. When attached directly to an evidence object, an absolute uncertainty is interpreted in the unit of the provenance target.
-- quantity-level `uncertainty` travels with the normalized quantitative value itself.
+- evidence-level `absolute` and `asymmetric` uncertainty are self-describing and **must include a unit**; they may also include a unit URI.
+- evidence-level `relative` uncertainty is dimensionless and therefore does not require a unit.
+- quantity-level `uncertainty` travels with the normalized quantitative value itself and inherits the quantity's unit.
 - `confidence` is an epistemic score from 0 to 1 and must not be used as a substitute for measurement uncertainty or statistical significance.
 
-When both evidence-level and quantity-level uncertainty are present, they should agree or the derivation should explain the difference.
+Evidence objects are also used by relationships and non-quantity claims, so an evidence-level absolute uncertainty must never rely on a provenance target to infer its unit. When both evidence-level and quantity-level uncertainty are present, they should agree or the derivation should explain the difference.
 
 ## Conditions and mechanism status
 
@@ -89,7 +92,7 @@ For any important quantitative value, the UI should be able to expose:
 
 1. the value and uncertainty, if present;
 2. whether it is measured, referenced, modeled, computed, correlated, hypothetical, subjective, disputed, or refuted;
-3. the source and precise locator;
+3. the source and precise locator, or the explicit derivation trail for a derived value;
 4. raw/extracted source metadata when available;
 5. the applicable conditions;
 6. derivation details for computed or modeled values;
@@ -116,7 +119,8 @@ The carbon-dioxide bending-mode seed stores the normalized spectral position in 
     },
     "uncertainty": {
       "type": "absolute",
-      "value": 1
+      "value": 1,
+      "unit": "cm^-1"
     },
     "mechanism_status": "known"
   }
