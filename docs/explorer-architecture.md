@@ -15,7 +15,7 @@ The site deploys as a GitHub Pages project site at `https://atlas-spectra.github
 
 `examples/*.json` remains the only scientific source of truth. The web build derives a compact `ExplorerItem` view model directly from those manifests. No web-specific database, CMS, or duplicate scientific schema is introduced.
 
-The adapter preserves the manifest's native profile and axis while separately computing an optional display coordinate for navigation.
+The adapter preserves the manifest's native profile and axis while separately computing an optional display coordinate for navigation. Complete raw manifests stay on the Astro/build side; the hydrated React island receives only the compact explorer fields it actually renders.
 
 ## Display coordinate is not ontology
 
@@ -24,9 +24,10 @@ The x-axis is an **equivalent cycles/second display coordinate**, not a claim th
 - temporal frequency in Hz is native;
 - event rate is normalized to events/s while remaining an event process;
 - angular frequency is divided by `2π` when the unit is supported;
-- wavelength is transformed with `f = c / λ`;
-- wavenumber is transformed with `f = c·k` after unit normalization;
-- selected frequency-like perceptual claim references may be shown as dashed reference marks;
+- wavelength is transformed with `f = c / λ` only when the manifest has explicit electromagnetic-domain context;
+- wavenumber is transformed with `f = c·k` after unit normalization only when the manifest has explicit electromagnetic-domain context;
+- non-electromagnetic wavelength or wavenumber records remain unpositioned until a medium-specific transform is available;
+- selected frequency-like perceptual claim references may be shown as dashed scalar reference marks or dashed ranged-reference bands;
 - unsupported or unresolved coordinates remain unpositioned.
 
 Every transformed mark retains a human-readable explanation of the mapping for the detail panel.
@@ -40,7 +41,8 @@ The first renderer distinguishes:
 - discrete spectral lines;
 - continuous spectrum / response range;
 - time-varying/chirp range;
-- frequency-like reference mark.
+- scalar frequency-like reference mark;
+- ranged frequency-like reference band.
 
 Visual proximity alone must never be rendered as evidence of causal relation.
 
@@ -51,12 +53,12 @@ The initial interaction model supports:
 - wheel zoom anchored at the pointer;
 - drag pan;
 - keyboard pan/zoom;
-- search filtering;
+- visible search across positioned and unpositioned records;
 - mark selection;
 - progressive labels as the visible span narrows;
 - deep-linked `center`, `span`, and selected `entity` query state.
 
-A selected mark opens a DOM detail panel containing its native axis, native representation, display transform, provenance summary, and typed relationships. Static full records live under `/phenomena/<id>/` relative to the configured Astro base.
+A selected mark opens a DOM detail panel containing its native axis, native representation, display transform, provenance summary, and typed relationships. Static full records live under `/phenomena/<id>/` relative to the configured Astro base. Records that cannot be placed on the shared axis remain reachable through the visible search UI rather than through hidden focusable controls.
 
 ## Performance baseline
 
