@@ -6,6 +6,7 @@ on:
       - "schema/**"
       - "examples/**"
       - "scripts/validate-schema.py"
+      - "scripts/validate-corpus.py"
       - "tests/**"
       - "requirements-schema.txt"
       - ".github/workflows/schema.yml"
@@ -15,6 +16,7 @@ on:
       - "schema/**"
       - "examples/**"
       - "scripts/validate-schema.py"
+      - "scripts/validate-corpus.py"
       - "tests/**"
       - "requirements-schema.txt"
       - ".github/workflows/schema.yml"
@@ -34,4 +36,5 @@ jobs:
           cache-dependency-path: requirements-schema.txt
       - run: pip install -r requirements-schema.txt
       - run: python scripts/validate-schema.py
+      - run: python scripts/validate-corpus.py
       - run: python -m unittest discover -s tests -v
