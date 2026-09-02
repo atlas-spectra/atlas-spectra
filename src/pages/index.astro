@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { explorerItems } from "../lib/corpus";
 
 const positioned = explorerItems.filter((item) => item.display !== null).length;
+const base = import.meta.env.BASE_URL;
 ---
 <BaseLayout>
   <section class="hero">
@@ -13,7 +14,7 @@ const positioned = explorerItems.filter((item) => item.display !== null).length;
       for physical connection.
     </p>
     <div class="hero-actions">
-      <a class="button primary" href="/explore/">Open the explorer</a>
+      <a class="button primary" href={`${base}explore/`}>Open the explorer</a>
       <a class="button secondary" href="https://github.com/atlas-spectra/atlas-spectra">View the data model</a>
     </div>
     <dl class="hero-stats">
