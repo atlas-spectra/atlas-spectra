@@ -1,8 +1,8 @@
 {
   "schema_version": "0.1.0",
   "id": "wearable.ppg.resting-adult-pulse",
-  "name": "Resting adult PPG pulse waveform",
-  "summary": "A photoplethysmographic observation of cardiac-synchronous peripheral blood-volume changes, represented by the time-varying pulse frequency derived from the optical waveform.",
+  "name": "Resting adult PPG pulse observations",
+  "summary": "Photoplethysmography observes cardiac-synchronous peripheral blood-volume changes optically. This record represents the resulting pulse observations with a population-level resting-adult event-rate range, not a beat-to-beat frequency track.",
   "domains": [
     "wearables",
     "cardiology",
@@ -15,24 +15,27 @@
     "type": "optical-biomedical-sensor"
   },
   "observable": {
-    "id": "observable.ppg.optical-intensity-pulse",
-    "name": "Cardiac-synchronous PPG optical intensity variation",
-    "quantity_kind": "optical-intensity-variation",
+    "id": "observable.ppg.pulse-event-count",
+    "name": "Cardiac-synchronous PPG pulse-event count",
+    "quantity_kind": "event-count",
     "independent_coordinate": "time"
   },
   "frequency_profile": {
-    "type": "time_varying",
+    "type": "event_rate",
     "axis": {
-      "kind": "temporal_frequency"
+      "kind": "event_rate"
     },
-    "range": {
-      "lower": 1,
-      "upper": 1.6666666667,
-      "unit": "Hz",
-      "quantity_kind": "pulse-frequency"
+    "rate": {
+      "lower": 60,
+      "upper": 100,
+      "unit": "bpm",
+      "quantity_kind": "ppg-pulse-rate"
     },
-    "representation": "frequency_track",
-    "estimator": "inverse interval between cardiac-synchronous PPG pulses"
+    "aggregation_window": {
+      "value": 60,
+      "unit": "s",
+      "quantity_kind": "time"
+    }
   },
   "conditions": [
     {
@@ -63,7 +66,7 @@
       "type": "photodetector",
       "observes": [
         {
-          "id": "observable.ppg.optical-intensity-pulse"
+          "id": "observable.ppg.pulse-event-count"
         }
       ]
     }
@@ -115,9 +118,9 @@
       }
     },
     {
-      "target": "/frequency_profile/range",
+      "target": "/frequency_profile/rate",
       "evidence": {
-        "basis": "computed_derivation",
+        "basis": "model_derived",
         "review_status": "reviewed",
         "source_refs": [
           {
@@ -135,7 +138,7 @@
             "id": "condition.ppg.adult"
           }
         ],
-        "derivation": "Convert the typical resting-adult rate of 60–100 beats/minute to 1.0–1.6667 pulses/second. The PPG review identifies the waveform as a cardiac-synchronous optical measure of the arterial pulse wave.",
+        "derivation": "The AHA 60–100 beats/minute resting-adult range is retained as a population-level event-rate interval for cardiac-synchronous PPG pulse observations. The PPG review establishes the optical pulse mechanism; Atlas does not promote the population reference interval into a time-varying frequency track.",
         "mechanism_status": "known"
       }
     }
@@ -145,7 +148,7 @@
     "wearable",
     "optical-sensing",
     "pulse-wave",
-    "time-varying",
+    "event-rate",
     "transduction-chain"
   ]
 }
