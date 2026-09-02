@@ -1,0 +1,40 @@
+name: request root pages deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "examples/**"
+      - "schema/**"
+      - "scripts/**"
+      - "tests/**"
+      - "package.json"
+      - "astro.config.mjs"
+      - "tsconfig.json"
+      - ".nvmrc"
+      - "requirements-schema.txt"
+      - ".github/workflows/pages-dispatch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    env:
+      PAGES_DEPLOY_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+    steps:
+      - name: Dispatch root Pages deployment
+        if: env.PAGES_DEPLOY_TOKEN != ''
+        run: |
+          curl --fail-with-body -L -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${PAGES_DEPLOY_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            https://api.github.com/repos/atlas-spectra/atlas-spectra.github.io/dispatches \
+            -d "{\"event_type\":\"source-updated\",\"client_payload\":{\"source_sha\":\"${GITHUB_SHA}\"}}"
+      - name: Explain skipped dispatch
+        if: env.PAGES_DEPLOY_TOKEN == ''
+        run: echo "::notice::PAGES_DEPLOY_TOKEN is not configured; root Pages deployment dispatch skipped."
