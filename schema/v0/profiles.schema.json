@@ -97,6 +97,18 @@
         "estimator": {"type": "string"}
       }
     },
+    "nonnegativeQuantity": {
+      "allOf": [
+        {"$ref": "./common.schema.json#/$defs/quantity"},
+        {"properties": {"value": {"minimum": 0}}}
+      ]
+    },
+    "nonnegativeQuantityRange": {
+      "allOf": [
+        {"$ref": "./common.schema.json#/$defs/quantityRange"},
+        {"properties": {"lower": {"minimum": 0}, "upper": {"minimum": 0}}}
+      ]
+    },
     "eventRateProfile": {
       "type": "object",
       "additionalProperties": false,
@@ -111,8 +123,8 @@
         },
         "rate": {
           "oneOf": [
-            {"$ref": "./common.schema.json#/$defs/quantity"},
-            {"$ref": "./common.schema.json#/$defs/quantityRange"}
+            {"$ref": "#/$defs/nonnegativeQuantity"},
+            {"$ref": "#/$defs/nonnegativeQuantityRange"}
           ]
         },
         "process_model": {"type": "string"},
