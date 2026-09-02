@@ -17,28 +17,45 @@ LOCAL_COLLECTIONS = (
 )
 
 
-def manifest_ids(document):
-    identifiers = {document["id"], document["system"]["id"], document["observable"]["id"]}
+def manifest_id_entries(document):
+    yield document["id"], "/id"
+    yield document["system"]["id"], "/system/id"
+    yield document["observable"]["id"], "/observable/id"
     for collection in LOCAL_COLLECTIONS:
-        for value in document.get(collection, []):
-            identifiers.add(value["id"])
-    return identifiers
+        for index, value in enumerate(document.get(collection, [])):
+            yield value["id"], f"/{collection}/{index}/id"
 
 
-def main():
-    files = sorted(EXAMPLES.glob("*.json"))
+def validate_corpus(files):
     documents = []
-    atlas_ids = set()
+    owners = {}
+    failures = []
 
     for path in files:
         with path.open() as handle:
             document = json.load(handle)
         documents.append((path, document))
-        atlas_ids.update(manifest_ids(document))
 
-    failures = []
+        for identifier, pointer in manifest_id_entries(document):
+            if identifier in owners:
+                first_path, first_pointer = owners[identifier]
+                failures.append(
+                    f"{path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}{pointer}: "
+                    f"duplicate Atlas id {identifier}; first declared at "
+                    f"{first_path.relative_to(ROOT) if first_path.is_relative_to(ROOT) else first_path}{first_pointer}"
+                )
+            else:
+                owners[identifier] = (path, pointer)
+
+    # Atlas-scoped references are meaningful only when every graph-node ID has
+    # exactly one owner. Do not resolve against an ambiguous global index.
+    if failures:
+        return failures, 0
+
+    atlas_ids = set(owners)
     checked = 0
     for path, document in documents:
+        display_path = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
         for index, relationship in enumerate(document.get("relationships", [])):
             for field in ("source_ref", "target_ref"):
                 reference = relationship[field]
@@ -47,9 +64,16 @@ def main():
                 checked += 1
                 if reference["id"] not in atlas_ids:
                     failures.append(
-                        f"{path.relative_to(ROOT)}/relationships/{index}/{field}: "
+                        f"{display_path}/relationships/{index}/{field}: "
                         f"unresolved atlas reference {reference['id']}"
                     )
+
+    return failures, checked
+
+
+def main():
+    files = sorted(EXAMPLES.glob("*.json"))
+    failures, checked = validate_corpus(files)
 
     if failures:
         print("Corpus validation failed:", file=sys.stderr)
