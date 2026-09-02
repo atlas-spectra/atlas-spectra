@@ -1,0 +1,123 @@
+{
+  "schema_version": "0.1.0",
+  "id": "perception.pitch.a4-reference",
+  "name": "A4-like 440 Hz pitch percept",
+  "summary": "A pitch percept associated with an A4-like 440 Hz pure tone. The 440 Hz value is a perceptual reference tied to acoustic periodicity; the percept itself is not modeled as a neural oscillator at 440 Hz.",
+  "domains": [
+    "hearing",
+    "perception",
+    "psychoacoustics",
+    "music"
+  ],
+  "system": {
+    "id": "system.human-auditory-system.pitch-perception",
+    "name": "Human auditory system",
+    "type": "perceptual-system"
+  },
+  "observable": {
+    "id": "observable.pitch.perceived-a4-reference",
+    "name": "Perceived pitch",
+    "quantity_kind": "perceptual-pitch",
+    "independent_coordinate": "other"
+  },
+  "frequency_profile": {
+    "type": "unknown",
+    "axis": {
+      "kind": "temporal_frequency",
+      "notes": "Perceptual pitch can be expressed on a frequency-like scale, but this is not a claim about the carrier frequency of the underlying neural activity."
+    },
+    "constraints": [
+      "a 440 Hz pure sinusoid can evoke a 440 Hz pitch percept",
+      "pitch can also be evoked by complex tones without acoustic energy at the perceived fundamental",
+      "context and multiple acoustic cues can influence pitch"
+    ]
+  },
+  "claims": [
+    {
+      "id": "claim.pitch.a4-440hz-reference",
+      "subject_ref": {
+        "id": "perception.pitch.a4-reference"
+      },
+      "predicate": "has-perceptual-pitch-reference",
+      "object": {
+        "value": 440,
+        "unit": "Hz",
+        "quantity_kind": "perceptual-pitch-frequency"
+      },
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.abrams.pitch-percept-2025"
+          }
+        ],
+        "locator": "Introduction: pure sinusoidal 440 cycles/s example and missing-fundamental discussion",
+        "mechanism_status": "not_applicable"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.abrams.pitch-percept-2025",
+      "type": "paper",
+      "title": "Dynamics of Pitch Perception in the Auditory Cortex",
+      "authors": [
+        "Ellie Bean Abrams",
+        "Alec Marantz",
+        "Isaac Krementsov",
+        "Laura Gwilliams"
+      ],
+      "publisher": "The Journal of Neuroscience",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11924889/",
+      "doi": "10.1523/JNEUROSCI.1111-24.2025",
+      "issued": "2025-03-19",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.oxenham.pitch-perception-2012",
+      "type": "paper",
+      "title": "Pitch Perception",
+      "authors": [
+        "Andrew J. Oxenham"
+      ],
+      "publisher": "The Journal of Neuroscience",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3481156/",
+      "doi": "10.1523/JNEUROSCI.3815-12.2012",
+      "issued": "2012-09-26",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.abrams.pitch-percept-2025"
+          },
+          {
+            "id": "source.oxenham.pitch-perception-2012"
+          }
+        ],
+        "derivation": "The literature treats pitch as a perceptual correlate of acoustic periodicity and shows that multiple acoustic cues can yield the same pitch, including missing-fundamental stimuli. Atlas therefore stores the pitch reference separately from the neural signal's physical spectrum.",
+        "mechanism_status": "proposed"
+      }
+    }
+  ],
+  "tags": [
+    "pitch",
+    "a4",
+    "440-hz",
+    "psychoacoustics",
+    "perception"
+  ]
+}
