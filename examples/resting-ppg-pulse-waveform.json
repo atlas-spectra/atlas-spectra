@@ -1,0 +1,142 @@
+{
+  "schema_version": "0.1.0",
+  "id": "wearable.ppg.resting-adult-pulse",
+  "name": "Resting adult electrical PPG pulse observations",
+  "summary": "A PPG photodetector transduces cardiac-synchronous optical intensity variations into an electrical signal. This record represents the resulting electrical pulse observations with a population-level resting-adult event-rate range, not a beat-to-beat frequency track.",
+  "domains": [
+    "wearables",
+    "cardiology",
+    "electronics",
+    "biomedical-sensing"
+  ],
+  "system": {
+    "id": "system.ppg.photodetector-signal-chain",
+    "name": "PPG photodetector and electrical signal chain",
+    "type": "optoelectronic-biomedical-sensor"
+  },
+  "observable": {
+    "id": "observable.ppg.electrical-pulse-event-count",
+    "name": "Cardiac-synchronous electrical PPG pulse-event count",
+    "quantity_kind": "event-count",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "event_rate",
+    "axis": {
+      "kind": "event_rate"
+    },
+    "rate": {
+      "lower": 60,
+      "upper": 100,
+      "unit": "bpm",
+      "quantity_kind": "ppg-pulse-rate"
+    },
+    "aggregation_window": {
+      "value": 60,
+      "unit": "s",
+      "quantity_kind": "time"
+    }
+  },
+  "conditions": [
+    {
+      "id": "condition.ppg.resting",
+      "property": "activity-state",
+      "operator": "equals",
+      "value": "resting"
+    },
+    {
+      "id": "condition.ppg.adult",
+      "property": "population",
+      "operator": "equals",
+      "value": "adult"
+    }
+  ],
+  "mechanisms": [
+    {
+      "id": "mechanism.ppg.photodetection",
+      "type": "optical-to-electrical-transduction",
+      "status": "established",
+      "description": "The photodetector converts received optical intensity into an electrical photocurrent or voltage; subsequent electronics condition that electrical signal for PPG analysis."
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.aha.ppg-resting-rate",
+      "type": "web",
+      "title": "Target Heart Rates Chart",
+      "publisher": "American Heart Association",
+      "url": "https://www.heart.org/en/healthy-living/exercise-and-physical-activity/fitness-basics/target-heart-rates",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.charlton.ppg-waveform",
+      "type": "paper",
+      "title": "Wearable Photoplethysmography for Cardiovascular Monitoring",
+      "authors": [
+        "Peter H. Charlton",
+        "Panicos A. Kyriacou"
+      ],
+      "publisher": "Proceedings of the IEEE",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7612541/",
+      "doi": "10.1109/JPROC.2022.3149785",
+      "issued": "2022-01-27",
+      "license": {
+        "spdx": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "status": "licensed"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/mechanisms/0",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.charlton.ppg-waveform"
+          }
+        ],
+        "locator": "Wearable PPG fundamentals",
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "target": "/frequency_profile/rate",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.aha.ppg-resting-rate"
+          },
+          {
+            "id": "source.charlton.ppg-waveform"
+          }
+        ],
+        "condition_refs": [
+          {
+            "id": "condition.ppg.resting"
+          },
+          {
+            "id": "condition.ppg.adult"
+          }
+        ],
+        "derivation": "The AHA 60–100 beats/minute resting-adult range is retained as a population-level event-rate interval for cardiac-synchronous electrical PPG pulse observations. The PPG review establishes the photodetector's optical-to-electrical sensing mechanism; Atlas does not promote the population reference interval into a time-varying frequency track.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "ppg",
+    "wearable",
+    "electrical-sensing",
+    "pulse-wave",
+    "event-rate",
+    "transduction-chain"
+  ]
+}

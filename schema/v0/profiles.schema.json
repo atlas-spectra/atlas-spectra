@@ -190,7 +190,12 @@
       "required": ["type", "axis"],
       "properties": {
         "type": {"const": "unknown"},
-        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "axis": {
+          "oneOf": [
+            {"$ref": "./common.schema.json#/$defs/axis"},
+            {"$ref": "#/$defs/wavelengthAxis"}
+          ]
+        },
         "constraints": {"type": "array", "items": {"type": "string"}}
       }
     },

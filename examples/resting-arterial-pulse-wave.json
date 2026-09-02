@@ -1,0 +1,144 @@
+{
+  "schema_version": "0.1.0",
+  "id": "cardiology.arterial-pulse.resting-adult",
+  "name": "Resting adult arterial pulse events",
+  "summary": "Cardiac ejection launches arterial pulse waves that propagate through the vascular system. This record represents their population-level resting-adult recurrence as an event-rate range rather than inventing a beat-to-beat frequency track.",
+  "domains": [
+    "cardiology",
+    "hemodynamics",
+    "biology"
+  ],
+  "system": {
+    "id": "system.arterial-tree.resting-adult",
+    "name": "Resting adult systemic arterial tree",
+    "type": "vascular-system"
+  },
+  "observable": {
+    "id": "observable.arterial-pulse.arrival-count",
+    "name": "Arterial pulse-wave arrival count",
+    "quantity_kind": "event-count",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "event_rate",
+    "axis": {
+      "kind": "event_rate"
+    },
+    "rate": {
+      "lower": 60,
+      "upper": 100,
+      "unit": "bpm",
+      "quantity_kind": "arterial-pulse-rate"
+    },
+    "aggregation_window": {
+      "value": 60,
+      "unit": "s",
+      "quantity_kind": "time"
+    }
+  },
+  "conditions": [
+    {
+      "id": "condition.arterial-pulse.resting",
+      "property": "activity-state",
+      "operator": "equals",
+      "value": "resting"
+    },
+    {
+      "id": "condition.arterial-pulse.adult",
+      "property": "population",
+      "operator": "equals",
+      "value": "adult"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship.arterial-pulse-modulates-ppg-optical",
+      "type": "MODULATES",
+      "category": "physical",
+      "source_ref": {
+        "id": "cardiology.arterial-pulse.resting-adult"
+      },
+      "target_ref": {
+        "id": "wearable.ppg.resting-adult-optical-variation",
+        "scope": "atlas",
+        "label": "Resting adult PPG optical intensity modulation"
+      },
+      "description": "Cardiac-synchronous peripheral blood-volume changes modulate tissue optical absorption and therefore the intensity of light transmitted through or reflected from the tissue.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.charlton.arterial-pulse-ppg"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.aha.arterial-resting-rate",
+      "type": "web",
+      "title": "Target Heart Rates Chart",
+      "publisher": "American Heart Association",
+      "url": "https://www.heart.org/en/healthy-living/exercise-and-physical-activity/fitness-basics/target-heart-rates",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.charlton.arterial-pulse-ppg",
+      "type": "paper",
+      "title": "Wearable Photoplethysmography for Cardiovascular Monitoring",
+      "authors": [
+        "Peter H. Charlton",
+        "Panicos A. Kyriacou"
+      ],
+      "publisher": "Proceedings of the IEEE",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7612541/",
+      "doi": "10.1109/JPROC.2022.3149785",
+      "issued": "2022-01-27",
+      "license": {
+        "spdx": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "status": "licensed"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile/rate",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.aha.arterial-resting-rate"
+          },
+          {
+            "id": "source.charlton.arterial-pulse-ppg"
+          }
+        ],
+        "condition_refs": [
+          {
+            "id": "condition.arterial-pulse.resting"
+          },
+          {
+            "id": "condition.arterial-pulse.adult"
+          }
+        ],
+        "derivation": "The AHA 60–100 beats/minute resting-adult range is retained as a population-level event-rate interval for cardiac-synchronous arterial pulse arrivals. Atlas does not interpret that reference range as an observed beat-to-beat frequency track.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "arterial-pulse",
+    "pulse-wave",
+    "hemodynamics",
+    "event-rate",
+    "transduction-chain"
+  ]
+}

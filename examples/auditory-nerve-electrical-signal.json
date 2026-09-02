@@ -1,0 +1,71 @@
+{
+  "schema_version": "0.1.0",
+  "id": "hearing.auditory-nerve.electrical-signal",
+  "name": "Auditory nerve electrical signal",
+  "summary": "Electrical activity produced by cochlear sensory transduction is carried from the inner ear toward the brain by the auditory nerve. This neural signal is encoded activity, not an acoustic pressure wave.",
+  "domains": [
+    "hearing",
+    "neuroscience",
+    "biology"
+  ],
+  "system": {
+    "id": "system.auditory-nerve.cochlear-branch",
+    "name": "Cochlear branch of the auditory nerve",
+    "type": "sensory-nerve"
+  },
+  "observable": {
+    "id": "observable.auditory-nerve.electrical-activity",
+    "name": "Auditory nerve electrical activity",
+    "quantity_kind": "neural-electrical-signal",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "unknown",
+    "axis": {
+      "kind": "temporal_frequency",
+      "notes": "Neural encoding downstream of cochlear transduction; no single carrier frequency is assigned."
+    },
+    "constraints": [
+      "signal consists of neural electrical activity rather than an acoustic pressure oscillation",
+      "temporal coding depends on stimulus and auditory physiology"
+    ]
+  },
+  "sources": [
+    {
+      "id": "source.nidcd.auditory-nerve-pathway",
+      "type": "web",
+      "title": "How Do We Hear?",
+      "publisher": "National Institute on Deafness and Other Communication Disorders (NIDCD), NIH",
+      "url": "https://www.nidcd.nih.gov/health/how-do-we-hear",
+      "issued": "2022-03-16",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nidcd.auditory-nerve-pathway"
+          }
+        ],
+        "locator": "Step 6 of the hearing pathway",
+        "derivation": "NIDCD identifies the auditory-nerve signal as electrical activity carried to the brain; Atlas therefore does not equate its spectrum with the acoustic carrier.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "auditory-nerve",
+    "neural-encoding",
+    "electrical-signal",
+    "hearing",
+    "carrier-change"
+  ]
+}

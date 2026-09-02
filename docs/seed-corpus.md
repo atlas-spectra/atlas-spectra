@@ -13,6 +13,15 @@ The seed corpus is intentionally small and heterogeneous. Its job is to pressure
 | Standard tuning pitch A4 | periodic | temporal frequency |
 | Carbon dioxide bending mode | discrete line | wavenumber |
 | CIE 2006 LMS cone fundamentals, 2° | continuous response curve | wavelength |
+| Incident optical stimulus at a cone photoreceptor | unresolved optical spectrum | wavelength |
+| Cone photoreceptor electrical response | unresolved downstream signal | temporal frequency |
+| Cone synaptic glutamate output | unresolved downstream signal | temporal frequency |
+| Cochlear hair-cell electrical response | unresolved downstream signal | temporal frequency |
+| Auditory nerve electrical signal | unresolved downstream signal | temporal frequency |
+| Resting adult ventricular electrical activation | event rate | event rate |
+| Resting adult arterial pulse events | event rate | event rate |
+| Resting adult PPG optical intensity modulation | event rate | event rate |
+| Resting adult electrical PPG pulse observations | event rate | event rate |
 
 ## Schema pressure discovered
 
@@ -28,12 +37,27 @@ Detector and biological-response functions are neither amplitude spectra nor pow
 
 The quartz examples intentionally separate the 32,768 Hz resonator and the derived 1 Hz clock output into distinct phenomena connected by `DIVIDED_TO`. This keeps the source phenomenon, transformation, and output separately inspectable.
 
+### Transduction does not imply carrier-frequency identity
+
+The visual and auditory chains make changes in the **physical observable** explicit: optical radiation drives photoreceptor electrical/chemical responses, and acoustic/mechanical motion drives cochlear electrical and neural responses. The downstream temporal spectra are intentionally left unresolved unless a source supports a more specific representation.
+
+Atlas therefore does **not assume** that an input carrier frequency should simply be copied onto a downstream electrical or neural signal. That is weaker than claiming that no stimulus-locked component can remain: an unresolved downstream spectrum may still contain components related to stimulus timing or frequency, and those should be added when supported by evidence.
+
+For these first qualitative downstream stages, `frequency_profile.type: unknown` means **the temporal spectrum is intentionally unspecified**, not that the transduction mechanism itself is unknown.
+
+The CIE LMS standard-observer response curve remains a descriptive sensitivity model. It is not treated as the physical optical source of phototransduction; the incident-photon stimulus is represented as its own phenomenon.
+
+### Population reference ranges are not time series
+
+The AHA 60–100 bpm resting-adult range is a population-level event-rate reference. The ventricular activation, arterial pulse, PPG optical modulation, and electrical PPG records retain that semantics as event-rate ranges when they reuse the reference. Atlas does not reinterpret the range as evidence that one signal traces a 1.0–1.6667 Hz beat-to-beat frequency track over time.
+
+The cardiac sensing chain also separates two PPG stages that are easy to conflate: arterial blood-volume changes **modulate the tissue optical signal**, and the photodetector then **transduces that optical variation into an electrical PPG signal**. Ventricular electrical activation, arterial propagation, tissue optical modulation, and detector output therefore remain separate phenomena with different observables and mechanisms.
+
 ## Still missing from the initial target set
 
-- light source → cone response → retinal encoding → perceived color chain
-- sound → cochlear response → neural encoding → perceived pitch chain
-- cardiac electrical → mechanical → pressure/optical sensing chain
-- a time-varying or nonstationary spectral example
+- retinal-network and perceived-color stages beyond the cone synapse
+- central auditory / perceived-pitch stages beyond the auditory nerve
+- a genuinely measured time-varying or nonstationary spectral example
 - an explicit weak numerical coincidence used to test non-causal matching
 
 Those examples should continue to change the schema when the real data demands it; the schema should not force them into the current shapes.

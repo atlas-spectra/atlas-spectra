@@ -1,0 +1,179 @@
+{
+  "schema_version": "0.1.0",
+  "id": "wearable.ppg.resting-adult-optical-variation",
+  "name": "Resting adult PPG optical intensity modulation",
+  "summary": "Cardiac-synchronous arterial blood-volume changes modulate the amount of light transmitted through or reflected from perfused tissue. This record represents those optical modulation events with the population-level resting-adult event-rate range, before photodetector conversion to an electrical PPG signal.",
+  "domains": [
+    "wearables",
+    "cardiology",
+    "optics",
+    "biomedical-sensing"
+  ],
+  "system": {
+    "id": "system.ppg.peripheral-tissue-optical-path",
+    "name": "Illuminated peripheral tissue optical path",
+    "type": "optical-biological-system"
+  },
+  "observable": {
+    "id": "observable.ppg.optical-modulation-event-count",
+    "name": "Cardiac-synchronous optical intensity modulation count",
+    "quantity_kind": "event-count",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "event_rate",
+    "axis": {
+      "kind": "event_rate"
+    },
+    "rate": {
+      "lower": 60,
+      "upper": 100,
+      "unit": "bpm",
+      "quantity_kind": "ppg-optical-modulation-rate"
+    },
+    "aggregation_window": {
+      "value": 60,
+      "unit": "s",
+      "quantity_kind": "time"
+    }
+  },
+  "conditions": [
+    {
+      "id": "condition.ppg-optical.resting",
+      "property": "activity-state",
+      "operator": "equals",
+      "value": "resting"
+    },
+    {
+      "id": "condition.ppg-optical.adult",
+      "property": "population",
+      "operator": "equals",
+      "value": "adult"
+    }
+  ],
+  "mechanisms": [
+    {
+      "id": "mechanism.ppg.blood-volume-optical-modulation",
+      "type": "blood-volume-optical-modulation",
+      "status": "established",
+      "description": "Cardiac-synchronous changes in peripheral blood volume alter tissue optical absorption and therefore modulate transmitted or reflected light intensity."
+    }
+  ],
+  "detectors": [
+    {
+      "id": "detector.ppg.photodetector",
+      "name": "PPG photodetector",
+      "type": "photodetector",
+      "observes": [
+        {
+          "id": "observable.ppg.optical-modulation-event-count"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship.ppg-optical-to-electrical",
+      "type": "TRANSDUCES_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "wearable.ppg.resting-adult-optical-variation"
+      },
+      "target_ref": {
+        "id": "wearable.ppg.resting-adult-pulse",
+        "scope": "atlas",
+        "label": "Resting adult electrical PPG pulse observations"
+      },
+      "description": "The photodetector converts cardiac-synchronous optical intensity variations into an electrical photocurrent or voltage that is processed as the PPG signal.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.charlton.ppg-optical-modulation"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.aha.ppg-optical-resting-rate",
+      "type": "web",
+      "title": "Target Heart Rates Chart",
+      "publisher": "American Heart Association",
+      "url": "https://www.heart.org/en/healthy-living/exercise-and-physical-activity/fitness-basics/target-heart-rates",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.charlton.ppg-optical-modulation",
+      "type": "paper",
+      "title": "Wearable Photoplethysmography for Cardiovascular Monitoring",
+      "authors": [
+        "Peter H. Charlton",
+        "Panicos A. Kyriacou"
+      ],
+      "publisher": "Proceedings of the IEEE",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7612541/",
+      "doi": "10.1109/JPROC.2022.3149785",
+      "issued": "2022-01-27",
+      "license": {
+        "spdx": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "status": "licensed"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/mechanisms/0",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.charlton.ppg-optical-modulation"
+          }
+        ],
+        "locator": "Wearable PPG fundamentals",
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "target": "/frequency_profile/rate",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.aha.ppg-optical-resting-rate"
+          },
+          {
+            "id": "source.charlton.ppg-optical-modulation"
+          }
+        ],
+        "condition_refs": [
+          {
+            "id": "condition.ppg-optical.resting"
+          },
+          {
+            "id": "condition.ppg-optical.adult"
+          }
+        ],
+        "derivation": "The AHA 60–100 beats/minute resting-adult range is retained as a population-level recurrence interval for cardiac-synchronous optical modulation events. It is not treated as beat-to-beat time-series evidence.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "ppg",
+    "optical-modulation",
+    "blood-volume",
+    "event-rate",
+    "transduction-chain"
+  ]
+}

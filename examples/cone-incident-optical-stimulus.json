@@ -1,0 +1,108 @@
+{
+  "schema_version": "0.1.0",
+  "id": "vision.cone-phototransduction.incident-optical-stimulus",
+  "name": "Incident optical stimulus at a cone photoreceptor",
+  "summary": "Incident photons reaching a cone photoreceptor provide the physical optical input to phototransduction. The stimulus spectrum is intentionally left unspecified because the cited physiology establishes photon-driven transduction without defining a single canonical spectral distribution.",
+  "domains": [
+    "vision",
+    "optics",
+    "biology"
+  ],
+  "system": {
+    "id": "system.retina.cone-incident-optical-field",
+    "name": "Optical field incident on a cone photoreceptor",
+    "type": "optical-stimulus"
+  },
+  "observable": {
+    "id": "observable.cone.incident-photon-stimulus",
+    "name": "Incident photon stimulus",
+    "quantity_kind": "photon-flux",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "unknown",
+    "axis": {
+      "kind": "wavelength",
+      "notes": "Optical spectral coordinate; no single stimulus spectrum is implied by the physiology reference."
+    },
+    "constraints": [
+      "spectral distribution depends on the external visual stimulus",
+      "this record represents the physical photon input rather than the CIE standard-observer response curve"
+    ]
+  },
+  "relationships": [
+    {
+      "id": "relationship.cone.optical-stimulus-to-voltage",
+      "type": "TRANSDUCES_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "vision.cone-phototransduction.incident-optical-stimulus"
+      },
+      "target_ref": {
+        "id": "vision.cone-phototransduction.membrane-potential",
+        "scope": "atlas",
+        "label": "Cone photoreceptor electrical response to light"
+      },
+      "description": "Photon absorption initiates the phototransduction cascade that produces a graded cone membrane-potential response.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.ncbi.cone-optical-stimulus"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.ncbi.cone-optical-stimulus",
+      "type": "book",
+      "title": "Phototransduction",
+      "publisher": "NCBI Bookshelf, National Library of Medicine",
+      "url": "https://www.ncbi.nlm.nih.gov/books/NBK10806/",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/relationships/0",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.ncbi.cone-optical-stimulus"
+          }
+        ],
+        "locator": "Phototransduction discussion and Figures 11.5–11.7",
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.ncbi.cone-optical-stimulus"
+          }
+        ],
+        "derivation": "The physiology source establishes photon-driven phototransduction but does not define one canonical stimulus spectrum, so Atlas leaves the optical spectral profile unresolved rather than substituting the CIE sensitivity curve for the physical stimulus.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "optical-stimulus",
+    "photons",
+    "cone",
+    "phototransduction",
+    "transduction-chain"
+  ]
+}
