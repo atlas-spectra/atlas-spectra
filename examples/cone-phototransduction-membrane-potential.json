@@ -40,30 +40,6 @@
   ],
   "relationships": [
     {
-      "id": "relationship.cone.optical-stimulus-to-voltage",
-      "type": "TRANSDUCES_TO",
-      "category": "physical",
-      "source_ref": {
-        "id": "vision.cone-phototransduction.incident-optical-stimulus",
-        "scope": "atlas",
-        "label": "Incident optical stimulus at a cone photoreceptor"
-      },
-      "target_ref": {
-        "id": "vision.cone-phototransduction.membrane-potential"
-      },
-      "description": "Incident photons are physically transduced by the cone phototransduction cascade into a graded electrical membrane response. The CIE LMS curve remains a descriptive response model, not the physical source node.",
-      "evidence": {
-        "basis": "established_reference",
-        "review_status": "reviewed",
-        "source_refs": [
-          {
-            "id": "source.ncbi.neuroscience-phototransduction"
-          }
-        ],
-        "mechanism_status": "known"
-      }
-    },
-    {
       "id": "relationship.cone.voltage-modulates-glutamate",
       "type": "MODULATES",
       "category": "physical",
