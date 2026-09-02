@@ -170,6 +170,13 @@ def provenance_covers(target, pointer):
     return normalized == pointer or pointer.startswith(normalized + "/")
 
 
+def provenance_is_traceable(evidence):
+    """A provenance entry must identify a source or provide an explicit derivation trail."""
+    source_refs = evidence.get("source_refs", [])
+    derivation = evidence.get("derivation")
+    return bool(source_refs) or (isinstance(derivation, str) and bool(derivation.strip()))
+
+
 def semantic_checks(document):
     problems = []
     typed_ids, local_ids, duplicate_problems = id_indexes(document)
@@ -282,15 +289,24 @@ def semantic_checks(document):
     provenance_targets = []
     for index, provenance in enumerate(document.get("provenance", [])):
         target = provenance["target"]
+        evidence = provenance["evidence"]
         try:
             resolve_pointer(document, target)
-            provenance_targets.append(target)
         except (KeyError, IndexError, ValueError, TypeError):
             problems.append(f"/provenance/{index}/target: JSON pointer does not resolve: {target}")
+            continue
+
+        if not provenance_is_traceable(evidence):
+            problems.append(
+                f"/provenance/{index}/evidence: provenance evidence must include source_refs or derivation"
+            )
+            continue
+
+        provenance_targets.append(target)
 
     for pointer in primary_quantitative_pointers(document):
         if not any(provenance_covers(target, pointer) for target in provenance_targets):
-            problems.append(f"{pointer}: primary quantitative profile value lacks provenance")
+            problems.append(f"{pointer}: primary quantitative profile value lacks traceable provenance")
 
     return problems
 
