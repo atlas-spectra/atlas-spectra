@@ -40,6 +40,55 @@ class SchemaValidationTests(unittest.TestCase):
         ]
         self.assertTrue(self.failures_for(document))
 
+    def test_cross_manifest_relationship_target_is_explicit(self):
+        document = copy.deepcopy(self.cesium)
+        document["relationships"] = [
+            {
+                "id": "relationship.cesium.same-frequency-example",
+                "type": "SAME_NUMERICAL_FREQUENCY_AS",
+                "category": "numerical",
+                "source_ref": {"id": document["id"]},
+                "target_ref": {
+                    "id": "biology.heart.resting-adult-rate",
+                    "scope": "atlas"
+                },
+                "evidence": {
+                    "basis": "computed_derivation",
+                    "review_status": "unreviewed",
+                    "source_refs": [{"id": "source.bipm.si-second"}],
+                    "mechanism_status": "none"
+                }
+            }
+        ]
+        self.assertEqual(self.failures_for(document), [])
+
+        document["relationships"][0]["source_ref"] = {
+            "id": "another.external.node",
+            "scope": "atlas"
+        }
+        failures = self.failures_for(document)
+        self.assertTrue(any("anchored to at least one local endpoint" in failure for failure in failures))
+
+    def test_unscoped_cross_manifest_relationship_is_rejected(self):
+        document = copy.deepcopy(self.cesium)
+        document["relationships"] = [
+            {
+                "id": "relationship.cesium.unresolved-target",
+                "type": "SAME_NUMERICAL_FREQUENCY_AS",
+                "category": "numerical",
+                "source_ref": {"id": document["id"]},
+                "target_ref": {"id": "biology.heart.resting-adult-rate"},
+                "evidence": {
+                    "basis": "computed_derivation",
+                    "review_status": "unreviewed",
+                    "source_refs": [{"id": "source.bipm.si-second"}],
+                    "mechanism_status": "none"
+                }
+            }
+        ]
+        failures = self.failures_for(document)
+        self.assertTrue(any("unresolved target_ref" in failure for failure in failures))
+
     def test_local_references_are_type_aware(self):
         document = copy.deepcopy(self.heart)
         document["measurements"] = [
@@ -84,6 +133,13 @@ class SchemaValidationTests(unittest.TestCase):
                     handle.flush()
                     with self.assertRaises(ValueError):
                         VALIDATOR_MODULE.load(Path(handle.name))
+
+    def test_overflowed_json_float_is_rejected(self):
+        with tempfile.NamedTemporaryFile("w+", suffix=".json") as handle:
+            handle.write('{"value": 1e999}')
+            handle.flush()
+            with self.assertRaises(ValueError):
+                VALIDATOR_MODULE.load(Path(handle.name))
 
     def test_condition_operator_requires_compatible_value(self):
         document = copy.deepcopy(self.heart)
