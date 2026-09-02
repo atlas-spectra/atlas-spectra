@@ -9,6 +9,11 @@ on:
       - "tsconfig.json"
       - ".nvmrc"
       - "examples/**"
+      - "schema/**"
+      - "scripts/validate-schema.py"
+      - "scripts/validate-corpus.py"
+      - "tests/**"
+      - "requirements-schema.txt"
       - ".github/workflows/web.yml"
   push:
     branches: [main]
@@ -19,6 +24,11 @@ on:
       - "tsconfig.json"
       - ".nvmrc"
       - "examples/**"
+      - "schema/**"
+      - "scripts/validate-schema.py"
+      - "scripts/validate-corpus.py"
+      - "tests/**"
+      - "requirements-schema.txt"
       - ".github/workflows/web.yml"
 
 jobs:
@@ -28,6 +38,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-schema.txt
+      - name: Validate scientific corpus
+        run: |
+          pip install -r requirements-schema.txt
+          python scripts/validate-schema.py
+          python scripts/validate-corpus.py
+          python -m unittest discover -s tests -v
       - uses: actions/setup-node@v6
         with:
           node-version-file: ".nvmrc"
