@@ -16,12 +16,17 @@ The seed corpus is intentionally small and heterogeneous. Its job is to pressure
 | Incident optical stimulus at a cone photoreceptor | unresolved optical spectrum | wavelength |
 | Cone photoreceptor electrical response | unresolved downstream signal | temporal frequency |
 | Cone synaptic glutamate output | unresolved downstream signal | temporal frequency |
+| Post-receptoral color-opponent neural signal | unresolved downstream signal | temporal frequency |
+| Human hue perception | unresolved perceptual attribute | other |
 | Cochlear hair-cell electrical response | unresolved downstream signal | temporal frequency |
 | Auditory nerve electrical signal | unresolved downstream signal | temporal frequency |
+| Auditory cortical pitch representation | unresolved downstream signal | temporal frequency |
+| A4-like 440 Hz pitch percept | unresolved perceptual attribute | temporal-frequency-like reference |
 | Resting adult ventricular electrical activation | event rate | event rate |
 | Resting adult arterial pulse events | event rate | event rate |
 | Resting adult PPG optical intensity modulation | event rate | event rate |
 | Resting adult electrical PPG pulse observations | event rate | event rate |
+| GW150914 gravitational-wave strain chirp | time-varying frequency track | temporal frequency |
 
 ## Schema pressure discovered
 
@@ -47,17 +52,40 @@ For these first qualitative downstream stages, `frequency_profile.type: unknown`
 
 The CIE LMS standard-observer response curve remains a descriptive sensitivity model. It is not treated as the physical optical source of phototransduction; the incident-photon stimulus is represented as its own phenomenon.
 
+### Percepts are not hidden oscillators
+
+Hue and pitch are represented as perceptual phenomena rather than as physical oscillators. The color chain now continues from cone output into post-receptoral opponent processing and then hue perception. The auditory chain continues from auditory-nerve activity into a cortical pitch representation and then a pitch percept.
+
+A percept may still have a frequency-related reference. For example, a 440 Hz pure tone can evoke a pitch described as 440 Hz. Atlas stores that perceptual reference separately from the physical spectrum of the underlying neural activity. Likewise, hue can be related to spectral input without becoming a one-to-one wavelength label: trichromatic matching, opponent processing, mixtures, adaptation, and context all matter.
+
 ### Population reference ranges are not time series
 
 The AHA 60–100 bpm resting-adult range is a population-level event-rate reference. The ventricular activation, arterial pulse, PPG optical modulation, and electrical PPG records retain that semantics as event-rate ranges when they reuse the reference. Atlas does not reinterpret the range as evidence that one signal traces a 1.0–1.6667 Hz beat-to-beat frequency track over time.
 
 The cardiac sensing chain also separates two PPG stages that are easy to conflate: arterial blood-volume changes **modulate the tissue optical signal**, and the photodetector then **transduces that optical variation into an electrical PPG signal**. Ventricular electrical activation, arterial propagation, tissue optical modulation, and detector output therefore remain separate phenomena with different observables and mechanisms.
 
-## Still missing from the initial target set
+### Time-varying profiles require time-varying evidence
 
-- retinal-network and perceived-color stages beyond the cone synapse
-- central auditory / perceived-pitch stages beyond the auditory nerve
-- a genuinely measured time-varying or nonstationary spectral example
-- an explicit weak numerical coincidence used to test non-causal matching
+GW150914 is the seed corpus's first genuine `time_varying` example. LIGO measured a transient strain signal whose frequency swept upward from roughly 35 Hz to 250 Hz during the binary-black-hole merger, and GWOSC publishes the calibrated strain time series. That is qualitatively different evidence from converting a static population range into frequency units.
 
-Those examples should continue to change the schema when the real data demands it; the schema should not force them into the current shapes.
+### Same number is the weakest relationship
+
+The lower endpoint of the 60–100 bpm adult resting-heart-rate reference converts to 1 event/s, which numerically matches the quartz clock's 1 Hz output. The corpus encodes this with `SAME_NUMERICAL_FREQUENCY_AS`, `category: numerical`, and `mechanism_status: none`.
+
+That edge exists precisely to prevent a future discovery engine or UI from turning a numerical match into a claim of resonance, coupling, entrainment, or shared mechanism.
+
+## Initial target coverage
+
+The initial adversarial target set from issue #2 is now represented:
+
+- light stimulus → cone response → retinal/post-receptoral processing → perceived color
+- sound → cochlear response → neural/cortical encoding → perceived pitch
+- cardiac electrical activation → arterial mechanics → optical modulation → wearable electrical observation
+- quartz resonance → frequency division → one-second clock output
+- atomic transition → atomic timekeeping reference
+- molecular vibrational spectroscopy
+- nonperiodic/event-rate representation
+- genuinely measured time-varying/nonstationary frequency behavior
+- explicit weak numerical coincidence with no physical mechanism
+
+The corpus should continue to evolve when new domains expose schema weaknesses, but broad catalog expansion no longer needs to wait for these initial ontology stress tests.
