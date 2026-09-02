@@ -12,6 +12,7 @@ The seed corpus is intentionally small and heterogeneous. Its job is to pressure
 | Quartz wristwatch one-second tick | periodic | temporal frequency |
 | Standard tuning pitch A4 | periodic | temporal frequency |
 | Carbon dioxide bending mode | discrete line | wavenumber |
+| EEG alpha band | frequency band | temporal frequency |
 | CIE 2006 LMS cone fundamentals, 2° | continuous response curve | wavelength |
 | Incident optical stimulus at a cone photoreceptor | unresolved optical spectrum | wavelength |
 | Cone photoreceptor electrical response | unresolved downstream signal | temporal frequency |
@@ -37,6 +38,10 @@ Authoritative color-science datasets are naturally tabulated in wavelength. The 
 ### A spectral object can be a response curve
 
 Detector and biological-response functions are neither amplitude spectra nor power spectra. `continuous_spectrum.representation` therefore includes `response_curve`.
+
+### A named frequency band is not automatically a rhythm
+
+The IFCN EEG glossary defines the alpha **band** as 8–13 Hz inclusive, while the alpha **rhythm** has additional topographic, behavioral, and reactivity criteria. The seed corpus therefore includes the alpha band as a `frequency_band` classification without silently asserting that every 8–13 Hz EEG component is the physiological alpha rhythm.
 
 ### Frequency transformation should be graph-visible
 
@@ -78,14 +83,19 @@ That edge exists precisely to prevent a future discovery engine or UI from turni
 
 The initial adversarial target set from issue #2 is now represented:
 
+- scalar periodic frequency
+- explicit frequency band
+- discrete-line spectrum
+- continuous response curve
+- genuine time-varying/nonstationary frequency behavior
+- event-rate representation
+- quantum transition
 - light stimulus → cone response → retinal/post-receptoral processing → perceived color
 - sound → cochlear response → neural/cortical encoding → perceived pitch
 - cardiac electrical activation → arterial mechanics → optical modulation → wearable electrical observation
 - quartz resonance → frequency division → one-second clock output
 - atomic transition → atomic timekeeping reference
 - molecular vibrational spectroscopy
-- nonperiodic/event-rate representation
-- genuinely measured time-varying/nonstationary frequency behavior
 - explicit weak numerical coincidence with no physical mechanism
 
 The corpus should continue to evolve when new domains expose schema weaknesses, but broad catalog expansion no longer needs to wait for these initial ontology stress tests.
