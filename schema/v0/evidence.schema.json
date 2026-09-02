@@ -21,6 +21,50 @@
         "notes": {"type": "string"}
       }
     },
+    "evidenceUncertainty": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value", "unit"],
+          "properties": {
+            "type": {"const": "absolute"},
+            "value": {"type": "number", "minimum": 0},
+            "unit": {"type": "string", "minLength": 1},
+            "unit_uri": {"type": "string", "format": "uri"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "minus", "plus", "unit"],
+          "properties": {
+            "type": {"const": "asymmetric"},
+            "minus": {"type": "number", "minimum": 0},
+            "plus": {"type": "number", "minimum": 0},
+            "unit": {"type": "string", "minLength": 1},
+            "unit_uri": {"type": "string", "format": "uri"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type": {"const": "relative"},
+            "value": {"type": "number", "minimum": 0}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": {"const": "unknown"}
+          }
+        }
+      ]
+    },
     "evidence": {
       "type": "object",
       "additionalProperties": false,
@@ -31,7 +75,7 @@
         "source_refs": {"type": "array", "items": {"$ref": "./common.schema.json#/$defs/reference"}},
         "locator": {"type": "string"},
         "extraction": {"$ref": "#/$defs/extraction"},
-        "uncertainty": {"$ref": "./common.schema.json#/$defs/uncertainty"},
+        "uncertainty": {"$ref": "#/$defs/evidenceUncertainty"},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "mechanism_status": {"enum": ["known", "proposed", "none", "not_applicable", "unknown"]},
         "derivation": {"type": "string"},
