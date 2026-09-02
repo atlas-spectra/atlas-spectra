@@ -3,6 +3,16 @@
   "$id": "https://atlas-spectra.org/schema/v0/profiles.schema.json",
   "title": "Atlas Spectra v0 profiles definitions",
   "$defs": {
+    "wavelengthAxis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"const": "wavelength"},
+        "quantity_kind_uri": {"type": "string", "format": "uri"},
+        "notes": {"type": "string"}
+      }
+    },
     "periodicProfile": {
       "type": "object",
       "additionalProperties": false,
@@ -67,9 +77,14 @@
       "required": ["type", "axis", "range", "representation"],
       "properties": {
         "type": {"const": "continuous_spectrum"},
-        "axis": {"$ref": "./common.schema.json#/$defs/axis"},
+        "axis": {
+          "oneOf": [
+            {"$ref": "./common.schema.json#/$defs/axis"},
+            {"$ref": "#/$defs/wavelengthAxis"}
+          ]
+        },
         "range": {"$ref": "./common.schema.json#/$defs/quantityRange"},
-        "representation": {"enum": ["amplitude_spectrum", "power_spectrum", "power_spectral_density", "spectral_density", "other"]},
+        "representation": {"enum": ["amplitude_spectrum", "power_spectrum", "power_spectral_density", "spectral_density", "response_curve", "other"]},
         "data_ref": {"type": "string", "format": "uri"}
       }
     },

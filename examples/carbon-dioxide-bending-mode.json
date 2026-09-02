@@ -1,0 +1,94 @@
+{
+  "schema_version": "0.1.0",
+  "id": "molecular.carbon-dioxide.bending-mode",
+  "name": "Carbon dioxide bending vibrational mode",
+  "summary": "The strong gas-phase ν2 bending mode of 12C16O2 represented at 667.38 cm^-1 on a wavenumber axis.",
+  "domains": [
+    "molecular",
+    "spectroscopy",
+    "infrared"
+  ],
+  "system": {
+    "id": "system.carbon-dioxide.c12o16o2",
+    "name": "Carbon dioxide (12C16O2)",
+    "type": "molecule"
+  },
+  "observable": {
+    "id": "observable.carbon-dioxide.vibrational-wavenumber",
+    "name": "Vibrational mode spectral position",
+    "quantity_kind": "wavenumber",
+    "independent_coordinate": "energy"
+  },
+  "frequency_profile": {
+    "type": "discrete_lines",
+    "axis": {
+      "kind": "wavenumber"
+    },
+    "lines": [
+      {
+        "position": {
+          "value": 667.38,
+          "unit": "cm^-1",
+          "quantity_kind": "wavenumber",
+          "uncertainty": {
+            "type": "absolute",
+            "value": 1
+          }
+        },
+        "label": "ν2 bend (gas), strong infrared band"
+      }
+    ]
+  },
+  "conditions": [
+    {
+      "id": "condition.carbon-dioxide.gas-phase",
+      "property": "phase",
+      "operator": "equals",
+      "value": "gas"
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.nist-webbook.co2-vibrations",
+      "type": "dataset",
+      "title": "Carbon dioxide (12C16O2): Vibrational and/or electronic energy levels",
+      "authors": [
+        "Takehiko Shimanouchi"
+      ],
+      "publisher": "NIST Chemistry WebBook, SRD 69",
+      "url": "https://webbook.nist.gov/cgi/cbook.cgi?ID=B4000020&Mask=800",
+      "issued": "1972",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile/lines/0/position",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nist-webbook.co2-vibrations"
+          }
+        ],
+        "condition_refs": [
+          {
+            "id": "condition.carbon-dioxide.gas-phase"
+          }
+        ],
+        "locator": "πu, mode 2, Bend; selected frequency 667.38 cm^-1; rating A (0–1 cm^-1 uncertainty)",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "carbon-dioxide",
+    "molecular-vibration",
+    "infrared",
+    "wavenumber"
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "schema_version": "0.1.0",
+  "id": "timekeeping.quartz-wristwatch.resonance",
+  "name": "Quartz wristwatch resonance",
+  "summary": "The nominal 32,768 Hz mechanical resonance commonly used as the time base in quartz wristwatches.",
+  "domains": [
+    "timekeeping",
+    "mechanical",
+    "electronics"
+  ],
+  "system": {
+    "id": "system.quartz-wristwatch.oscillator",
+    "name": "Quartz wristwatch oscillator",
+    "type": "piezoelectric-oscillator"
+  },
+  "observable": {
+    "id": "observable.quartz-wristwatch.resonance-frequency",
+    "name": "Quartz mechanical resonance frequency",
+    "quantity_kind": "frequency",
+    "independent_coordinate": "time",
+    "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+  },
+  "frequency_profile": {
+    "type": "periodic",
+    "axis": {
+      "kind": "temporal_frequency",
+      "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+    },
+    "fundamental": {
+      "value": 32768,
+      "unit": "Hz",
+      "unit_uri": "https://qudt.org/vocab/unit/HZ",
+      "quantity_kind": "frequency",
+      "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+    }
+  },
+  "mechanisms": [
+    {
+      "id": "mechanism.quartz-wristwatch.piezoelectric-resonance",
+      "type": "piezoelectric-resonance",
+      "status": "established",
+      "description": "Applied voltage strains the quartz resonator; feedback sustains oscillation at the crystal resonance frequency."
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship.quartz-wristwatch.divided-to-one-hz",
+      "type": "DIVIDED_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "timekeeping.quartz-wristwatch.resonance"
+      },
+      "target_ref": {
+        "id": "timekeeping.quartz-wristwatch.one-second-tick",
+        "scope": "atlas"
+      },
+      "description": "A clock divider counts the 32,768 Hz oscillator down by 32,768 to produce one-second ticks.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nist.quartz-clock-faq"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.nist.resonance-frequency",
+      "type": "documentation",
+      "title": "Time and Frequency from A to Z, Re to Ru",
+      "publisher": "National Institute of Standards and Technology",
+      "url": "https://www.nist.gov/pml/time-and-frequency-division/popular-links/time-frequency-z/time-and-frequency-z-re-ru",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.nist.quartz-oscillator",
+      "type": "documentation",
+      "title": "Time and Frequency from A to Z, Q to Ra",
+      "publisher": "National Institute of Standards and Technology",
+      "url": "https://www.nist.gov/pml/time-and-frequency-division/popular-links/time-frequency-z/time-and-frequency-z-q-ra",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.nist.quartz-clock-faq",
+      "type": "documentation",
+      "title": "Timekeeping and clocks FAQs",
+      "publisher": "National Institute of Standards and Technology",
+      "url": "https://www.nist.gov/pml/time-and-frequency-division/timekeeping-and-clocks-faqs",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile/fundamental",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nist.resonance-frequency"
+          }
+        ],
+        "locator": "Resonance Frequency table: Quartz Wristwatch",
+        "mechanism_status": "known"
+      }
+    },
+    {
+      "target": "/mechanisms/0",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nist.quartz-oscillator"
+          }
+        ],
+        "locator": "Quartz Oscillator",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "quartz",
+    "clock",
+    "resonance",
+    "frequency-division"
+  ]
+}

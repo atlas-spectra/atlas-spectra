@@ -1,0 +1,112 @@
+{
+  "schema_version": "0.1.0",
+  "id": "vision.cie-2006.lms-cone-fundamentals-2deg",
+  "name": "CIE 2006 LMS cone fundamentals, 2° field",
+  "summary": "The CIE 2006 L-, M-, and S-cone spectral sensitivity fundamentals for a 2° field size, represented as response curves over wavelength.",
+  "domains": [
+    "vision",
+    "color-science",
+    "biology",
+    "optics"
+  ],
+  "system": {
+    "id": "system.cie-2006.standard-observer-2deg",
+    "name": "CIE 2006 2° physiological standard observer",
+    "type": "physiological-observer-model"
+  },
+  "observable": {
+    "id": "observable.cie-2006.lms-relative-spectral-sensitivity",
+    "name": "LMS relative cone spectral sensitivity",
+    "quantity_kind": "relative-spectral-sensitivity",
+    "independent_coordinate": "other"
+  },
+  "frequency_profile": {
+    "type": "continuous_spectrum",
+    "axis": {
+      "kind": "wavelength",
+      "notes": "Source coordinate; the CIE dataset is tabulated in 1 nm wavelength increments."
+    },
+    "range": {
+      "lower": 390,
+      "upper": 830,
+      "unit": "nm",
+      "quantity_kind": "wavelength"
+    },
+    "representation": "response_curve",
+    "data_ref": "https://files.cie.co.at/Publications-datasets/CIE_lms_cf_2deg.csv"
+  },
+  "conditions": [
+    {
+      "id": "condition.cie-2006.field-size-2deg",
+      "property": "field-size",
+      "operator": "equals",
+      "value": {
+        "value": 2,
+        "unit": "deg",
+        "quantity_kind": "angle"
+      }
+    },
+    {
+      "id": "condition.cie-2006.energy-basis",
+      "property": "radiometric-basis",
+      "operator": "equals",
+      "value": "energy"
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.cie.lms-2deg-2006",
+      "type": "dataset",
+      "title": "CIE 2006 LMS cone fundamentals for 2° field size in terms of energy",
+      "authors": [
+        "International Commission on Illumination (CIE)"
+      ],
+      "publisher": "International Commission on Illumination (CIE), Vienna, AT",
+      "url": "https://cie.co.at/datatable/cie-2006-lms-cone-fundamentals-2-field-size-terms-energy",
+      "doi": "10.25039/CIE.DS.tijidesg",
+      "issued": "2006",
+      "accessed": "2026-09-02",
+      "license": {
+        "spdx": "CC-BY-SA-4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "status": "licensed"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.cie.lms-2deg-2006"
+          }
+        ],
+        "locator": "CIE 2006 LMS 2° CSV; wavelength range 390–830 nm, 1 nm increment (441 samples)",
+        "mechanism_status": "not_applicable"
+      }
+    },
+    {
+      "target": "/conditions",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.cie.lms-2deg-2006"
+          }
+        ],
+        "mechanism_status": "not_applicable"
+      }
+    }
+  ],
+  "tags": [
+    "cone-response",
+    "color-vision",
+    "wavelength",
+    "response-curve",
+    "cie"
+  ]
+}
