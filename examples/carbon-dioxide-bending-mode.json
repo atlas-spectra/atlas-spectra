@@ -89,7 +89,8 @@
         },
         "uncertainty": {
           "type": "absolute",
-          "value": 1
+          "value": 1,
+          "unit": "cm^-1"
         },
         "mechanism_status": "known"
       }
