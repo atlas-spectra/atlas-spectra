@@ -9,10 +9,11 @@ export function getStaticPaths() {
 interface Props { item: ExplorerItem; }
 const { item } = Astro.props;
 const display = item.display;
+const base = import.meta.env.BASE_URL;
 ---
 <BaseLayout title={item.name} description={item.summary}>
   <article class="phenomenon-page">
-    <a class="back-link" href={`/explore/?entity=${encodeURIComponent(item.id)}`}>← Back to explorer</a>
+    <a class="back-link" href={`${base}explore/?entity=${encodeURIComponent(item.id)}`}>← Back to explorer</a>
     <p class="eyebrow">{item.lane}</p>
     <h1>{item.name}</h1>
     <p class="lead">{item.summary}</p>
