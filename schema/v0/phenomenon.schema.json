@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-spectra.org/schema/v0/phenomenon.schema.json",
+  "title": "Atlas Spectra phenomenon manifest",
+  "description": "Canonical v0 manifest for a frequency-bearing phenomenon and its local evidence-aware graph.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "summary",
+    "domains",
+    "system",
+    "observable",
+    "frequency_profile",
+    "sources",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1.0"},
+    "id": {"$ref": "./common.schema.json#/$defs/id"},
+    "name": {"type": "string", "minLength": 1},
+    "summary": {"type": "string", "minLength": 1},
+    "domains": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "system": {"$ref": "./common.schema.json#/$defs/system"},
+    "observable": {"$ref": "./common.schema.json#/$defs/observable"},
+    "frequency_profile": {"$ref": "./profiles.schema.json#/$defs/frequencyProfile"},
+    "conditions": {"type": "array", "items": {"$ref": "./common.schema.json#/$defs/condition"}},
+    "mechanisms": {"type": "array", "items": {"$ref": "./common.schema.json#/$defs/mechanism"}},
+    "detectors": {"type": "array", "items": {"$ref": "./common.schema.json#/$defs/detector"}},
+    "transformations": {"type": "array", "items": {"$ref": "./common.schema.json#/$defs/transformation"}},
+    "measurements": {"type": "array", "items": {"$ref": "./common.schema.json#/$defs/measurement"}},
+    "relationships": {"type": "array", "items": {"$ref": "./graph.schema.json#/$defs/relationship"}},
+    "claims": {"type": "array", "items": {"$ref": "./graph.schema.json#/$defs/claim"}},
+    "sources": {
+      "type": "array",
+      "items": {"$ref": "./evidence.schema.json#/$defs/source"},
+      "minItems": 1
+    },
+    "provenance": {
+      "type": "array",
+      "items": {"$ref": "./evidence.schema.json#/$defs/provenance"},
+      "minItems": 1
+    },
+    "tags": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+      "uniqueItems": true
+    }
+  }
+}

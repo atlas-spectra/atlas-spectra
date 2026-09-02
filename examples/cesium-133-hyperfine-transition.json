@@ -1,0 +1,72 @@
+{
+  "schema_version": "0.1.0",
+  "id": "atomic.cesium-133.hyperfine-transition",
+  "name": "Cesium-133 ground-state hyperfine transition",
+  "summary": "The unperturbed cesium-133 ground-state hyperfine transition used to define the SI second.",
+  "domains": [
+    "atomic",
+    "timekeeping"
+  ],
+  "system": {
+    "id": "system.cesium-133.atom",
+    "name": "Cesium-133 atom",
+    "type": "atomic-system"
+  },
+  "observable": {
+    "id": "observable.cesium-133.transition-frequency",
+    "name": "Hyperfine transition frequency",
+    "quantity_kind": "frequency",
+    "independent_coordinate": "time",
+    "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+  },
+  "frequency_profile": {
+    "type": "quantum_transition",
+    "axis": {
+      "kind": "temporal_frequency",
+      "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+    },
+    "transition_frequency": {
+      "value": 9192631770,
+      "unit": "Hz",
+      "unit_uri": "https://qudt.org/vocab/unit/HZ",
+      "quantity_kind": "frequency",
+      "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+    },
+    "lower_state": "cesium-133 ground-state hyperfine level F=3",
+    "upper_state": "cesium-133 ground-state hyperfine level F=4"
+  },
+  "sources": [
+    {
+      "id": "source.bipm.si-second",
+      "type": "standard",
+      "title": "SI base unit: second (s)",
+      "publisher": "BIPM",
+      "url": "https://www.bipm.org/en/si-base-units/second",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile/transition_frequency",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.bipm.si-second"
+          }
+        ],
+        "locator": "Definition of the second",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "si",
+    "clock",
+    "quantum-transition"
+  ]
+}

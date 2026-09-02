@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-spectra.org/schema/v0/graph.schema.json",
+  "title": "Atlas Spectra v0 graph definitions",
+  "$defs": {
+    "relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "category", "source_ref", "target_ref", "evidence"],
+      "properties": {
+        "id": {"$ref": "./common.schema.json#/$defs/id"},
+        "type": {"enum": ["GENERATES", "EMITS", "CONTAINS_MODE", "DETECTED_BY", "TRANSDUCES_TO", "FILTERED_BY", "COUPLES_TO", "RESONATES_WITH", "ENTRAINS", "PHASE_LOCKS_WITH", "MODULATES", "MIXES_WITH", "DIVIDED_TO", "MULTIPLIED_TO", "HARMONIC_OF", "SUBHARMONIC_OF", "SHARES_SPECTRAL_BAND_WITH", "COHERENT_WITH", "CORRELATED_WITH", "SHARES_DYNAMICAL_MODEL_WITH", "SAME_NUMERICAL_FREQUENCY_AS", "HYPOTHESIZED_RELATION", "SUBJECTIVELY_ASSOCIATED_WITH", "DISPUTED_RELATION", "REFUTED_RELATION"]},
+        "category": {"enum": ["physical", "mathematical", "statistical", "numerical", "subjective", "epistemic"]},
+        "source_ref": {"$ref": "./common.schema.json#/$defs/reference"},
+        "target_ref": {"$ref": "./common.schema.json#/$defs/reference"},
+        "description": {"type": "string"},
+        "evidence": {"$ref": "./evidence.schema.json#/$defs/evidence"}
+      }
+    },
+    "claimObject": {
+      "oneOf": [
+        {"type": "string"},
+        {"type": "number"},
+        {"type": "boolean"},
+        {"$ref": "./common.schema.json#/$defs/quantity"},
+        {"$ref": "./common.schema.json#/$defs/quantityRange"},
+        {"$ref": "./common.schema.json#/$defs/reference"}
+      ]
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "subject_ref", "predicate", "object", "evidence"],
+      "properties": {
+        "id": {"$ref": "./common.schema.json#/$defs/id"},
+        "subject_ref": {"$ref": "./common.schema.json#/$defs/reference"},
+        "predicate": {"type": "string", "minLength": 1},
+        "object": {"$ref": "#/$defs/claimObject"},
+        "evidence": {"$ref": "./evidence.schema.json#/$defs/evidence"}
+      }
+    }
+  }
+}

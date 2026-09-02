@@ -1,0 +1,93 @@
+{
+  "schema_version": "0.1.0",
+  "id": "biology.heart.resting-adult-rate",
+  "name": "Typical adult resting heart rate",
+  "summary": "A population-level reference range for how often the adult heart beats while at rest; represented as an event rate rather than as a sinusoidal oscillator.",
+  "domains": [
+    "biology",
+    "cardiology"
+  ],
+  "system": {
+    "id": "system.human-heart.adult",
+    "name": "Adult human heart",
+    "type": "biological-system"
+  },
+  "observable": {
+    "id": "observable.heart.cardiac-cycle-count",
+    "name": "Cardiac cycle count",
+    "quantity_kind": "event-count",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "event_rate",
+    "axis": {
+      "kind": "event_rate"
+    },
+    "rate": {
+      "lower": 60,
+      "upper": 100,
+      "unit": "bpm",
+      "quantity_kind": "heart-rate"
+    },
+    "aggregation_window": {
+      "value": 60,
+      "unit": "s",
+      "quantity_kind": "time"
+    }
+  },
+  "conditions": [
+    {
+      "id": "condition.subject.resting",
+      "property": "activity-state",
+      "operator": "equals",
+      "value": "resting"
+    },
+    {
+      "id": "condition.subject.adult",
+      "property": "population",
+      "operator": "equals",
+      "value": "adult"
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.aha.resting-heart-rate",
+      "type": "web",
+      "title": "Target Heart Rates Chart",
+      "publisher": "American Heart Association",
+      "url": "https://www.heart.org/en/healthy-living/exercise-and-physical-activity/fitness-basics/target-heart-rates",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile/rate",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.aha.resting-heart-rate"
+          }
+        ],
+        "condition_refs": [
+          {
+            "id": "condition.subject.resting"
+          },
+          {
+            "id": "condition.subject.adult"
+          }
+        ],
+        "mechanism_status": "not_applicable"
+      }
+    }
+  ],
+  "tags": [
+    "heart-rate",
+    "event-rate",
+    "biology"
+  ]
+}
