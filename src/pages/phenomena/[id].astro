@@ -10,6 +10,20 @@ interface Props { item: ExplorerItem; }
 const { item } = Astro.props;
 const display = item.display;
 const base = import.meta.env.BASE_URL;
+
+function formatHz(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) return "Unpositioned";
+  const exponent = Math.floor(Math.log10(value));
+  if (exponent >= -2 && exponent <= 3) return `${Number(value.toPrecision(4))} Hz`;
+  const mantissa = value / 10 ** exponent;
+  return `${Number(mantissa.toFixed(2))} × 10^${exponent} Hz`;
+}
+
+const displayCoordinate = display
+  ? display.lowHz === display.highHz
+    ? formatHz(display.lowHz)
+    : `${formatHz(display.lowHz)}–${formatHz(display.highHz)}`
+  : "Unpositioned";
 ---
 <BaseLayout title={item.name} description={item.summary}>
   <article class="phenomenon-page">
@@ -20,7 +34,8 @@ const base = import.meta.env.BASE_URL;
     <section class="data-grid" aria-label="Phenomenon summary">
       <div><span class="data-label">Representation</span><strong>{item.profileType.replaceAll("_", " ")}</strong></div>
       <div><span class="data-label">Native axis</span><strong>{item.axisKind.replaceAll("_", " ")}</strong></div>
-      <div><span class="data-label">Explorer position</span><strong>{display?.nativeLabel ?? "Unpositioned"}</strong>{display && <small>{display.note}</small>}</div>
+      <div><span class="data-label">Native value</span><strong>{display?.nativeLabel ?? "Unresolved"}</strong></div>
+      <div><span class="data-label">Display coordinate</span><strong>{displayCoordinate}</strong>{display && <small>{display.note}</small>}</div>
       <div><span class="data-label">Domains</span><strong>{item.domains.join(" · ")}</strong></div>
     </section>
     {item.relationships.length > 0 && <section class="content-section"><h2>Relationships</h2><div class="relationship-list">{item.relationships.map((relationship) => <div class={`relationship relationship-${relationship.category}`}><div><span class="relationship-type">{relationship.type.replaceAll("_", " ")}</span><span>{relationship.direction === "outgoing" ? "→" : "←"} {relationship.peerName}</span></div><small>{relationship.category}{relationship.evidence?.mechanism_status ? ` · mechanism ${relationship.evidence.mechanism_status}` : ""}</small></div>)}</div></section>}
