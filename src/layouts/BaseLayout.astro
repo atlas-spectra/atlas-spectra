@@ -11,6 +11,7 @@ const {
   description = "Understand frequency across scales.",
 } = Astro.props;
 const pageTitle = title === "Atlas Spectra" ? title : `${title} · Atlas Spectra`;
+const base = import.meta.env.BASE_URL;
 ---
 <!doctype html>
 <html lang="en">
@@ -23,12 +24,12 @@ const pageTitle = title === "Atlas Spectra" ? title : `${title} · Atlas Spectra
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="/">
+      <a class="brand" href={base}>
         <span class="brand-mark" aria-hidden="true"></span>
         <span>Atlas Spectra</span>
       </a>
       <nav aria-label="Primary navigation">
-        <a href="/explore/">Explore</a>
+        <a href={`${base}explore/`}>Explore</a>
         <a href="https://github.com/atlas-spectra/atlas-spectra">GitHub</a>
       </nav>
     </header>
