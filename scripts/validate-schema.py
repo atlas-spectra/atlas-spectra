@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -27,9 +28,20 @@ def reject_non_finite(value):
     raise ValueError(f"non-finite JSON number is not allowed: {value}")
 
 
+def parse_finite_float(value):
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError(f"non-finite JSON number is not allowed: {value}")
+    return number
+
+
 def load(path):
     with path.open() as f:
-        return json.load(f, parse_constant=reject_non_finite)
+        return json.load(
+            f,
+            parse_constant=reject_non_finite,
+            parse_float=parse_finite_float,
+        )
 
 
 def schema_registry():
@@ -124,7 +136,12 @@ def semantic_checks(document):
     typed_ids, local_ids, duplicate_problems = id_indexes(document)
     problems.extend(duplicate_problems)
 
-    def check_reference(reference, allowed, pointer, kind):
+    def is_atlas_reference(reference):
+        return isinstance(reference, dict) and reference.get("scope") == "atlas"
+
+    def check_reference(reference, allowed, pointer, kind, allow_atlas=False):
+        if allow_atlas and is_atlas_reference(reference):
+            return
         identifier = reference.get("id") if isinstance(reference, dict) else None
         if identifier not in allowed:
             problems.append(f"{pointer}: unresolved {kind} {identifier}")
@@ -192,12 +209,19 @@ def semantic_checks(document):
             )
 
     for index, relationship in enumerate(document.get("relationships", [])):
-        for field in ("source_ref", "target_ref"):
+        source_ref = relationship["source_ref"]
+        target_ref = relationship["target_ref"]
+        for field, reference in (("source_ref", source_ref), ("target_ref", target_ref)):
             check_reference(
-                relationship[field],
+                reference,
                 local_ids,
                 f"/relationships/{index}/{field}",
                 field,
+                allow_atlas=True,
+            )
+        if is_atlas_reference(source_ref) and is_atlas_reference(target_ref):
+            problems.append(
+                f"/relationships/{index}: relationship must be anchored to at least one local endpoint"
             )
 
     for index, claim in enumerate(document.get("claims", [])):
