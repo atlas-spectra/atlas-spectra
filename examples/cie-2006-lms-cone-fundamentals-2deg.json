@@ -24,7 +24,7 @@
     "type": "continuous_spectrum",
     "axis": {
       "kind": "wavelength",
-      "notes": "Source coordinate; the CIE dataset is tabulated in 5 nm wavelength increments."
+      "notes": "Source coordinate; the CIE dataset is tabulated in 1 nm wavelength increments."
     },
     "range": {
       "lower": 390,
@@ -84,7 +84,7 @@
             "id": "source.cie.lms-2deg-2006"
           }
         ],
-        "locator": "CIE 170-1:2006 table 6.7; wavelength range 390–830 nm, 5 nm increment",
+        "locator": "CIE 2006 LMS 2° CSV; wavelength range 390–830 nm, 1 nm increment (441 samples)",
         "mechanism_status": "not_applicable"
       }
     },
