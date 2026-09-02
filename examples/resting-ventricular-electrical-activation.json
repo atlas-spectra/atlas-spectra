@@ -1,0 +1,144 @@
+{
+  "schema_version": "0.1.0",
+  "id": "cardiology.ventricular-activation.resting-adult",
+  "name": "Resting adult ventricular electrical activation",
+  "summary": "A resting-adult event-rate representation of ventricular electrical activation, the electrical stage that precedes ventricular contraction and arterial pulse generation.",
+  "domains": [
+    "cardiology",
+    "electrophysiology",
+    "biology"
+  ],
+  "system": {
+    "id": "system.heart.ventricular-myocardium-resting",
+    "name": "Resting adult ventricular myocardium",
+    "type": "cardiac-electrical-system"
+  },
+  "observable": {
+    "id": "observable.ventricle.electrical-activation-count",
+    "name": "Ventricular electrical activation count",
+    "quantity_kind": "event-count",
+    "independent_coordinate": "time"
+  },
+  "frequency_profile": {
+    "type": "event_rate",
+    "axis": {
+      "kind": "event_rate"
+    },
+    "rate": {
+      "lower": 60,
+      "upper": 100,
+      "unit": "bpm",
+      "quantity_kind": "ventricular-activation-rate"
+    },
+    "aggregation_window": {
+      "value": 60,
+      "unit": "s",
+      "quantity_kind": "time"
+    }
+  },
+  "conditions": [
+    {
+      "id": "condition.ventricular-activation.resting",
+      "property": "activity-state",
+      "operator": "equals",
+      "value": "resting"
+    },
+    {
+      "id": "condition.ventricular-activation.adult",
+      "property": "population",
+      "operator": "equals",
+      "value": "adult"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "relationship.ventricular-activation-to-arterial-pulse",
+      "type": "COUPLES_TO",
+      "category": "physical",
+      "source_ref": {
+        "id": "cardiology.ventricular-activation.resting-adult"
+      },
+      "target_ref": {
+        "id": "cardiology.arterial-pulse.resting-adult",
+        "scope": "atlas",
+        "label": "Resting adult arterial pulse wave"
+      },
+      "description": "Ventricular electrical activation precedes contraction and ejection; the resulting arterial pulse reaches peripheral sites after pre-ejection and propagation delays.",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.charlton.wearable-ppg"
+          }
+        ],
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "id": "source.aha.ventricular-resting-rate",
+      "type": "web",
+      "title": "Target Heart Rates Chart",
+      "publisher": "American Heart Association",
+      "url": "https://www.heart.org/en/healthy-living/exercise-and-physical-activity/fitness-basics/target-heart-rates",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    },
+    {
+      "id": "source.charlton.wearable-ppg",
+      "type": "paper",
+      "title": "Wearable Photoplethysmography for Cardiovascular Monitoring",
+      "authors": [
+        "Peter H. Charlton",
+        "Panicos A. Kyriacou"
+      ],
+      "publisher": "Proceedings of the IEEE",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7612541/",
+      "doi": "10.1109/JPROC.2022.3149785",
+      "issued": "2022-01-27",
+      "license": {
+        "spdx": "CC-BY-4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/",
+        "status": "licensed"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile/rate",
+      "evidence": {
+        "basis": "model_derived",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.aha.ventricular-resting-rate"
+          },
+          {
+            "id": "source.charlton.wearable-ppg"
+          }
+        ],
+        "condition_refs": [
+          {
+            "id": "condition.ventricular-activation.resting"
+          },
+          {
+            "id": "condition.ventricular-activation.adult"
+          }
+        ],
+        "derivation": "The AHA resting adult heart-rate range is applied to the ventricular electrical activation events that initiate each cardiac cycle; the PPG review identifies HRV timing with the electrical impulses causing ventricular contraction.",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "cardiac-electrical",
+    "ventricular-activation",
+    "event-rate",
+    "resting-heart",
+    "transduction-chain"
+  ]
+}
