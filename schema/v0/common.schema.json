@@ -277,7 +277,7 @@
         }
       }
     },
-    "conditionValue": {
+    "conditionScalar": {
       "oneOf": [
         {
           "type": "string"
@@ -290,9 +290,37 @@
         },
         {
           "$ref": "#/$defs/quantity"
+        }
+      ]
+    },
+    "conditionComparable": {
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/quantity"
+        }
+      ]
+    },
+    "conditionCollection": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/conditionScalar"
+      }
+    },
+    "conditionValue": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/conditionScalar"
         },
         {
           "$ref": "#/$defs/quantityRange"
+        },
+        {
+          "$ref": "#/$defs/conditionCollection"
         }
       ]
     },
@@ -335,7 +363,71 @@
             "$ref": "#/$defs/semanticRef"
           }
         }
-      }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "operator": {
+                  "enum": [
+                    "equals",
+                    "not_equals"
+                  ]
+                },
+                "value": {
+                  "$ref": "#/$defs/conditionScalar"
+                }
+              }
+            },
+            {
+              "properties": {
+                "operator": {
+                  "enum": [
+                    "less_than",
+                    "less_than_or_equal",
+                    "greater_than",
+                    "greater_than_or_equal"
+                  ]
+                },
+                "value": {
+                  "$ref": "#/$defs/conditionComparable"
+                }
+              }
+            },
+            {
+              "properties": {
+                "operator": {
+                  "const": "between"
+                },
+                "value": {
+                  "$ref": "#/$defs/quantityRange"
+                }
+              }
+            },
+            {
+              "properties": {
+                "operator": {
+                  "const": "in"
+                },
+                "value": {
+                  "$ref": "#/$defs/conditionCollection"
+                }
+              }
+            },
+            {
+              "properties": {
+                "operator": {
+                  "const": "describes"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      ]
     },
     "mechanism": {
       "type": "object",
