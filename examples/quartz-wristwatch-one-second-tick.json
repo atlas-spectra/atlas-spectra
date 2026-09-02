@@ -1,0 +1,72 @@
+{
+  "schema_version": "0.1.0",
+  "id": "timekeeping.quartz-wristwatch.one-second-tick",
+  "name": "Quartz wristwatch one-second tick",
+  "summary": "A 1 Hz clock timing output produced by dividing a nominal 32,768 Hz quartz wristwatch oscillator by 32,768.",
+  "domains": [
+    "timekeeping",
+    "electronics"
+  ],
+  "system": {
+    "id": "system.quartz-wristwatch.divider-output",
+    "name": "Quartz wristwatch divider output",
+    "type": "digital-timing-output"
+  },
+  "observable": {
+    "id": "observable.quartz-wristwatch.tick-frequency",
+    "name": "One-second timing pulse frequency",
+    "quantity_kind": "frequency",
+    "independent_coordinate": "time",
+    "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+  },
+  "frequency_profile": {
+    "type": "periodic",
+    "axis": {
+      "kind": "temporal_frequency",
+      "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+    },
+    "fundamental": {
+      "value": 1,
+      "unit": "Hz",
+      "unit_uri": "https://qudt.org/vocab/unit/HZ",
+      "quantity_kind": "frequency",
+      "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+    }
+  },
+  "sources": [
+    {
+      "id": "source.nist.quartz-clock-faq",
+      "type": "documentation",
+      "title": "Timekeeping and clocks FAQs",
+      "publisher": "National Institute of Standards and Technology",
+      "url": "https://www.nist.gov/pml/time-and-frequency-division/timekeeping-and-clocks-faqs",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile/fundamental",
+      "evidence": {
+        "basis": "computed_derivation",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.nist.quartz-clock-faq"
+          }
+        ],
+        "locator": "How do clocks work? Quartz clock description",
+        "derivation": "32768 Hz / 32768 = 1 Hz",
+        "mechanism_status": "known"
+      }
+    }
+  ],
+  "tags": [
+    "quartz",
+    "clock",
+    "one-hz",
+    "frequency-division"
+  ]
+}
