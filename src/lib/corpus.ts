@@ -1,4 +1,18 @@
 const SPEED_OF_LIGHT_M_S = 299_792_458;
+const ELECTROMAGNETIC_DOMAINS = new Set([
+  "electromagnetic",
+  "optical",
+  "optics",
+  "infrared",
+  "ultraviolet",
+  "visible-light",
+  "radio",
+  "microwave",
+  "x-ray",
+  "gamma-ray",
+  "photometry",
+  "color-science",
+]);
 
 export interface Quantity { value?: number; lower?: number; upper?: number; unit?: string; quantity_kind?: string; }
 interface Axis { kind: string; notes?: string; }
@@ -21,12 +35,16 @@ const manifestById = new Map(manifests.map((manifest) => [manifest.id, manifest]
 const LANE_ORDER = ["Event processes", "Biological", "Neural & perceptual", "Mechanical & acoustic", "Electrical & timekeeping", "Molecular", "Optical", "Atomic & quantum", "Astronomical", "Other"] as const;
 export const lanes = [...LANE_ORDER];
 
+function hasElectromagneticContext(manifest: Manifest): boolean {
+  return manifest.domains.some((domain) => ELECTROMAGNETIC_DOMAINS.has(domain.toLowerCase()));
+}
+
 function laneFor(manifest: Manifest): string {
   const domains = new Set(manifest.domains.map((domain) => domain.toLowerCase()));
   const axisKind = manifest.frequency_profile.axis?.kind;
   if (domains.has("astronomy") || domains.has("astrophysics") || domains.has("relativity") || domains.has("gravitational-wave") || manifest.id.startsWith("astronomy.") || manifest.id.startsWith("gravity.")) return "Astronomical";
   if (domains.has("atomic") || domains.has("quantum") || manifest.id.startsWith("atomic.")) return "Atomic & quantum";
-  if (axisKind === "wavelength" || domains.has("optical") || domains.has("color-science") || domains.has("photometry")) return "Optical";
+  if ((axisKind === "wavelength" && hasElectromagneticContext(manifest)) || domains.has("optical") || domains.has("optics") || domains.has("color-science") || domains.has("photometry")) return "Optical";
   if (domains.has("molecular") || domains.has("spectroscopy") || domains.has("infrared")) return "Molecular";
   if (domains.has("electronics") || domains.has("electrical") || domains.has("timekeeping") || domains.has("clocks")) return "Electrical & timekeeping";
   if (domains.has("acoustics") || domains.has("sound") || domains.has("music")) return "Mechanical & acoustic";
@@ -41,25 +59,25 @@ function unitScale(unit: string | undefined): number | null { switch ((unit ?? "
 function wavelengthScale(unit: string | undefined): number | null { switch ((unit ?? "").trim()) { case "m": return 1; case "cm": return 1e-2; case "mm": return 1e-3; case "um": case "µm": return 1e-6; case "nm": return 1e-9; default: return null; } }
 function wavenumberScale(unit: string | undefined): number | null { switch ((unit ?? "").trim()) { case "m^-1": case "1/m": return 1; case "cm^-1": case "1/cm": return 100; default: return null; } }
 function nativeLabel(quantity: Quantity | undefined): string { const b = bounds(quantity); if (!b || !quantity?.unit) return "Unresolved"; return b[0] === b[1] ? `${b[0]} ${quantity.unit}` : `${b[0]}–${b[1]} ${quantity.unit}`; }
-function convertQuantity(quantity: Quantity | undefined, axisKind: string): DisplayPosition | null {
+function convertQuantity(quantity: Quantity | undefined, axisKind: string, electromagneticContext: boolean): DisplayPosition | null {
   const b = bounds(quantity); if (!b) return null;
   if (axisKind === "temporal_frequency") { const scale = unitScale(quantity?.unit); if (!scale) return null; return { lowHz: b[0] * scale, highHz: b[1] * scale, mode: scale === 1 ? "native" : "normalized", note: scale === 1 ? "Native temporal-frequency coordinate" : "Unit-normalized temporal frequency", nativeLabel: nativeLabel(quantity) }; }
   if (axisKind === "event_rate") { const scale = unitScale(quantity?.unit); if (!scale) return null; return { lowHz: b[0] * scale, highHz: b[1] * scale, mode: "normalized", note: "Event rate normalized to events per second for display; it is not reclassified as an oscillator", nativeLabel: nativeLabel(quantity) }; }
   if (axisKind === "angular_frequency") { if ((quantity?.unit ?? "").trim() !== "rad/s") return null; return { lowHz: b[0] / (2 * Math.PI), highHz: b[1] / (2 * Math.PI), mode: "transformed", note: "Angular frequency transformed to cycles per second using f = ω / 2π", nativeLabel: nativeLabel(quantity) }; }
-  if (axisKind === "wavelength") { const scale = wavelengthScale(quantity?.unit); if (!scale) return null; return { lowHz: SPEED_OF_LIGHT_M_S / (b[1] * scale), highHz: SPEED_OF_LIGHT_M_S / (b[0] * scale), mode: "transformed", note: "Wavelength mapped to equivalent vacuum electromagnetic frequency using f = c / λ", nativeLabel: nativeLabel(quantity) }; }
-  if (axisKind === "wavenumber") { const scale = wavenumberScale(quantity?.unit); if (!scale) return null; return { lowHz: SPEED_OF_LIGHT_M_S * b[0] * scale, highHz: SPEED_OF_LIGHT_M_S * b[1] * scale, mode: "transformed", note: "Wavenumber mapped to equivalent vacuum electromagnetic frequency using f = c·k", nativeLabel: nativeLabel(quantity) }; }
+  if (axisKind === "wavelength") { if (!electromagneticContext) return null; const scale = wavelengthScale(quantity?.unit); if (!scale) return null; return { lowHz: SPEED_OF_LIGHT_M_S / (b[1] * scale), highHz: SPEED_OF_LIGHT_M_S / (b[0] * scale), mode: "transformed", note: "Electromagnetic wavelength mapped to equivalent vacuum frequency using f = c / λ", nativeLabel: nativeLabel(quantity) }; }
+  if (axisKind === "wavenumber") { if (!electromagneticContext) return null; const scale = wavenumberScale(quantity?.unit); if (!scale) return null; return { lowHz: SPEED_OF_LIGHT_M_S * b[0] * scale, highHz: SPEED_OF_LIGHT_M_S * b[1] * scale, mode: "transformed", note: "Electromagnetic spectroscopic wavenumber mapped to equivalent vacuum frequency using f = c·k", nativeLabel: nativeLabel(quantity) }; }
   return null;
 }
 function profilePosition(manifest: Manifest): DisplayPosition | null {
-  const profile = manifest.frequency_profile; const axisKind = profile.axis?.kind ?? "other";
+  const profile = manifest.frequency_profile; const axisKind = profile.axis?.kind ?? "other"; const electromagneticContext = hasElectromagneticContext(manifest);
   switch (profile.type) {
-    case "periodic": return convertQuantity(profile.fundamental, axisKind);
-    case "quasi_periodic": return convertQuantity(profile.range ?? profile.center, axisKind);
-    case "discrete_lines": { const positions = (profile.lines ?? []).map((line) => convertQuantity(line.position, axisKind)).filter((position): position is DisplayPosition => position !== null); if (!positions.length) return null; const values = positions.flatMap((position) => [position.lowHz, position.highHz]); return { lowHz: Math.min(...values), highHz: Math.max(...values), positionsHz: positions.map((position) => (position.lowHz + position.highHz) / 2), mode: positions.some((position) => position.mode === "transformed") ? "transformed" : "native", note: positions[0].note, nativeLabel: (profile.lines ?? []).map((line) => nativeLabel(line.position)).join(", ") }; }
-    case "continuous_spectrum": case "frequency_band": case "time_varying": case "stochastic_process": return convertQuantity(profile.range, axisKind);
-    case "event_rate": return convertQuantity(profile.rate, axisKind);
-    case "quantum_transition": return convertQuantity(profile.transition_frequency, axisKind);
-    case "transient": return convertQuantity(profile.characteristic_band, axisKind);
+    case "periodic": return convertQuantity(profile.fundamental, axisKind, electromagneticContext);
+    case "quasi_periodic": return convertQuantity(profile.range ?? profile.center, axisKind, electromagneticContext);
+    case "discrete_lines": { const positions = (profile.lines ?? []).map((line) => convertQuantity(line.position, axisKind, electromagneticContext)).filter((position): position is DisplayPosition => position !== null); if (!positions.length) return null; const values = positions.flatMap((position) => [position.lowHz, position.highHz]); return { lowHz: Math.min(...values), highHz: Math.max(...values), positionsHz: positions.map((position) => (position.lowHz + position.highHz) / 2), mode: positions.some((position) => position.mode === "transformed") ? "transformed" : "native", note: positions[0].note, nativeLabel: (profile.lines ?? []).map((line) => nativeLabel(line.position)).join(", ") }; }
+    case "continuous_spectrum": case "frequency_band": case "time_varying": case "stochastic_process": return convertQuantity(profile.range, axisKind, electromagneticContext);
+    case "event_rate": return convertQuantity(profile.rate, axisKind, electromagneticContext);
+    case "quantum_transition": return convertQuantity(profile.transition_frequency, axisKind, electromagneticContext);
+    case "transient": return convertQuantity(profile.characteristic_band, axisKind, electromagneticContext);
     default: return null;
   }
 }
