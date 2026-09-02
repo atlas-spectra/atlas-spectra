@@ -1,0 +1,72 @@
+{
+  "schema_version": "0.1.0",
+  "id": "acoustics.standard-pitch.a4-440hz",
+  "name": "Standard tuning pitch A4",
+  "summary": "The international standard tuning reference assigning 440 Hz to the note A in the treble stave.",
+  "domains": [
+    "acoustics",
+    "music"
+  ],
+  "system": {
+    "id": "system.acoustic-reference.a4",
+    "name": "A4 acoustic tuning reference",
+    "type": "acoustic-reference"
+  },
+  "observable": {
+    "id": "observable.acoustic-reference.a4-frequency",
+    "name": "Acoustic oscillation frequency",
+    "quantity_kind": "frequency",
+    "independent_coordinate": "time",
+    "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+  },
+  "frequency_profile": {
+    "type": "periodic",
+    "axis": {
+      "kind": "temporal_frequency",
+      "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+    },
+    "fundamental": {
+      "value": 440,
+      "unit": "Hz",
+      "unit_uri": "https://qudt.org/vocab/unit/HZ",
+      "quantity_kind": "frequency",
+      "quantity_kind_uri": "https://qudt.org/vocab/quantitykind/Frequency"
+    }
+  },
+  "sources": [
+    {
+      "id": "source.iso.iso-16-1975",
+      "type": "standard",
+      "title": "ISO 16:1975 Acoustics — Standard tuning frequency (Standard musical pitch)",
+      "publisher": "International Organization for Standardization",
+      "url": "https://www.iso.org/standard/3601.html",
+      "issued": "1975-01",
+      "accessed": "2026-09-02",
+      "license": {
+        "status": "terms_apply"
+      }
+    }
+  ],
+  "provenance": [
+    {
+      "target": "/frequency_profile/fundamental",
+      "evidence": {
+        "basis": "established_reference",
+        "review_status": "reviewed",
+        "source_refs": [
+          {
+            "id": "source.iso.iso-16-1975"
+          }
+        ],
+        "locator": "Abstract",
+        "mechanism_status": "not_applicable"
+      }
+    }
+  ],
+  "tags": [
+    "sound",
+    "pitch",
+    "music",
+    "standard-reference"
+  ]
+}
