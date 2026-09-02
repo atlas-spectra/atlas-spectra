@@ -20,9 +20,9 @@ A heartbeat rate and a 1 Hz sine wave can therefore occupy the same numerical ne
 
 `frequency_profile.type` describes **what kind of representation we have**: periodic, banded, discrete-line, stochastic, event-rate, quantum transition, and so on.
 
-`frequency_profile.axis.kind` describes **the coordinate being compared**: temporal frequency, angular frequency, spatial frequency, wavelength, wavenumber, event rate, or another explicitly named axis.
+`frequency_profile.axis.kind` describes **the coordinate being compared**. The shared v0 axis vocabulary supports temporal frequency, angular frequency, spatial frequency, wavenumber, event rate, and `other`. Wavelength is currently supported only where the profile schema explicitly permits it: `continuous_spectrum` and `unknown`. Authors must not assume every representation accepts every coordinate kind.
 
-Keeping these separate prevents dimensionally similar quantities from becoming semantically identical.
+Keeping representation and coordinate separate prevents dimensionally similar quantities from becoming semantically identical while still allowing individual profile types to constrain which coordinates are scientifically meaningful in v0.
 
 ## Local graph model
 
@@ -36,6 +36,6 @@ Atlas Spectra is not RDF-first. Where established semantics help interoperabilit
 
 ## Evidence is data
 
-Quantitative fields are traceable with JSON-pointer provenance entries such as `/frequency_profile/rate`. Relationships and claims carry evidence inline. The evidence model separates basis (measurement, reference, derivation, hypothesis, subjective report, etc.) from review state, and can carry conditions, uncertainty, confidence, extraction metadata, and derivation details.
+Quantitative fields are traceable with JSON-pointer provenance entries such as `/frequency_profile/rate`. Relationships and claims carry evidence inline. The evidence model separates basis (measurement, reference, derivation, hypothesis, subjective report, etc.) from review state, and can carry conditions, self-describing uncertainty, confidence, extraction metadata, and derivation details.
 
 See [Evidence, provenance, and review](evidence-and-review.md) for the evidence-level definitions, review lifecycle, provenance rules, and frontend presentation contract.
