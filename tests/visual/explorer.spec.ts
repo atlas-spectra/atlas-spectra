@@ -1,5 +1,4 @@
 import { expect, test, type Locator } from "@playwright/test";
-import { mkdirSync } from "node:fs";
 
 const screenshotDir = "artifacts/screenshots";
 
@@ -11,8 +10,6 @@ function viewState(locator: Locator) {
     max: Number(element.dataset.boundMax),
   }));
 }
-
-test.beforeAll(() => mkdirSync(screenshotDir, { recursive: true }));
 
 test("labels identify marks and navigation stays inside corpus bounds", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
