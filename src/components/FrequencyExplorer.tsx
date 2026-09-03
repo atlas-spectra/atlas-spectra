@@ -8,29 +8,50 @@ import {
   type PointerEvent,
   type WheelEvent,
 } from "react";
-import type { ExplorerItem } from "../lib/corpus";
+import type { ExplorerItem, MarkKind } from "../lib/corpus";
+import "../styles/explorer-ux.css";
 
 interface Props { items: ExplorerItem[]; lanes: string[]; }
 interface ViewState { center: number; span: number; }
-interface HitRegion { id: string; x1: number; x2: number; y1: number; y2: number; }
+interface LogBounds { min: number; max: number; }
+interface HitRegion { id: string; x1: number; x2: number; y1: number; y2: number; anchorX: number; anchorY: number; }
+interface PlotLabel { id: string; name: string; lane: string; kind: MarkKind; x: number; y: number; selected: boolean; hovered: boolean; rightAligned: boolean; }
 
-const DEFAULT_VIEW: ViewState = { center: 7.3, span: 16.6 };
+const INITIAL_VIEW: ViewState = { center: 7.3, span: 16.6 };
 const MIN_SPAN = 1.2;
-const MAX_SPAN = 22;
-const MIN_CENTER = -30;
-const MAX_CENTER = 30;
-const LEFT_GUTTER = 152;
+const DATA_PADDING_DECADES = 0.65;
+const LEFT_GUTTER_DESKTOP = 152;
+const LEFT_GUTTER_MOBILE = 112;
 const TOP_GUTTER = 44;
 const BOTTOM_GUTTER = 58;
 const LANE_HEIGHT = 66;
 
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
+const leftGutterForWidth = (width: number) => width < 640 ? LEFT_GUTTER_MOBILE : LEFT_GUTTER_DESKTOP;
 
-function sanitizeView(view: ViewState): ViewState {
-  return {
-    center: Number.isFinite(view.center) ? clamp(view.center, MIN_CENTER, MAX_CENTER) : DEFAULT_VIEW.center,
-    span: Number.isFinite(view.span) && view.span > 0 ? clamp(view.span, MIN_SPAN, MAX_SPAN) : DEFAULT_VIEW.span,
-  };
+function boundsFor(items: ExplorerItem[]): LogBounds {
+  const logs = items.flatMap((item) => item.display ? [Math.log10(item.display.lowHz), Math.log10(item.display.highHz)] : []);
+  if (!logs.length) return { min: -1, max: 1 };
+  const low = Math.min(...logs);
+  const high = Math.max(...logs);
+  if (low === high) return { min: low - 1, max: high + 1 };
+  return { min: low - DATA_PADDING_DECADES, max: high + DATA_PADDING_DECADES };
+}
+
+function fitView(bounds: LogBounds): ViewState {
+  return { center: (bounds.min + bounds.max) / 2, span: Math.max(MIN_SPAN, bounds.max - bounds.min) };
+}
+
+function sanitizeView(view: ViewState, bounds: LogBounds): ViewState {
+  const availableSpan = Math.max(MIN_SPAN, bounds.max - bounds.min);
+  const span = Number.isFinite(view.span) && view.span > 0 ? clamp(view.span, MIN_SPAN, availableSpan) : Math.min(INITIAL_VIEW.span, availableSpan);
+  const half = span / 2;
+  const minimumCenter = bounds.min + half;
+  const maximumCenter = bounds.max - half;
+  const fallbackCenter = (bounds.min + bounds.max) / 2;
+  const rawCenter = Number.isFinite(view.center) ? view.center : fallbackCenter;
+  const center = minimumCenter > maximumCenter ? fallbackCenter : clamp(rawCenter, minimumCenter, maximumCenter);
+  return { center, span };
 }
 
 function parseUrlNumber(value: string | null, fallback: number): number {
@@ -55,19 +76,19 @@ function formatDisplayCoordinate(item: ExplorerItem): string {
     : `${formatHz(item.display.lowHz)}–${formatHz(item.display.highHz)}`;
 }
 
-function readUrlState() {
-  if (typeof window === "undefined") return { view: DEFAULT_VIEW, selectedId: null as string | null };
+function readUrlState(bounds: LogBounds, fallback: ViewState) {
+  if (typeof window === "undefined") return { view: fallback, selectedId: null as string | null };
   const params = new URLSearchParams(window.location.search);
-  const center = parseUrlNumber(params.get("center"), DEFAULT_VIEW.center);
-  const span = parseUrlNumber(params.get("span"), DEFAULT_VIEW.span);
+  const center = parseUrlNumber(params.get("center"), fallback.center);
+  const span = parseUrlNumber(params.get("span"), fallback.span);
   return {
-    view: sanitizeView({ center, span }),
+    view: sanitizeView({ center, span }, bounds),
     selectedId: params.get("entity"),
   };
 }
 
-function writeUrlState(view: ViewState, selectedId: string | null) {
-  const safeView = sanitizeView(view);
+function writeUrlState(view: ViewState, selectedId: string | null, bounds: LogBounds) {
+  const safeView = sanitizeView(view, bounds);
   const url = new URL(window.location.href);
   url.searchParams.set("center", safeView.center.toFixed(3));
   url.searchParams.set("span", safeView.span.toFixed(3));
@@ -75,19 +96,30 @@ function writeUrlState(view: ViewState, selectedId: string | null) {
   history.replaceState(null, "", `${url.pathname}?${url.searchParams.toString()}${url.hash}`);
 }
 
+function MarkGlyph({ kind }: { kind: MarkKind }) {
+  return <span className={`mark-glyph mark-glyph-${kind}`} aria-hidden="true" />;
+}
+
 export default function FrequencyExplorer({ items, lanes }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hits = useRef<HitRegion[]>([]);
   const drag = useRef<{ x: number; center: number } | null>(null);
   const initialized = useRef(false);
-  const [view, setView] = useState<ViewState>(DEFAULT_VIEW);
+
+  const itemById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
+  const positioned = useMemo(() => items.filter((item) => item.display), [items]);
+  const dataBounds = useMemo(() => boundsFor(positioned), [positioned]);
+  const fitAllView = useMemo(() => fitView(dataBounds), [dataBounds]);
+  const initialView = useMemo(() => sanitizeView(INITIAL_VIEW, dataBounds), [dataBounds]);
+
+  const [view, setView] = useState<ViewState>(initialView);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [size, setSize] = useState({ width: 1200, height: TOP_GUTTER + lanes.length * LANE_HEIGHT + BOTTOM_GUTTER });
 
-  const itemById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
   const selected = selectedId ? itemById.get(selectedId) ?? null : null;
-  const positioned = useMemo(() => items.filter((item) => item.display), [items]);
+  const hovered = hoveredId ? itemById.get(hoveredId) ?? null : null;
   const unpositioned = items.length - positioned.length;
   const normalizedQuery = query.trim().toLowerCase();
   const searchMatches = useMemo(() => {
@@ -99,18 +131,23 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
     [normalizedQuery, positioned, searchMatches],
   );
   const unpositionedMatches = normalizedQuery ? searchMatches.filter((item) => !item.display).length : 0;
+  const laneIndex = useMemo(() => new Map(lanes.map((lane, index) => [lane, index])), [lanes]);
+
+  const applyView = useCallback((next: ViewState | ((current: ViewState) => ViewState)) => {
+    setView((current) => sanitizeView(typeof next === "function" ? next(current) : next, dataBounds));
+  }, [dataBounds]);
 
   const selectItem = useCallback((id: string) => {
     setSelectedId(id);
     const item = itemById.get(id);
     if (!item?.display) return;
     const center = (Math.log10(item.display.lowHz) + Math.log10(item.display.highHz)) / 2;
-    setView((current) => sanitizeView({ ...current, center }));
-  }, [itemById]);
+    applyView((current) => ({ ...current, center }));
+  }, [applyView, itemById]);
 
   useEffect(() => {
     const sync = () => {
-      const state = readUrlState();
+      const state = readUrlState(dataBounds, initialView);
       setView(state.view);
       setSelectedId(state.selectedId);
     };
@@ -118,24 +155,94 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
     initialized.current = true;
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
-  }, []);
+  }, [dataBounds, initialView]);
 
   useEffect(() => {
-    if (initialized.current) writeUrlState(view, selectedId);
-  }, [view, selectedId]);
+    if (initialized.current) writeUrlState(view, selectedId, dataBounds);
+  }, [dataBounds, selectedId, view]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const observer = new ResizeObserver((entries) => setSize({
-      width: Math.max(720, Math.floor(entries[0].contentRect.width)),
+      width: Math.max(320, Math.floor(entries[0].contentRect.width)),
       height: TOP_GUTTER + lanes.length * LANE_HEIGHT + BOTTOM_GUTTER,
     }));
     observer.observe(canvas);
     return () => observer.disconnect();
   }, [lanes.length]);
 
-  const laneIndex = useMemo(() => new Map(lanes.map((lane, index) => [lane, index])), [lanes]);
+  const plotGeometry = useMemo(() => {
+    const left = leftGutterForWidth(size.width);
+    const right = size.width - 22;
+    const width = Math.max(1, right - left);
+    const min = view.center - view.span / 2;
+    const max = view.center + view.span / 2;
+    const x = (log: number) => left + ((log - min) / view.span) * width;
+    return { left, right, width, min, max, x };
+  }, [size.width, view]);
+
+  const plotLabels = useMemo<PlotLabel[]>(() => {
+    const candidates = visible.flatMap((item) => {
+      if (!item.display) return [];
+      const low = Math.log10(item.display.lowHz);
+      const high = Math.log10(item.display.highHz);
+      if (high < plotGeometry.min || low > plotGeometry.max) return [];
+      const lane = laneIndex.get(item.lane) ?? lanes.length - 1;
+      const visibleLineLogs = item.markKind === "lines" && item.display.positionsHz?.length
+        ? item.display.positionsHz.map((value) => Math.log10(value)).filter((log) => log >= plotGeometry.min && log <= plotGeometry.max)
+        : null;
+      if (visibleLineLogs && !visibleLineLogs.length) return [];
+      const anchorLog = visibleLineLogs?.length
+        ? visibleLineLogs.reduce((sum, value) => sum + value, 0) / visibleLineLogs.length
+        : clamp((low + high) / 2, plotGeometry.min, plotGeometry.max);
+      const labelX = clamp(plotGeometry.x(anchorLog), plotGeometry.left + 4, plotGeometry.right - 4);
+      const rightAligned = labelX > plotGeometry.right - (size.width < 700 ? 165 : 220);
+      return [{
+        id: item.id,
+        name: item.name,
+        lane: item.lane,
+        kind: item.markKind,
+        x: labelX,
+        y: TOP_GUTTER + lane * LANE_HEIGHT + LANE_HEIGHT / 2,
+        selected: item.id === selectedId,
+        hovered: item.id === hoveredId,
+        rightAligned,
+      }];
+    });
+
+    const byLane = new Map<string, PlotLabel[]>();
+    for (const candidate of candidates) {
+      const group = byLane.get(candidate.lane) ?? [];
+      group.push(candidate);
+      byLane.set(candidate.lane, group);
+    }
+
+    const gap = view.span > 16 ? 165 : view.span > 10 ? 135 : 105;
+    const result: PlotLabel[] = [];
+    for (const group of byLane.values()) {
+      group.sort((a, b) => a.x - b.x);
+      let lastNormalX = -Infinity;
+      for (const label of group) {
+        if (label.selected || label.hovered) {
+          result.push(label);
+          continue;
+        }
+        if (label.x - lastNormalX >= gap) {
+          result.push(label);
+          lastNormalX = label.x;
+        }
+      }
+    }
+
+    const forcedIds = new Set(result.map((label) => label.id));
+    for (const candidate of candidates) {
+      if ((candidate.selected || candidate.hovered) && !forcedIds.has(candidate.id)) result.push(candidate);
+    }
+    return result;
+  }, [hoveredId, laneIndex, lanes.length, plotGeometry, selectedId, size.width, view.span, visible]);
+
+  const labelById = useMemo(() => new Map(plotLabels.map((label) => [label.id, label])), [plotLabels]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -149,12 +256,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, size.width, size.height);
 
-    const left = LEFT_GUTTER;
-    const right = size.width - 22;
-    const width = Math.max(1, right - left);
-    const min = view.center - view.span / 2;
-    const max = view.center + view.span / 2;
-    const x = (log: number) => left + ((log - min) / view.span) * width;
+    const { left, right, min, max, x } = plotGeometry;
 
     ctx.fillStyle = "#fbfbfa";
     ctx.fillRect(0, 0, size.width, size.height);
@@ -210,45 +312,48 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
       const x1 = clamp(x(low), left, right);
       const x2 = clamp(x(high), left, right);
       const isSelected = item.id === selectedId;
+      const isHovered = item.id === hoveredId;
       const isReference = item.markKind === "reference";
       const rangedReference = isReference && item.display.lowHz !== item.display.highHz;
+      const emphasis = isSelected || isHovered;
 
       ctx.save();
-      ctx.strokeStyle = isSelected ? "#11110f" : isReference ? "#8d8375" : "#4f5652";
-      ctx.fillStyle = isSelected ? "#11110f" : "#4f5652";
-      ctx.lineWidth = isSelected ? 2.5 : 1.5;
+      ctx.strokeStyle = isSelected ? "#11110f" : isHovered ? "#343a36" : isReference ? "#8d8375" : "#4f5652";
+      ctx.fillStyle = isSelected ? "#11110f" : isHovered ? "#343a36" : "#4f5652";
+      ctx.lineWidth = emphasis ? 2.5 : 1.5;
       if (isReference) ctx.setLineDash([4, 3]);
 
+      let anchorX = (x1 + x2) / 2;
       if (item.markKind === "point" || (isReference && !rangedReference)) {
-        const xx = (x1 + x2) / 2;
         ctx.beginPath();
-        ctx.arc(xx, cy, isSelected ? 6 : 4.5, 0, Math.PI * 2);
+        ctx.arc(anchorX, cy, emphasis ? 6 : 4.5, 0, Math.PI * 2);
         isReference ? ctx.stroke() : ctx.fill();
-        regions.push({ id: item.id, x1: xx - 10, x2: xx + 10, y1: cy - 12, y2: cy + 12 });
+        regions.push({ id: item.id, x1: anchorX - 10, x2: anchorX + 10, y1: cy - 12, y2: cy + 12, anchorX, anchorY: cy });
       } else if (rangedReference) {
         const bandWidth = Math.max(3, x2 - x1);
-        ctx.globalAlpha = isSelected ? 0.16 : 0.07;
+        ctx.globalAlpha = emphasis ? 0.16 : 0.07;
         ctx.fillRect(x1, cy - 7, bandWidth, 14);
         ctx.globalAlpha = 1;
         ctx.strokeRect(x1, cy - 7, bandWidth, 14);
-        regions.push({ id: item.id, x1: x1 - 5, x2: x2 + 5, y1: cy - 16, y2: cy + 16 });
+        regions.push({ id: item.id, x1: x1 - 5, x2: x2 + 5, y1: cy - 16, y2: cy + 16, anchorX, anchorY: cy });
       } else if (item.markKind === "lines" && item.display.positionsHz?.length) {
         const xs = item.display.positionsHz.map((value) => x(Math.log10(value))).filter((xx) => xx >= left && xx <= right);
         if (!xs.length) {
           ctx.restore();
           continue;
         }
+        anchorX = xs.reduce((sum, value) => sum + value, 0) / xs.length;
         for (const xx of xs) {
           ctx.beginPath();
           ctx.moveTo(xx, cy - 12);
           ctx.lineTo(xx, cy + 12);
           ctx.stroke();
         }
-        regions.push({ id: item.id, x1: Math.max(left, Math.min(...xs) - 8), x2: Math.min(right, Math.max(...xs) + 8), y1: cy - 16, y2: cy + 16 });
+        regions.push({ id: item.id, x1: Math.max(left, Math.min(...xs) - 8), x2: Math.min(right, Math.max(...xs) + 8), y1: cy - 16, y2: cy + 16, anchorX, anchorY: cy });
       } else {
         const markWidth = Math.max(3, x2 - x1);
         const height = item.markKind === "spectrum" ? 18 : item.markKind === "chirp" ? 14 : 10;
-        ctx.globalAlpha = isSelected ? 0.95 : item.markKind === "spectrum" ? 0.28 : 0.62;
+        ctx.globalAlpha = isSelected ? 0.95 : isHovered ? 0.78 : item.markKind === "spectrum" ? 0.28 : 0.62;
         ctx.fillRect(x1, cy - height / 2, markWidth, height);
         ctx.globalAlpha = 1;
         if (item.markKind === "chirp") {
@@ -257,49 +362,51 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
           ctx.lineTo(x2, cy - 7);
           ctx.stroke();
         }
-        regions.push({ id: item.id, x1: x1 - 5, x2: x2 + 5, y1: cy - 16, y2: cy + 16 });
-      }
-
-      if (view.span < 11 || isSelected) {
-        ctx.setLineDash([]);
-        ctx.fillStyle = isSelected ? "#11110f" : "#605d57";
-        ctx.font = isSelected ? "600 11px ui-sans-serif,system-ui,sans-serif" : "11px ui-sans-serif,system-ui,sans-serif";
-        ctx.textAlign = "left";
-        ctx.fillText(item.name, Math.min(right - 6, Math.max(left + 6, x2 + 7)), cy - 16);
+        regions.push({ id: item.id, x1: x1 - 5, x2: x2 + 5, y1: cy - 16, y2: cy + 16, anchorX, anchorY: cy });
       }
       ctx.restore();
     }
     hits.current = regions;
-  }, [laneIndex, lanes, selectedId, size, view, visible]);
+  }, [hoveredId, laneIndex, lanes, plotGeometry, selectedId, size, visible]);
+
+  const hitAt = useCallback((x: number, y: number) => [...hits.current].reverse().find((region) => x >= region.x1 && x <= region.x2 && y >= region.y1 && y <= region.y2), []);
 
   const selectAt = useCallback((x: number, y: number) => {
-    const hit = [...hits.current].reverse().find((region) => x >= region.x1 && x <= region.x2 && y >= region.y1 && y <= region.y2);
+    const hit = hitAt(x, y);
     hit ? selectItem(hit.id) : setSelectedId(null);
-  }, [selectItem]);
+  }, [hitAt, selectItem]);
 
   function wheel(event: WheelEvent<HTMLCanvasElement>) {
     event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
-    const plotWidth = Math.max(1, rect.width - LEFT_GUTTER - 22);
-    const ratio = clamp((event.clientX - rect.left - LEFT_GUTTER) / plotWidth, 0, 1);
+    const leftGutter = leftGutterForWidth(rect.width);
+    const plotWidth = Math.max(1, rect.width - leftGutter - 22);
+    const ratio = clamp((event.clientX - rect.left - leftGutter) / plotWidth, 0, 1);
     const min = view.center - view.span / 2;
     const anchor = min + ratio * view.span;
-    const newSpan = clamp(view.span * Math.exp(event.deltaY * 0.0012), MIN_SPAN, MAX_SPAN);
+    const availableSpan = Math.max(MIN_SPAN, dataBounds.max - dataBounds.min);
+    const newSpan = clamp(view.span * Math.exp(event.deltaY * 0.0012), MIN_SPAN, availableSpan);
     const newMin = anchor - ratio * newSpan;
-    setView(sanitizeView({ center: newMin + newSpan / 2, span: newSpan }));
+    applyView({ center: newMin + newSpan / 2, span: newSpan });
   }
 
   function down(event: PointerEvent<HTMLCanvasElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
     drag.current = { x: event.clientX, center: view.center };
+    setHoveredId(null);
   }
 
   function move(event: PointerEvent<HTMLCanvasElement>) {
-    if (!drag.current) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    const plotWidth = Math.max(1, rect.width - LEFT_GUTTER - 22);
-    const delta = ((event.clientX - drag.current.x) / plotWidth) * view.span;
-    setView((current) => sanitizeView({ ...current, center: drag.current!.center - delta }));
+    if (drag.current) {
+      const leftGutter = leftGutterForWidth(rect.width);
+      const plotWidth = Math.max(1, rect.width - leftGutter - 22);
+      const delta = ((event.clientX - drag.current.x) / plotWidth) * view.span;
+      applyView((current) => ({ ...current, center: drag.current!.center - delta }));
+      return;
+    }
+    const hit = hitAt(event.clientX - rect.left, event.clientY - rect.top);
+    setHoveredId(hit?.id ?? null);
   }
 
   function up(event: PointerEvent<HTMLCanvasElement>) {
@@ -316,20 +423,31 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
       const direction = event.key === "ArrowLeft" ? -1 : 1;
-      setView((current) => sanitizeView({ ...current, center: current.center + direction * current.span * 0.08 }));
+      applyView((current) => ({ ...current, center: current.center + direction * current.span * 0.08 }));
     }
     if (event.key === "+" || event.key === "=" || event.key === "-") {
       event.preventDefault();
       const factor = event.key === "-" ? 1.25 : 0.8;
-      setView((current) => sanitizeView({ ...current, span: current.span * factor }));
+      applyView((current) => ({ ...current, span: current.span * factor }));
+    }
+    if (event.key === "Home") {
+      event.preventDefault();
+      applyView(fitAllView);
     }
   }
 
   const countLabel = normalizedQuery
     ? `${visible.length} plotted · ${unpositionedMatches} unpositioned matches`
     : `${positioned.length} plotted · ${unpositioned} unpositioned`;
+  const hoveredLabel = hoveredId ? labelById.get(hoveredId) : undefined;
 
-  return <div className="explorer-shell">
+  return <div
+    className="explorer-shell"
+    data-view-center={view.center.toFixed(4)}
+    data-view-span={view.span.toFixed(4)}
+    data-bound-min={dataBounds.min.toFixed(4)}
+    data-bound-max={dataBounds.max.toFixed(4)}
+  >
     <div className="explorer-toolbar">
       <div className="search-control">
         <label htmlFor="explorer-search"><span>Find</span></label>
@@ -343,16 +461,62 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
         </div>}
       </div>
       <div className="toolbar-actions">
-        <button type="button" onClick={() => setView((current) => sanitizeView({ ...current, span: current.span * 0.75 }))}>Zoom in</button>
-        <button type="button" onClick={() => setView((current) => sanitizeView({ ...current, span: current.span * 1.35 }))}>Zoom out</button>
-        <button type="button" onClick={() => setView(DEFAULT_VIEW)}>Reset</button>
+        <button type="button" onClick={() => applyView((current) => ({ ...current, span: current.span * 0.75 }))}>Zoom in</button>
+        <button type="button" onClick={() => applyView((current) => ({ ...current, span: current.span * 1.35 }))}>Zoom out</button>
+        <button type="button" onClick={() => applyView(fitAllView)}>Fit all</button>
       </div>
       <div className="explorer-count">{countLabel}</div>
     </div>
-    <div className="canvas-frame">
-      <canvas ref={canvasRef} className="frequency-canvas" aria-label="Logarithmic frequency explorer. Drag to pan, use the mouse wheel or zoom buttons to zoom, and click a mark to inspect it. Use the visible Find control to select any Atlas record, including unpositioned records." tabIndex={0} onWheel={wheel} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { drag.current = null; }} onKeyDown={key} />
+
+    <div className="canvas-frame" data-testid="explorer-plot">
+      <canvas
+        ref={canvasRef}
+        className="frequency-canvas"
+        aria-label="Logarithmic frequency explorer. Drag to pan, use the mouse wheel or zoom buttons to zoom, hover or focus labels to identify marks, and click a mark or label to inspect it. Press Home to fit all data."
+        tabIndex={0}
+        onWheel={wheel}
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onPointerCancel={() => { drag.current = null; }}
+        onPointerLeave={() => { if (!drag.current) setHoveredId(null); }}
+        onKeyDown={key}
+      />
+      <div className="plot-label-layer" aria-label="Visible phenomenon labels">
+        {plotLabels.map((label) => <button
+          key={label.id}
+          type="button"
+          className={`plot-label${label.selected ? " is-selected" : ""}${label.hovered ? " is-hovered" : ""}${label.rightAligned ? " is-right" : ""}`}
+          style={{ left: label.x, top: label.y - 21 }}
+          onMouseEnter={() => setHoveredId(label.id)}
+          onMouseLeave={() => setHoveredId((current) => current === label.id ? null : current)}
+          onFocus={() => setHoveredId(label.id)}
+          onBlur={() => setHoveredId((current) => current === label.id ? null : current)}
+          onClick={() => selectItem(label.id)}
+          title={`${label.name} — ${label.lane}`}
+        >
+          <MarkGlyph kind={label.kind} />
+          <span>{label.name}</span>
+        </button>)}
+        {hovered && hoveredLabel && <div className={`plot-tooltip${hoveredLabel.rightAligned ? " is-right" : ""}`} style={{ left: hoveredLabel.x, top: hoveredLabel.y + 13 }} role="status">
+          <strong>{hovered.name}</strong>
+          <span>{hovered.lane}</span>
+          <small>{formatDisplayCoordinate(hovered)}</small>
+        </div>}
+      </div>
     </div>
+
+    <div className="mark-legend" aria-label="Explorer mark legend">
+      <span><MarkGlyph kind="point" />point</span>
+      <span><MarkGlyph kind="band" />band</span>
+      <span><MarkGlyph kind="lines" />lines</span>
+      <span><MarkGlyph kind="spectrum" />spectrum</span>
+      <span><MarkGlyph kind="chirp" />time-varying</span>
+      <span><MarkGlyph kind="reference" />reference</span>
+    </div>
+
     <div className="explorer-footer"><span>{formatHz(10 ** (view.center - view.span / 2))}</span><span>{view.span.toFixed(1)} decades visible</span><span>{formatHz(10 ** (view.center + view.span / 2))}</span></div>
+
     <div className="explorer-detail" aria-live="polite">{selected ? <>
       <div className="detail-heading"><div><span className="detail-lane">{selected.lane}</span><h2>{selected.name}</h2></div><button type="button" className="icon-button" onClick={() => setSelectedId(null)} aria-label="Close detail panel">×</button></div>
       <p>{selected.summary}</p>
@@ -366,6 +530,6 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
       {selected.relationships.length > 0 && <div className="detail-section"><h3>Relationships</h3><div className="relationship-chips">{selected.relationships.slice(0, 8).map((relationship) => <span key={relationship.id} className={`chip chip-${relationship.category}`}>{relationship.type.replaceAll("_", " ")}<small> {relationship.direction === "outgoing" ? "→" : "←"} {relationship.peerName}</small></span>)}</div></div>}
       <div className="detail-section evidence-summary"><h3>Evidence</h3>{selected.provenance.length ? <p>{selected.provenance[0].evidence.basis?.replaceAll("_", " ")} · {selected.provenance[0].evidence.review_status?.replaceAll("_", " ")}</p> : <p>See relationship or claim evidence in the full record.</p>}</div>
       <a className="button primary detail-link" href={`../phenomena/${selected.id}/`}>Open full record</a>
-    </> : <div className="empty-detail"><span className="detail-lane">Inspect</span><h2>Select a phenomenon</h2><p>The plot separates display position from scientific relationship. Search also exposes records that cannot be placed on the shared display coordinate.</p></div>}</div>
+    </> : <div className="empty-detail"><span className="detail-lane">Inspect</span><h2>Hover or select a phenomenon</h2><p>Labels identify visible marks without a click. Search also exposes records that cannot be placed on the shared display coordinate.</p></div>}</div>
   </div>;
 }
