@@ -1,9 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 
 const screenshotDir = "artifacts/screenshots";
 
-function viewState(locator: ReturnType<Parameters<typeof test>[0]> extends never ? never : any) {
+function viewState(locator: Locator) {
   return locator.evaluate((element: HTMLElement) => ({
     center: Number(element.dataset.viewCenter),
     span: Number(element.dataset.viewSpan),
