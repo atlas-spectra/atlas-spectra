@@ -15,17 +15,19 @@ interface Props { items: ExplorerItem[]; lanes: string[]; }
 interface ViewState { center: number; span: number; }
 interface LogBounds { min: number; max: number; }
 interface HitRegion { id: string; x1: number; x2: number; y1: number; y2: number; anchorX: number; anchorY: number; }
-interface PlotLabel { id: string; name: string; lane: string; kind: MarkKind; x: number; y: number; selected: boolean; hovered: boolean; }
+interface PlotLabel { id: string; name: string; lane: string; kind: MarkKind; x: number; y: number; selected: boolean; hovered: boolean; rightAligned: boolean; }
 
 const INITIAL_VIEW: ViewState = { center: 7.3, span: 16.6 };
 const MIN_SPAN = 1.2;
 const DATA_PADDING_DECADES = 0.65;
-const LEFT_GUTTER = 152;
+const LEFT_GUTTER_DESKTOP = 152;
+const LEFT_GUTTER_MOBILE = 112;
 const TOP_GUTTER = 44;
 const BOTTOM_GUTTER = 58;
 const LANE_HEIGHT = 66;
 
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
+const leftGutterForWidth = (width: number) => width < 640 ? LEFT_GUTTER_MOBILE : LEFT_GUTTER_DESKTOP;
 
 function boundsFor(items: ExplorerItem[]): LogBounds {
   const logs = items.flatMap((item) => item.display ? [Math.log10(item.display.lowHz), Math.log10(item.display.highHz)] : []);
@@ -163,7 +165,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const observer = new ResizeObserver((entries) => setSize({
-      width: Math.max(720, Math.floor(entries[0].contentRect.width)),
+      width: Math.max(320, Math.floor(entries[0].contentRect.width)),
       height: TOP_GUTTER + lanes.length * LANE_HEIGHT + BOTTOM_GUTTER,
     }));
     observer.observe(canvas);
@@ -171,7 +173,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   }, [lanes.length]);
 
   const plotGeometry = useMemo(() => {
-    const left = LEFT_GUTTER;
+    const left = leftGutterForWidth(size.width);
     const right = size.width - 22;
     const width = Math.max(1, right - left);
     const min = view.center - view.span / 2;
@@ -187,16 +189,25 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
       const high = Math.log10(item.display.highHz);
       if (high < plotGeometry.min || low > plotGeometry.max) return [];
       const lane = laneIndex.get(item.lane) ?? lanes.length - 1;
-      const anchorLog = clamp((low + high) / 2, plotGeometry.min, plotGeometry.max);
+      const visibleLineLogs = item.markKind === "lines" && item.display.positionsHz?.length
+        ? item.display.positionsHz.map((value) => Math.log10(value)).filter((log) => log >= plotGeometry.min && log <= plotGeometry.max)
+        : null;
+      if (visibleLineLogs && !visibleLineLogs.length) return [];
+      const anchorLog = visibleLineLogs?.length
+        ? visibleLineLogs.reduce((sum, value) => sum + value, 0) / visibleLineLogs.length
+        : clamp((low + high) / 2, plotGeometry.min, plotGeometry.max);
+      const labelX = clamp(plotGeometry.x(anchorLog), plotGeometry.left + 4, plotGeometry.right - 4);
+      const rightAligned = labelX > plotGeometry.right - (size.width < 700 ? 165 : 220);
       return [{
         id: item.id,
         name: item.name,
         lane: item.lane,
         kind: item.markKind,
-        x: clamp(plotGeometry.x(anchorLog), plotGeometry.left + 4, plotGeometry.right - 4),
+        x: labelX,
         y: TOP_GUTTER + lane * LANE_HEIGHT + LANE_HEIGHT / 2,
         selected: item.id === selectedId,
         hovered: item.id === hoveredId,
+        rightAligned,
       }];
     });
 
@@ -229,7 +240,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
       if ((candidate.selected || candidate.hovered) && !forcedIds.has(candidate.id)) result.push(candidate);
     }
     return result;
-  }, [hoveredId, laneIndex, lanes.length, plotGeometry, selectedId, view.span, visible]);
+  }, [hoveredId, laneIndex, lanes.length, plotGeometry, selectedId, size.width, view.span, visible]);
 
   const labelById = useMemo(() => new Map(plotLabels.map((label) => [label.id, label])), [plotLabels]);
 
@@ -368,11 +379,13 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   function wheel(event: WheelEvent<HTMLCanvasElement>) {
     event.preventDefault();
     const rect = event.currentTarget.getBoundingClientRect();
-    const plotWidth = Math.max(1, rect.width - LEFT_GUTTER - 22);
-    const ratio = clamp((event.clientX - rect.left - LEFT_GUTTER) / plotWidth, 0, 1);
+    const leftGutter = leftGutterForWidth(rect.width);
+    const plotWidth = Math.max(1, rect.width - leftGutter - 22);
+    const ratio = clamp((event.clientX - rect.left - leftGutter) / plotWidth, 0, 1);
     const min = view.center - view.span / 2;
     const anchor = min + ratio * view.span;
-    const newSpan = view.span * Math.exp(event.deltaY * 0.0012);
+    const availableSpan = Math.max(MIN_SPAN, dataBounds.max - dataBounds.min);
+    const newSpan = clamp(view.span * Math.exp(event.deltaY * 0.0012), MIN_SPAN, availableSpan);
     const newMin = anchor - ratio * newSpan;
     applyView({ center: newMin + newSpan / 2, span: newSpan });
   }
@@ -386,7 +399,8 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   function move(event: PointerEvent<HTMLCanvasElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
     if (drag.current) {
-      const plotWidth = Math.max(1, rect.width - LEFT_GUTTER - 22);
+      const leftGutter = leftGutterForWidth(rect.width);
+      const plotWidth = Math.max(1, rect.width - leftGutter - 22);
       const delta = ((event.clientX - drag.current.x) / plotWidth) * view.span;
       applyView((current) => ({ ...current, center: drag.current!.center - delta }));
       return;
@@ -472,7 +486,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
         {plotLabels.map((label) => <button
           key={label.id}
           type="button"
-          className={`plot-label${label.selected ? " is-selected" : ""}${label.hovered ? " is-hovered" : ""}`}
+          className={`plot-label${label.selected ? " is-selected" : ""}${label.hovered ? " is-hovered" : ""}${label.rightAligned ? " is-right" : ""}`}
           style={{ left: label.x, top: label.y - 21 }}
           onMouseEnter={() => setHoveredId(label.id)}
           onMouseLeave={() => setHoveredId((current) => current === label.id ? null : current)}
@@ -484,7 +498,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
           <MarkGlyph kind={label.kind} />
           <span>{label.name}</span>
         </button>)}
-        {hovered && hoveredLabel && <div className="plot-tooltip" style={{ left: hoveredLabel.x, top: hoveredLabel.y + 13 }} role="status">
+        {hovered && hoveredLabel && <div className={`plot-tooltip${hoveredLabel.rightAligned ? " is-right" : ""}`} style={{ left: hoveredLabel.x, top: hoveredLabel.y + 13 }} role="status">
           <strong>{hovered.name}</strong>
           <span>{hovered.lane}</span>
           <small>{formatDisplayCoordinate(hovered)}</small>
