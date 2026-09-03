@@ -28,7 +28,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run check
       - run: npm run build
-      - run: npm run test:visual
+      - name: Run visual regression and capture screenshots
+        run: |
+          mkdir -p artifacts/screenshots
+          npm run test:visual
       - name: Upload explorer screenshots
         if: always()
         uses: actions/upload-artifact@v4
