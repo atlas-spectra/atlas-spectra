@@ -1,6 +1,7 @@
 import { expect, test, type Locator } from "@playwright/test";
 
 const screenshotDir = "artifacts/screenshots";
+// These browser regressions intentionally move away from Fit all before testing pan/zoom clamps.
 
 function viewState(locator: Locator) {
   return locator.evaluate((element: HTMLElement) => ({
