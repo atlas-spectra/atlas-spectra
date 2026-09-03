@@ -1,0 +1,99 @@
+name: apply explorer review fixes
+
+on:
+  push:
+    branches: [feat/explorer-visual-review]
+    paths:
+      - ".github/workflows/apply-explorer-review-fixes.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: feat/explorer-visual-review
+      - name: Patch reviewed explorer edge cases
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              if text.count(old) != 1:
+                  raise SystemExit(f"{label}: expected exactly one match, found {text.count(old)}")
+              return text.replace(old, new, 1)
+
+          component = Path("src/components/FrequencyExplorer.tsx")
+          text = component.read_text()
+          text = replace_once(
+              text,
+              'interface PlotLabel { id: string; name: string; lane: string; kind: MarkKind; x: number; y: number; selected: boolean; hovered: boolean; }',
+              'interface PlotLabel { id: string; name: string; lane: string; kind: MarkKind; x: number; y: number; selected: boolean; hovered: boolean; rightAligned: boolean; }',
+              'plot label interface',
+          )
+          text = replace_once(text, 'const LEFT_GUTTER = 152;', 'const LEFT_GUTTER_DESKTOP = 152;\nconst LEFT_GUTTER_MOBILE = 112;', 'gutter constants')
+          text = replace_once(
+              text,
+              'const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));',
+              'const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));\nconst leftGutterForWidth = (width: number) => width < 640 ? LEFT_GUTTER_MOBILE : LEFT_GUTTER_DESKTOP;',
+              'gutter helper',
+          )
+          text = replace_once(text, 'width: Math.max(720, Math.floor(entries[0].contentRect.width)),', 'width: Math.max(320, Math.floor(entries[0].contentRect.width)),', 'responsive canvas width')
+          text = replace_once(text, '    const left = LEFT_GUTTER;\n    const right = size.width - 22;', '    const left = leftGutterForWidth(size.width);\n    const right = size.width - 22;', 'plot geometry gutter')
+          text = replace_once(
+              text,
+              '''      const lane = laneIndex.get(item.lane) ?? lanes.length - 1;\n      const anchorLog = clamp((low + high) / 2, plotGeometry.min, plotGeometry.max);\n      return [{\n        id: item.id,\n        name: item.name,\n        lane: item.lane,\n        kind: item.markKind,\n        x: clamp(plotGeometry.x(anchorLog), plotGeometry.left + 4, plotGeometry.right - 4),\n        y: TOP_GUTTER + lane * LANE_HEIGHT + LANE_HEIGHT / 2,\n        selected: item.id === selectedId,\n        hovered: item.id === hoveredId,\n      }];''',
+              '''      const lane = laneIndex.get(item.lane) ?? lanes.length - 1;\n      const visibleLineLogs = item.markKind === "lines" && item.display.positionsHz?.length\n        ? item.display.positionsHz.map((value) => Math.log10(value)).filter((log) => log >= plotGeometry.min && log <= plotGeometry.max)\n        : null;\n      if (visibleLineLogs && !visibleLineLogs.length) return [];\n      const anchorLog = visibleLineLogs?.length\n        ? visibleLineLogs.reduce((sum, value) => sum + value, 0) / visibleLineLogs.length\n        : clamp((low + high) / 2, plotGeometry.min, plotGeometry.max);\n      const labelX = clamp(plotGeometry.x(anchorLog), plotGeometry.left + 4, plotGeometry.right - 4);\n      const rightAligned = labelX > plotGeometry.right - (size.width < 700 ? 165 : 220);\n      return [{\n        id: item.id,\n        name: item.name,\n        lane: item.lane,\n        kind: item.markKind,\n        x: labelX,\n        y: TOP_GUTTER + lane * LANE_HEIGHT + LANE_HEIGHT / 2,\n        selected: item.id === selectedId,\n        hovered: item.id === hoveredId,\n        rightAligned,\n      }];''',
+              'label visibility and alignment',
+          )
+          text = replace_once(
+              text,
+              '  }, [hoveredId, laneIndex, lanes.length, plotGeometry, selectedId, view.span, visible]);',
+              '  }, [hoveredId, laneIndex, lanes.length, plotGeometry, selectedId, size.width, view.span, visible]);',
+              'label dependencies',
+          )
+          text = replace_once(
+              text,
+              '''    const rect = event.currentTarget.getBoundingClientRect();\n    const plotWidth = Math.max(1, rect.width - LEFT_GUTTER - 22);\n    const ratio = clamp((event.clientX - rect.left - LEFT_GUTTER) / plotWidth, 0, 1);\n    const min = view.center - view.span / 2;\n    const anchor = min + ratio * view.span;\n    const newSpan = view.span * Math.exp(event.deltaY * 0.0012);\n    const newMin = anchor - ratio * newSpan;''',
+              '''    const rect = event.currentTarget.getBoundingClientRect();\n    const leftGutter = leftGutterForWidth(rect.width);\n    const plotWidth = Math.max(1, rect.width - leftGutter - 22);\n    const ratio = clamp((event.clientX - rect.left - leftGutter) / plotWidth, 0, 1);\n    const min = view.center - view.span / 2;\n    const anchor = min + ratio * view.span;\n    const availableSpan = Math.max(MIN_SPAN, dataBounds.max - dataBounds.min);\n    const newSpan = clamp(view.span * Math.exp(event.deltaY * 0.0012), MIN_SPAN, availableSpan);\n    const newMin = anchor - ratio * newSpan;''',
+              'wheel clamp',
+          )
+          text = replace_once(
+              text,
+              '      const plotWidth = Math.max(1, rect.width - LEFT_GUTTER - 22);\n      const delta = ((event.clientX - drag.current.x) / plotWidth) * view.span;',
+              '      const leftGutter = leftGutterForWidth(rect.width);\n      const plotWidth = Math.max(1, rect.width - leftGutter - 22);\n      const delta = ((event.clientX - drag.current.x) / plotWidth) * view.span;',
+              'drag gutter',
+          )
+          text = replace_once(
+              text,
+              '          className={`plot-label${label.selected ? " is-selected" : ""}${label.hovered ? " is-hovered" : ""}`}',
+              '          className={`plot-label${label.selected ? " is-selected" : ""}${label.hovered ? " is-hovered" : ""}${label.rightAligned ? " is-right" : ""}`}',
+              'label class',
+          )
+          text = replace_once(
+              text,
+              '        {hovered && hoveredLabel && <div className="plot-tooltip" style={{ left: hoveredLabel.x, top: hoveredLabel.y + 13 }} role="status">',
+              '        {hovered && hoveredLabel && <div className={`plot-tooltip${hoveredLabel.rightAligned ? " is-right" : ""}`} style={{ left: hoveredLabel.x, top: hoveredLabel.y + 13 }} role="status">',
+              'tooltip alignment',
+          )
+          component.write_text(text)
+
+          css_path = Path("src/styles/explorer-ux.css")
+          css = css_path.read_text()
+          css = replace_once(css, '.canvas-frame{position:relative}', '.canvas-frame{position:relative;overflow:hidden}.frequency-canvas{min-width:0}', 'mobile frame')
+          css = replace_once(css, 'width:max(100%,720px)', 'width:100%', 'label layer width')
+          css = replace_once(css, '.plot-label.is-selected{z-index:5;background:#20201d;border-color:#20201d;color:#fff;box-shadow:0 3px 12px rgba(30,30,27,.18)}', '.plot-label.is-selected{z-index:5;background:#20201d;border-color:#20201d;color:#fff;box-shadow:0 3px 12px rgba(30,30,27,.18)}.plot-label.is-right{transform:translateX(calc(-100% + 8px))}', 'right label')
+          css = replace_once(css, '.plot-tooltip strong{font-size:11px;font-weight:650}', '.plot-tooltip.is-right{transform:translateX(calc(-100% + 6px))}.plot-tooltip strong{font-size:11px;font-weight:650}', 'right tooltip')
+          css_path.write_text(css)
+          PY
+      - name: Commit fixes and remove bootstrap workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/apply-explorer-review-fixes.yml
+          git add src/components/FrequencyExplorer.tsx src/styles/explorer-ux.css
+          git commit -m "fix(web): address explorer review edge cases"
+          git push origin HEAD:feat/explorer-visual-review
