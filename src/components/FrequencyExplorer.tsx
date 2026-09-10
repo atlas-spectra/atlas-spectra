@@ -44,7 +44,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   // A trace belongs to the selected record, not a hidden global filtering mode.
   useEffect(() => { setTrace(false); }, [selectedId]);
   const filtered = useMemo(() => items.filter((item) => matchesDiscovery(item, query, lane)), [items, query, lane]);
-  const activeIds = useMemo(() => new Set(filtered.map((item) => [item.id]).flat()), [filtered]);
+  const activeIds = useMemo(() => new Set(filtered.map((item) => item.id)), [filtered]);
   const availableLanes = useMemo(() => lanes.filter((name) => items.some((item) => item.lane === name)), [items, lanes]);
   // Grouping is a presentation projection. Canonical lookup, bounds and evidence keep ALL records.
   const projection = useMemo(() => projectDiscovery(filtered, selectedId, detailed), [filtered, selectedId, detailed]);
@@ -62,7 +62,9 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   const fitResults = fitItems(filtered, bounds);
   const fitSelection = selected ? fitItems([selected], bounds) : null;
   const connectionItems = selected ? [selected, ...selected.relationships.flatMap((r) => byId.has(r.peerId) ? [byId.get(r.peerId)!] : [])] : [];
-  const fitConnections = fitItems(connectionItems, bounds);
+  // Framing must be able to display an edge, not merely refit its selected endpoint.
+  const fitConnections = selected && extentOf(selected) && connectionItems.some((item) => item.id !== selected.id && extentOf(item))
+    ? fitItems(connectionItems, bounds) : null;
   const drawnConnections = selected && layout.marks.some((mark) => mark.item.id === selected.id)
     ? selected.relationships.filter((r) => layout.marks.some((mark) => mark.item.id === r.peerId)).length : 0;
   const flightUrl = `${base}flight/?at=${view.center}${selectedId ? `&entity=${encodeURIComponent(selectedId)}` : ""}`;
@@ -289,7 +291,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
         {activeGroup && <ProcessGroupPanel group={activeGroup} items={items} selectedId={selectedId} onSelect={(id) => { cancel(); setSelectedId(id); setHoveredId(null); }} onCollapse={collapseObservations} />}
         <div className="atlas-plot-heading"><h2>{lane ?? "Across domains"}</h2><span>{layout.marks.length} entries in view · {positioned.length} positioned observations · {filtered.length - positioned.length} unpositioned</span></div>
         {!activeGroup && <CardiacContext visibleItems={layout.marks.map((mark) => mark.item)} />}
-        {selected && selected.relationships.length > 0 && <div className="atlas-context-connection-controls"><button type="button" aria-pressed={trace} onClick={() => { if (!trace) setDetailed(true); setTrace(!trace); }}>Trace recorded connections</button><button type="button" disabled={!fitConnections} onClick={() => { setQuery(""); setLane(null); setProbe(null); setPinned(false); setHoveredId(null); setDetailed(true); setTrace(true); if (fitConnections) travel(fitConnections); }}>Frame connections</button>{trace && <small>{drawnConnections} of {selected.relationships.length} connections positioned in this window. Tracing uses individual observations. Solid: physical category; dashed: other types. Mechanism status and sources remain in the inspector.</small>}</div>}
+        {selected && selected.relationships.length > 0 && <div className="atlas-context-connection-controls"><button type="button" aria-pressed={trace} onClick={() => { if (!trace) setDetailed(true); setTrace(!trace); }}>Trace recorded connections</button><button type="button" disabled={!fitConnections} onClick={() => { setQuery(""); setLane(null); setProbe(null); setPinned(false); setHoveredId(null); setDetailed(true); setTrace(true); if (fitConnections) travel(fitConnections); }}>Frame connections</button>{!fitConnections && <small>No connection has both endpoints positioned. Individual records and evidence remain available.</small>}{trace && <small>{drawnConnections} of {selected.relationships.length} connections positioned in this window. Tracing uses individual observations. Solid: physical category; dashed: other types. Mechanism status and sources remain in the inspector.</small>}</div>}
         <div ref={frameRef} className="canvas-frame" data-testid="explorer-plot" onPointerMove={probeMove}>
           <canvas ref={canvasRef} className="frequency-canvas" style={{ height: layout.height }} tabIndex={0} aria-label="Logarithmic frequency explorer. Drag horizontally to pan; wheel or buttons to zoom. Arrow keys pan, plus and minus zoom, Home fits all. Swipe vertically to scroll the page." onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} onPointerLeave={() => { if (!drag.current) setHoveredId(null); }} onKeyDown={key} />
           <AtlasLensOverlay at={contextAt} view={view} width={width} layout={layout} items={contextProjection.items} />
