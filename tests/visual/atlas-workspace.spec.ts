@@ -63,7 +63,9 @@ test("search includes domains and A4 shows its own claim evidence", async ({ pag
   await page.reload(); await expect(shell(page)).toHaveAttribute("data-ready", "true");
   expect((await state(page)).center).toBe(exact);
   await expect(page.locator(".atlas-value strong")).toHaveText("440 Hz");
-  const flight = new URL(await page.locator(".atlas-mode a").getAttribute("href"), "http://localhost");
+  const href = await page.locator(".atlas-mode a").getAttribute("href");
+  if (!href) throw new Error("The Flight mode link must have a destination");
+  const flight = new URL(href, "http://localhost");
   expect(Number(flight.searchParams.get("at"))).toBe(exact);
   expect(flight.searchParams.get("entity")).toBe("perception.pitch.a4-reference");
   await page.evaluate(() => window.scrollTo(0, 0));
