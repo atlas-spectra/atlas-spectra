@@ -39,7 +39,8 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
   // A trace belongs to the selected record, not a hidden global filtering mode.
   useEffect(() => { setTrace(false); }, [selectedId]);
-  const filtered = useMemo(() => items.filter((item) => matchesAtlas(item, query, lane)), [items, query, lane]);
+  const filtered = useMemo(() => items.filter((item) => matchesAtlas(item, query, lane)
+    || (matchesAtlas(item, "", lane) && Boolean(groupForRecord(item.id)?.title.toLowerCase().includes(query.trim().toLowerCase())))), [items, query, lane]);
   const activeIds = useMemo(() => new Set(filtered.map((item) => item.id)), [filtered]);
   const availableLanes = useMemo(() => lanes.filter((name) => items.some((item) => item.lane === name)), [items, lanes]);
   // Grouping is a presentation projection. Canonical lookup, bounds and evidence keep ALL records.
@@ -83,7 +84,8 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   function collapseObservations() {
     if (!activeGroup) return;
     cancel(); returnFocus.current = activeGroup.anchorId;
-    setQuery(""); setLane(null); setDetailed(false); setTrace(false); setHoveredId(null); setSelectedId(null);
+    // A detail disclosure must not reset the user's domain or camera.
+    setQuery(""); setDetailed(false); setTrace(false); setHoveredId(null); setSelectedId(null);
   }
   useEffect(() => {
     const id = returnFocus.current;
