@@ -4,6 +4,9 @@ export default defineConfig({
   testDir: "tests/visual",
   outputDir: "artifacts/playwright",
   fullyParallel: false,
+  // Software WebGL competes for CPU with the long 2D navigation stress test.
+  // Serialize CI evidence rather than weakening assertions or retrying failures.
+  workers: process.env.CI ? 1 : undefined,
   retries: 0,
   reporter: [["list"]],
   use: {
@@ -19,10 +22,15 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: "**/flight.spec.ts",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "chromium-flight",
+      testMatch: "**/flight.spec.ts",
       use: {
         ...devices["Desktop Chrome"],
-        // Software WebGL makes 3D evidence available on GPU-less CI runners.
-        // These flags apply only to the test browser, never to end users.
+        // Only the 3D test browser uses software WebGL on GPU-less CI runners.
         launchOptions: { args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] },
       },
     },
