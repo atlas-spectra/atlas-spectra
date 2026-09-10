@@ -38,11 +38,19 @@ The x/y arrangement is deterministic editorial domain layout. It is not position
 
 There is no animated oscillation, generated waveform, fabricated amplitude, random star catalog, free-fly navigation, or inferred relationship arc.
 
+### Evidence targets
+
+The display adapter carries `referenceClaim` metadata for the exact claim supplying a navigational reference: its stable claim ID, JSON-pointer target, and original evidence. This is derived presentation metadata, not a scientific schema change.
+
+The inspector separates **Reference coordinate evidence** from **Record provenance**. Each provenance entry retains its target; equal status labels do not merge unrelated targets. Reference evidence resolves only that claim's source references and preserves its locator/derivation. Missing claim evidence is stated explicitly and never replaced with profile provenance. For example, the A4 percept's 440 Hz claim is an established reference, while the separately modeled unresolved `/frequency_profile` is model-derived.
+
 ## Interaction
 
 The theater is a bounded native vertical scroll region with a sticky scene. Its scroll range maps linearly to logarithmic coordinate. Native wheel/touch scrolling remains available; the renderer does not consume pointer gestures. At the limits, normal page scrolling can resume. The experience is finite because the seed corpus is finite.
 
-The ruler, previous/next landmark buttons and reset are available independently of wheel input. Focusing the navigation region enables arrows (quarter-decade steps), Home and End. Form-control keys are not intercepted. Search includes unpositioned records; selecting one changes the inspector without inventing a camera location.
+The ruler, previous/next landmark buttons and reset are available independently of wheel input. Focusing the navigation region enables arrows (quarter-decade steps), Home and End. Form-control keys are not intercepted. Search includes names, IDs, summaries, lanes and every domain term, with case/whitespace normalization. It includes unpositioned records; selecting one changes the inspector without inventing a camera location.
+
+Every distinct spectral line is a previous/next landmark, including lines closer together than a ruler step. Clicking a line label uses its exact rendered anchor. Search/catalog selection chooses the line nearest the current coordinate rather than returning to the record's first line. Non-line ranges retain midpoint navigation. Exact duplicate coordinates share a stop; no gap midpoint is invented for a line spectrum.
 
 Labels use the same perspective-camera parameters as the renderer. They remain DOM buttons, face the reader, have leader lines to their marks, and are collision-thinned. The selected visible record has priority. Every record remains reachable through the nearby/all-record browser even when its label is culled. Sparse intervals keep the corridor, coordinate ruler, nearest records, and next-landmark control instead of presenting an unexplained blank screen.
 
@@ -50,7 +58,7 @@ Labels use the same perspective-camera parameters as the renderer. They remain D
 
 `/atlas-spectra/flight/?at=2.6435&entity=<atlas-id>`
 
-`at` is a logarithmic coordinate, not a raw Hz value. Missing/blank/malformed values use the corpus start; finite extreme values clamp to corpus bounds. Unknown IDs are ignored. Selection and coordinate restore on reload/popstate. URL updates are debounced rather than calling `replaceState` on every scroll frame.
+`at` is a logarithmic coordinate, not a raw Hz value. Missing/blank/malformed values use the corpus start; finite extreme values clamp to corpus bounds. Unknown IDs are ignored. Selection and coordinate restore on reload/popstate. URL updates are debounced rather than calling `replaceState` on every scroll frame. Written coordinates retain their full numeric precision so nearby spectral landmarks do not collapse into one rounded URL value. Programmatic scroll-pixel acknowledgements do not replace exact landmark coordinates.
 
 The link back to the 2D atlas carries center and entity. The existing 2D viewport sanitizer remains authoritative there.
 
@@ -66,9 +74,9 @@ The link back to the 2D atlas carries center and entity. The existing 2D viewpor
 
 `npm ci && npm run check && npm run build && npm run test:visual`
 
-`tests/visual/flight-model.spec.ts` tests pure projection semantics without a browser fixture: deterministic input ordering, all mark kinds, missing/invalid coordinates, actual-line anchors, bounded URL values, label containment and perspective math.
+`tests/visual/flight-model.spec.ts` tests pure projection semantics without a browser fixture: deterministic input ordering, all mark kinds, missing/invalid coordinates, actual-line anchors, bounded URL values, label containment and perspective math. `flight-landmarks.spec.ts` adds later-line selection, all-line stop lists, very close lines, exact coordinate round trips and unchanged range/unpositioned behavior.
 
-`tests/visual/flight.spec.ts` exercises rendered WebGL, actual native wheel scrolling, keyboard endpoints, non-no-op reset/jump paths, selection/deep links, unpositioned inspection, reduced motion, unavailable WebGL, context loss, 2D bundle isolation and Chromium touch swipes. Software-WebGL flags live only in the Playwright configuration, not in production.
+`tests/visual/flight.spec.ts` exercises rendered WebGL, actual native wheel scrolling, keyboard endpoints, non-no-op reset/jump paths, selection/deep links, unpositioned inspection, reduced motion, unavailable WebGL, context loss, 2D bundle isolation and Chromium touch swipes. `flight-review.spec.ts` covers domain-only searches, the actual A4 positioning-claim evidence, missing claim evidence and real later-line/previous-next clicks. Synthetic edge cases are passed to the hydrated island only inside tests; they never enter source manifests or production routes. Software-WebGL flags live only in the Playwright configuration, not in production.
 
 The visual tests explicitly require a rendered scene before capturing 3D evidence. A fallback page cannot silently satisfy that check. Evidence files:
 
@@ -76,6 +84,7 @@ The visual tests explicitly require a rendered scene before capturing 3D evidenc
 - `flight-detail.png`
 - `flight-mobile.png`
 - `flight-fallback.png`
+- `flight-reference-evidence.png`
 
 The existing read-only screenshot job uploads these alongside the 2D screenshots. The trusted publisher on main copies successful current-head evidence to the dedicated `visual-evidence` branch. The PR body embeds links pinned to the evidence commit; the source SHA is stated separately. These are review screenshots, not pixel-difference golden-image tests.
 
