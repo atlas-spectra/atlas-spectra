@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import type { ExplorerItem, MarkKind } from "../lib/corpus";
 import FlightEvidence from "./FlightEvidence";
+import { atlasAxisTicks } from "../lib/atlas-axis";
 import { atlasBounds, boundView, clamp, extentOf, fitAll, fitItems, formatCoordinate, geometryFor, hitAtlas, itemCoordinate, laneColor, layoutAtlas, MARK_LABELS, matchesAtlas, readAtlasState, zoomView, type AtlasView } from "../lib/atlas-view";
 import "../styles/atlas-workspace.css";
 
@@ -107,16 +108,19 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
       ctx.strokeStyle = "#e5e6df"; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(0, row.top + row.height); ctx.lineTo(width, row.top + row.height); ctx.stroke();
     });
-    const step = view.span <= 2 ? 0.2 : Math.max(1, Math.ceil(view.span / Math.max(2, g.width / 86)));
     ctx.font = "11px ui-sans-serif, system-ui, sans-serif";
     ctx.textAlign = "center";
-    for (let tick = Math.ceil(g.min / step) * step; tick <= g.max + 1e-10; tick += step) {
-      const x = g.x(tick);
+    let lastLabelRight = g.left;
+    for (const tick of atlasAxisTicks(view, g.width)) {
+      const x = g.x(tick.log);
       ctx.strokeStyle = "#e5e7e0"; ctx.setLineDash([2, 4]);
       ctx.beginPath(); ctx.moveTo(x, 35); ctx.lineTo(x, layout.height - 36); ctx.stroke();
       ctx.setLineDash([]); ctx.fillStyle = "#6b746c";
-      // End labels need room too; the footer always exposes both exact boundaries.
-      if (x >= g.left + 24 && x <= g.right - 24) ctx.fillText(formatCoordinate(tick), x, layout.height - 15);
+      const half = ctx.measureText(tick.label).width / 2;
+      if (x - half >= lastLabelRight + 6 && x + half <= g.right - 4) {
+        ctx.fillText(tick.label, x, layout.height - 15);
+        lastLabelRight = x + half;
+      }
     }
     ctx.textAlign = "left"; ctx.fillStyle = "#657065"; ctx.font = "10px ui-sans-serif, system-ui, sans-serif";
     ctx.fillText("Hz-equivalent · log scale", g.left + 5, 23);
@@ -145,7 +149,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
       ctx.restore();
     }
     ctx.restore();
-  }, [g, layout, lanes, selectedId, hoveredId, view.span, width]);
+  }, [g, layout, lanes, selectedId, hoveredId, view, width]);
 
   function local(event: PointerEvent<HTMLCanvasElement>) {
     const rect = event.currentTarget.getBoundingClientRect();

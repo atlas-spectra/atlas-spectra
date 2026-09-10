@@ -19,6 +19,17 @@ async function containedLabels(page: Page) {
     for (const other of boxes.slice(i + 1)) expect(box!.x < other!.x + other!.width && box!.x + box!.width > other!.x && box!.y < other!.y + other!.height && box!.y + box!.height > other!.y).toBe(false);
   }
 }
+async function plotPoint(page: Page) {
+  const canvas = page.locator(".frequency-canvas");
+  // Target the real canvas header, not a label that intentionally owns clicks.
+  // Leave room for the sticky site header when bringing this tall chart into view.
+  await canvas.evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 110));
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("Expected a visible canvas");
+  const point = { x: box.x + box.width * 0.6, y: box.y + 22 };
+  expect(await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.matches(".frequency-canvas"), point)).toBe(true);
+  return point;
+}
 test("atlas exposes all coincident labels and domain focus frames real data", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 }); await ready(page);
   await expect(page.locator(".plot-label")).toHaveCount(14);
@@ -68,6 +79,7 @@ test("search includes domains and A4 shows its own claim evidence", async ({ pag
   const flight = new URL(href, "http://localhost");
   expect(Number(flight.searchParams.get("at"))).toBe(exact);
   expect(flight.searchParams.get("entity")).toBe("perception.pitch.a4-reference");
+  await page.getByRole("region", { name: "Reference coordinate evidence" }).locator("summary").click();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `${shots}/atlas-reference-detail.png`, fullPage: true });
 });
@@ -85,11 +97,23 @@ test("overview keyboard navigation reaches both endpoints and wheel zoom does no
   await overview.focus(); await overview.press("End");
   let s = await state(page); expect(s.center + s.span / 2).toBeCloseTo(s.max, 5);
   await overview.press("Home"); s = await state(page); expect(s.center - s.span / 2).toBeCloseTo(s.min, 5);
-  const canvas = page.locator(".frequency-canvas"); await canvas.hover({ position: { x: 240, y: 80 } });
+  const p = await plotPoint(page); await page.mouse.move(p.x, p.y);
   const scroll = await page.evaluate(() => window.scrollY); const span = s.span;
   await page.mouse.wheel(0, -180);
   await expect.poll(async () => (await state(page)).span).toBeLessThan(span);
   expect(await page.evaluate(() => window.scrollY)).toBe(scroll);
+});
+test("primary pointer drag moves the camera and cancellation ends the gesture", async ({ page }) => {
+  await ready(page, `${route}?center=2&span=4`);
+  const before = await state(page), p = await plotPoint(page);
+  await page.mouse.move(p.x, p.y); await page.mouse.down();
+  await page.mouse.move(p.x + 100, p.y, { steps: 5 });
+  await expect.poll(async () => (await state(page)).center).toBeLessThan(before.center - 0.1);
+  const dragged = await state(page);
+  await page.locator(".frequency-canvas").dispatchEvent("pointercancel", { pointerId: 1 });
+  await page.mouse.move(p.x + 150, p.y); await page.mouse.up();
+  expect(await state(page)).toEqual(dragged);
+  await expect(page.locator(".atlas-inspector")).toHaveAttribute("data-selected-id", "");
 });
 test("an empty search has a recovery path and cannot invent a position", async ({ page }) => {
   await ready(page); const before = await state(page);
