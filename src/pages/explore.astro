@@ -15,3 +15,11 @@ validateProcessGroups(explorerItems);
     <noscript><p>The interactive atlas requires JavaScript. Every source record is also available as a static page.</p><ul>{explorerItems.map((item) => <li><a href={`${import.meta.env.BASE_URL}phenomena/${encodeURIComponent(item.id)}/`}>{item.name}</a></li>)}</ul></noscript>
   </section>
 </BaseLayout>
+<style is:global>
+  /* Filtering stays usable while results are open; never cover the domain controls. */
+  .atlas-page .atlas-workspace .search-results {
+    position: static;
+    margin-top: 8px;
+    box-shadow: none;
+  }
+</style>
