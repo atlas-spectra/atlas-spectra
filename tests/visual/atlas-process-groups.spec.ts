@@ -31,7 +31,7 @@ test("process membership is explicit, not a numerical coincidence or merged quan
   expect(groupForRecord(clock.id)).toBeUndefined();
   expect(projectDiscovery(items, electrical).items).toEqual(items);
   expect(projectDiscovery(items, null, true).items).toEqual(items);
-  expect(atlasBounds(items)).toEqual(before); expect(JSON.stringify(items)).toBe(snapshot);
+  expect(atlasBounds(items)).toEqual(before); expect(JSON.stringify(items)).toEqual(snapshot);
 });
 
 test("partial filters and missing or invalid anchors do not erase observations", () => {
@@ -93,6 +93,7 @@ test("expansion preserves the camera and each observation's evidence and selecti
   await panel(page).screenshot({ path: "artifacts/screenshots/atlas-process-expanded.png" });
   await panel(page).getByRole("button", { name: "Collapse observations" }).click();
   await expect(panel(page)).toHaveCount(0); await expect(card(page)).toBeFocused();
+  await expect(shell(page)).toHaveAttribute("data-lane", "Biological");
   await expect(page.locator(".plot-label")).toHaveCount(1); expect(await camera(page)).toEqual(before);
 });
 
@@ -134,8 +135,14 @@ test("neighborhood and catalog do not repeat a closed process and tracing never 
   await ready(page);
   await expect(page.locator('.atlas-neighbor-list [data-group-id="heart-activity"]')).toHaveCount(1);
   await expect(page.locator(`.atlas-neighbor-list [data-neighbor-id="${arterial}"]`)).toHaveCount(0);
+  const before = await camera(page);
   await page.getByRole("button", { name: "Browse all records", exact: true }).click();
-  await expect(page.locator(".atlas-record-list>button")).toHaveCount(1);
+  await expect(shell(page)).toHaveAttribute("data-lane", "all");
+  await expect(page.locator(".atlas-record-list>button")).toHaveCount(20);
+  await expect(page.locator('.atlas-record-list [data-process-id="heart-activity"]')).toHaveCount(1);
+  expect(await camera(page)).toEqual(before);
+  // Reapply the domain to test that tracing does not bypass it until explicitly framed.
+  await page.getByRole("group", { name: "Domain focus" }).getByRole("button", { name: "Biological", exact: true }).click();
   await card(page).click();
   await page.getByRole("button", { name: "Trace recorded connections", exact: true }).click();
   await expect(shell(page)).toHaveAttribute("data-detail-mode", "observations");
