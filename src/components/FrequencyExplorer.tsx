@@ -33,6 +33,8 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drag = useRef<{ id: number; x: number; y: number; view: AtlasView; moved: boolean } | null>(null);
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
+  // A trace belongs to the selected record, not a hidden global filtering mode.
+  useEffect(() => { setTrace(false); }, [selectedId]);
   const filtered = useMemo(() => items.filter((item) => matchesAtlas(item, query, lane)), [items, query, lane]);
   const activeIds = useMemo(() => new Set(filtered.map((item) => item.id)), [filtered]);
   const availableLanes = useMemo(() => lanes.filter((name) => items.some((item) => item.lane === name)), [items, lanes]);
@@ -216,6 +218,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   const overviewMin = bounds.min + view.span / 2, overviewMax = bounds.max - view.span / 2;
 
   return <div className="explorer-shell atlas-workspace" data-ready={ready} data-moving={moving} data-view-center={view.center} data-view-span={view.span} data-bound-min={bounds.min} data-bound-max={bounds.max} data-lane={lane ?? "all"}>
+    <p className="atlas-selection-status" role="status" aria-live="polite" aria-atomic="true" style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap", border: 0 }}>{selected ? `Selected ${identityFor(selected).title}. ${identityFor(selected).subtitle}. ${itemCoordinate(selected)}. Details are available in the selected record panel.` : "No phenomenon selected."}</p>
     <div className="atlas-topbar">
       <nav className="atlas-mode" aria-label="Explorer mode"><span aria-current="page">Atlas <small>2D</small></span><a href={flightUrl}>Flight <small>3D ↗</small></a></nav>
       <p><strong>{items.length}</strong> phenomena · one shared dataset</p>
