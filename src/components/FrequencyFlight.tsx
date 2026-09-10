@@ -3,8 +3,9 @@ import {
   type ReactNode, type KeyboardEvent,
 } from "react";
 import type { ExplorerItem } from "../lib/corpus";
+import FlightEvidence from "./FlightEvidence";
 import {
-  buildFlightModel, boundedCoordinate, formatFlightHz, layoutFlightLabels, MARK_NAMES,
+  buildFlightModel, boundedCoordinate, formatFlightHz, landmarkCoordinates, layoutFlightLabels, MARK_NAMES,
   nearbyRecords, parseCoordinate, projectPoint, recordCoordinate, SCROLL_PER_DECADE,
 } from "../lib/flight";
 import "../styles/flight.css";
@@ -56,11 +57,12 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
     if (scrollMotion) syncScroll(next);
   }, [model, scrollMotion, syncScroll]);
 
-  const choose = useCallback((id: string) => {
+  const choose = useCallback((id: string, anchor?: number) => {
     if (!byId.has(id)) return;
     setSelectedId(id);
     const record = recordsById.get(id);
-    if (record) jump(recordCoordinate(record));
+    // A label names its actual rendered line; search uses the nearest line.
+    if (record) jump(recordCoordinate(record, anchor ?? coordinateRef.current));
   }, [byId, recordsById, jump]);
 
   useEffect(() => {
@@ -94,7 +96,8 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
     // Do not call replaceState at trackpad frame rate (notably on Safari).
     const timer = window.setTimeout(() => {
       const url = new URL(window.location.href);
-      url.searchParams.set("at", at.toFixed(4));
+      // Preserve close spectral landmarks instead of rounding them into one.
+      url.searchParams.set("at", String(at));
       selectedId ? url.searchParams.set("entity", selectedId) : url.searchParams.delete("entity");
       window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
     }, 180);
@@ -127,11 +130,14 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
   const nearby = useMemo(() => nearbyRecords(model, at), [model, at]);
   const normalizedQuery = query.trim().toLowerCase();
   const catalog = normalizedQuery
-    ? items.filter((item) => `${item.name} ${item.id} ${item.summary} ${item.lane}`.toLowerCase().includes(normalizedQuery))
+    ? items.filter((item) => [item.name, item.id, item.summary, item.lane, ...item.domains]
+      .some((value) => value.toLowerCase().includes(normalizedQuery)))
     : showAll ? items : nearby.slice(0, 6).map((record) => byId.get(record.id)!);
-  const stops = useMemo(() => [...new Set(model.records.map(recordCoordinate))].sort((a, b) => a - b), [model]);
-  const previous = [...stops].reverse().find((stop) => stop < at - 0.02);
-  const next = stops.find((stop) => stop > at + 0.02);
+  const stops = useMemo(() => landmarkCoordinates(model), [model]);
+  // Do not skip distinct lines with a visual-step tolerance. Jumps and URL
+  // restoration retain the exact coordinate, so an occupied stop is excluded.
+  const previous = [...stops].reverse().find((stop) => stop < at);
+  const next = stops.find((stop) => stop > at);
   const atlasUrl = `${base}explore/?center=${at.toFixed(4)}&span=4${selectedId ? `&entity=${encodeURIComponent(selectedId)}` : ""}`;
 
   function key(event: KeyboardEvent<HTMLDivElement>) {
@@ -144,7 +150,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
   }
 
   return <div className="flight-experience" data-ready={ready} data-renderer={renderer}
-    data-coordinate={at.toFixed(4)} data-min={model.bounds.min} data-max={model.bounds.max}>
+    data-coordinate={at} data-min={model.bounds.min} data-max={model.bounds.max}>
     <div className="flight-toolbar">
       <div className="flight-mode"><a href={atlasUrl}>Atlas · 2D</a><span aria-current="page">Flight · 3D</span></div>
       <label className="flight-motion"><input type="checkbox" checked={scrollMotion} onChange={(event) => setScrollMotion(event.target.checked)} /> Scroll to fly</label>
@@ -188,8 +194,8 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
                   <div className="flight-labels" aria-label="Visible flight landmarks">
                     {labels.map((label) => <button type="button" key={label.record.id}
                       className={`flight-label${label.record.id === selectedId ? " is-selected" : ""}${label.record.kind === "reference" ? " is-reference" : ""}`}
-                      data-record-id={label.record.id}
-                      style={{ left: label.left, top: label.top, width: label.width }} onClick={() => choose(label.record.id)}>
+                      data-record-id={label.record.id} data-anchor-coordinate={label.coordinate}
+                      style={{ left: label.left, top: label.top, width: label.width }} onClick={() => choose(label.record.id, label.coordinate)}>
                       <strong>{label.record.name}</strong><span>{MARK_NAMES[label.record.kind]} · {label.record.lane}</span>
                     </button>)}
                   </div>
@@ -199,6 +205,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
                   })}</div>
                   {!labels.length && <p className="flight-open-space">An open interval in this seed corpus.<br />Use “Next landmark” to find the next record.</p>}
                 </>}
+                <div classNameName="unused" hidden />
                 <div className="flight-floor-note"><span>{scrollMotion ? "SCROLL / SWIPE TO TRAVEL" : "USE THE RULER TO TRAVEL"}</span><span>DEPTH = LOG FREQUENCY</span></div>
               </div>
             </div>
@@ -233,7 +240,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
             <div><dt>Display mapping</dt><dd>{selected.display?.mode ?? "Unpositioned"}</dd></div></dl>
           <p className="flight-mapping">{selected.display?.note ?? "No supported quantitative display coordinate. This record is not placed in the corridor."}</p>
           {selected.display && selected.display.lowHz !== selected.display.highHz && <p className="flight-mapping">The 3D object shows an extent only—not a measured amplitude, spectrum shape, or time trajectory.</p>}
-          {selected.provenance.length > 0 && <section><h3>Evidence</h3>{[...new Set(selected.provenance.map((p) => `${p.evidence.basis ?? "unspecified"} · ${p.evidence.review_status ?? "unreviewed"}`))].map((text) => <p className="flight-evidence" key={text}>{text.replaceAll("_", " ")}</p>)}</section>}
+          <FlightEvidence item={selected} />
           {selected.relationships.length > 0 && <section><h3>Connections in the dataset</h3>{selected.relationships.slice(0, 3).map((r) => <div className="flight-relationship" key={r.id}>
             <strong>{r.type.replaceAll("_", " ")}</strong><span>{r.direction} · {r.peerName}</span><small>{r.category} · mechanism: {r.evidence?.mechanism_status ?? "unspecified"}</small>
           </div>)}</section>}
