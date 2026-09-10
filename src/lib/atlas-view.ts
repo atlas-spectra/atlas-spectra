@@ -1,9 +1,12 @@
 import type { ExplorerItem, MarkKind } from "./corpus";
+import { identitySearchText } from "./phenomenon-identity";
 
 export interface AtlasView { center: number; span: number }
 export interface AtlasBounds { min: number; max: number }
 export interface AtlasExtent { low: number; high: number; lines: number[] }
 export const MIN_SPAN = 1.2;
+export const ATLAS_LABEL_HEIGHT = 82;
+export const ATLAS_ROW_HEIGHT = ATLAS_LABEL_HEIGHT + 30;
 export const clamp = (n: number, low: number, high: number) => Math.min(high, Math.max(low, n));
 const positive = (n: number) => Number.isFinite(n) && n > 0;
 
@@ -64,7 +67,7 @@ export function readAtlasState(search: string, bounds: AtlasBounds, items: Explo
   };
 }
 export function matchesAtlas(item: ExplorerItem, query: string, lane: string | null): boolean {
-  return (!lane || item.lane === lane) && [item.name, item.id, item.summary, item.lane, ...item.domains].join(" ").toLowerCase().includes(query.trim().toLowerCase());
+  return (!lane || item.lane === lane) && [item.name, item.id, item.summary, item.lane, ...item.domains, identitySearchText(item)].join(" ").toLowerCase().includes(query.trim().toLowerCase());
 }
 export function formatCoordinate(log: number): string {
   if (!Number.isFinite(log)) return "Unpositioned";
@@ -97,7 +100,7 @@ export interface AtlasLayout { marks: AtlasMark[]; lanes: AtlasLane[]; height: n
 /** Pack real label rectangles AND mark extents into separate rows; never invent x positions. */
 export function layoutAtlas(items: ExplorerItem[], lanes: string[], view: AtlasView, width: number): AtlasLayout {
   const g = geometryFor(width, view);
-  const labelWidth = Math.min(214, Math.max(70, g.width - 12));
+  const labelWidth = Math.min(270, Math.max(70, g.width - 12));
   const marks: AtlasMark[] = [];
   const rows: AtlasLane[] = [];
   let top = 42;
@@ -123,10 +126,10 @@ export function layoutAtlas(items: ExplorerItem[], lanes: string[], view: AtlasV
       let row = occupied.findIndex((intervals) => intervals.every(([a, b]) => high <= a || low >= b));
       if (row < 0) { row = occupied.length; occupied.push([]); }
       occupied[row].push([low, high]);
-      const labelTop = top + 12 + row * 68;
-      marks.push({ item, extent, anchor, x1, x2, xs: lines.map(g.x), x, y: labelTop + 53, labelLeft, labelTop, labelWidth });
+      const labelTop = top + 12 + row * ATLAS_ROW_HEIGHT;
+      marks.push({ item, extent, anchor, x1, x2, xs: lines.map(g.x), x, y: labelTop + ATLAS_LABEL_HEIGHT + 9, labelLeft, labelTop, labelWidth });
     }
-    const height = Math.max(1, occupied.length) * 68 + 20;
+    const height = Math.max(1, occupied.length) * ATLAS_ROW_HEIGHT + 20;
     rows.push({ name, top, height, count: visible.length });
     top += height;
   }
