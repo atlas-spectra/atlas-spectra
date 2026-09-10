@@ -5,8 +5,8 @@ export default defineConfig({
   outputDir: "artifacts/playwright",
   fullyParallel: false,
   // Software WebGL competes for CPU with the long 2D navigation stress test.
-  // Serialize CI evidence rather than weakening assertions or retrying failures.
-  workers: process.env.CI ? 1 : undefined,
+  // Serialize evidence rather than weakening assertions or retrying failures.
+  workers: 1,
   retries: 0,
   reporter: [["list"]],
   use: {
