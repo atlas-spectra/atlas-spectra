@@ -1,9 +1,14 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const flightBrowserTests = ["**/flight.spec.ts", "**/flight-review.spec.ts"];
+
 export default defineConfig({
   testDir: "tests/visual",
   outputDir: "artifacts/playwright",
   fullyParallel: false,
+  // Software WebGL competes for CPU with the long 2D navigation stress test.
+  // Serialize evidence rather than weakening assertions or retrying failures.
+  workers: 1,
   retries: 0,
   reporter: [["list"]],
   use: {
@@ -17,6 +22,19 @@ export default defineConfig({
     timeout: 30_000,
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "chromium",
+      testIgnore: flightBrowserTests,
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "chromium-flight",
+      testMatch: flightBrowserTests,
+      use: {
+        ...devices["Desktop Chrome"],
+        // Only the 3D test browser uses software WebGL on GPU-less CI runners.
+        launchOptions: { args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] },
+      },
+    },
   ],
 });

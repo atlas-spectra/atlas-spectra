@@ -1,0 +1,21 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import FrequencyFlight from "../components/FrequencyFlight";
+import { explorerItems, lanes } from "../lib/corpus";
+import "../styles/flight.css";
+const base = import.meta.env.BASE_URL;
+---
+<BaseLayout title="Frequency Flight" description="Travel through logarithmic frequency depth while preserving the Atlas Spectra corpus, sources, and evidence.">
+  <section class="flight-page">
+    <div class="flight-intro">
+      <div><p class="eyebrow">An immersive atlas · Experimental</p><h1>Frequency Flight</h1></div>
+      <p>A journey across orders of magnitude. Scroll through frequency depth, find a familiar landmark, and follow it back to the evidence.</p>
+    </div>
+    <FrequencyFlight client:load items={explorerItems} lanes={lanes} base={base} />
+    <noscript><p>The 3D instrument requires JavaScript. Every record is still available below.</p></noscript>
+    <details class="flight-static-records">
+      <summary>Browse the corpus without the 3D instrument</summary>
+      <ul>{explorerItems.map((item) => <li><a href={`${base}phenomena/${encodeURIComponent(item.id)}/`}>{item.name}</a></li>)}</ul>
+    </details>
+  </section>
+</BaseLayout>

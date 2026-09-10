@@ -18,14 +18,16 @@ export interface Quantity { value?: number; lower?: number; upper?: number; unit
 interface Axis { kind: string; notes?: string; }
 interface Line { position?: Quantity; }
 interface FrequencyProfile { type: string; axis?: Axis; fundamental?: Quantity; center?: Quantity; range?: Quantity; lines?: Line[]; rate?: Quantity; transition_frequency?: Quantity; characteristic_band?: Quantity; representation?: string; constraints?: string[]; }
-interface Evidence { basis?: string; review_status?: string; mechanism_status?: string; locator?: string; derivation?: string; source_refs?: Array<{ id: string }>; }
+export interface Evidence { basis?: string; review_status?: string; mechanism_status?: string; locator?: string; derivation?: string; source_refs?: Array<{ id: string }>; }
 interface Relationship { id: string; type: string; category: string; source_ref: { id: string; scope?: string }; target_ref: { id: string; scope?: string }; evidence?: Evidence; }
 interface Claim { id: string; predicate?: string; object?: unknown; evidence?: Evidence; }
 interface Source { id: string; title: string; type?: string; publisher?: string; url?: string; doi?: string; }
 interface Provenance { target: string; evidence: Evidence; }
 export interface Manifest { schema_version: string; id: string; name: string; summary: string; domains: string[]; system?: { id: string; name?: string; type?: string }; observable?: { id: string; name?: string; quantity_kind?: string; independent_coordinate?: string }; frequency_profile: FrequencyProfile; relationships?: Relationship[]; claims?: Claim[]; sources?: Source[]; provenance?: Provenance[]; tags?: string[]; }
 export type MarkKind = "point" | "band" | "lines" | "spectrum" | "chirp" | "reference";
-export interface DisplayPosition { lowHz: number; highHz: number; positionsHz?: number[]; mode: "native" | "normalized" | "transformed" | "claim-reference"; note: string; nativeLabel: string; }
+/** Origin of a navigational reference, separate from physical-profile provenance. */
+export interface ReferenceClaim { id: string; target: string; evidence?: Evidence; }
+export interface DisplayPosition { lowHz: number; highHz: number; positionsHz?: number[]; mode: "native" | "normalized" | "transformed" | "claim-reference"; note: string; nativeLabel: string; referenceClaim?: ReferenceClaim; }
 export interface ExplorerRelationship { id: string; type: string; category: string; direction: "outgoing" | "incoming"; peerId: string; peerName: string; evidence?: Evidence; }
 export interface ExplorerItem { id: string; name: string; summary: string; domains: string[]; lane: string; profileType: string; axisKind: string; markKind: MarkKind; display: DisplayPosition | null; sources: Source[]; provenance: Provenance[]; relationships: ExplorerRelationship[]; }
 
@@ -82,7 +84,25 @@ function profilePosition(manifest: Manifest): DisplayPosition | null {
   }
 }
 function quantityLike(value: unknown): Quantity | null { if (!value || typeof value !== "object" || Array.isArray(value)) return null; const candidate = value as Quantity; return bounds(candidate) ? candidate : null; }
-function claimReferencePosition(manifest: Manifest): DisplayPosition | null { if (manifest.frequency_profile.type !== "unknown") return null; for (const claim of manifest.claims ?? []) { const quantity = quantityLike(claim.object); if (!quantity) continue; const scale = unitScale(quantity.unit); const b = bounds(quantity); if (!scale || !b) continue; return { lowHz: b[0] * scale, highHz: b[1] * scale, mode: "claim-reference", note: "Frequency-like claim reference used for navigation; this is not the physical spectrum of the phenomenon", nativeLabel: nativeLabel(quantity) }; } return null; }
+function claimReferencePosition(manifest: Manifest): DisplayPosition | null {
+  if (manifest.frequency_profile.type !== "unknown") return null;
+  for (const [index, claim] of (manifest.claims ?? []).entries()) {
+    const quantity = quantityLike(claim.object);
+    if (!quantity) continue;
+    const scale = unitScale(quantity.unit);
+    const b = bounds(quantity);
+    if (!scale || !b) continue;
+    return {
+      lowHz: b[0] * scale, highHz: b[1] * scale, mode: "claim-reference",
+      note: "Frequency-like claim reference used for navigation; this is not the physical spectrum of the phenomenon",
+      nativeLabel: nativeLabel(quantity),
+      // Carry the exact claim that supplied the coordinate. Never substitute
+      // /frequency_profile provenance or another claim's evidence here.
+      referenceClaim: { id: claim.id, target: `/claims/${index}/object`, evidence: claim.evidence },
+    };
+  }
+  return null;
+}
 function markKindFor(manifest: Manifest, display: DisplayPosition | null): MarkKind { if (display?.mode === "claim-reference") return "reference"; switch (manifest.frequency_profile.type) { case "periodic": case "event_rate": case "quantum_transition": return display && display.lowHz !== display.highHz ? "band" : "point"; case "discrete_lines": return "lines"; case "continuous_spectrum": case "stochastic_process": return "spectrum"; case "time_varying": return "chirp"; default: return "band"; } }
 function relationshipList(manifest: Manifest): ExplorerRelationship[] { const relationships: ExplorerRelationship[] = []; for (const owner of manifests) for (const relationship of owner.relationships ?? []) { const sourceId = relationship.source_ref.id; const targetId = relationship.target_ref.id; if (sourceId !== manifest.id && targetId !== manifest.id) continue; const outgoing = sourceId === manifest.id; const peerId = outgoing ? targetId : sourceId; relationships.push({ id: relationship.id, type: relationship.type, category: relationship.category, direction: outgoing ? "outgoing" : "incoming", peerId, peerName: manifestById.get(peerId)?.name ?? peerId, evidence: relationship.evidence }); } return relationships.sort((a, b) => a.type.localeCompare(b.type) || a.peerName.localeCompare(b.peerName)); }
 export const explorerItems: ExplorerItem[] = manifests.map((manifest) => { const display = profilePosition(manifest) ?? claimReferencePosition(manifest); return { id: manifest.id, name: manifest.name, summary: manifest.summary, domains: manifest.domains, lane: laneFor(manifest), profileType: manifest.frequency_profile.type, axisKind: manifest.frequency_profile.axis?.kind ?? "other", markKind: markKindFor(manifest, display), display, sources: manifest.sources ?? [], provenance: manifest.provenance ?? [], relationships: relationshipList(manifest) }; });
