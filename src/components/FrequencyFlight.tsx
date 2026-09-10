@@ -5,8 +5,8 @@ import {
 import type { ExplorerItem } from "../lib/corpus";
 import FlightEvidence from "./FlightEvidence";
 import {
-  buildFlightModel, boundedCoordinate, formatFlightHz, landmarkCoordinates, layoutFlightLabels, MARK_NAMES,
-  nearbyRecords, parseCoordinate, projectPoint, recordCoordinate, SCROLL_PER_DECADE,
+  adjacentLandmarks, buildFlightModel, boundedCoordinate, formatFlightHz, landmarkCoordinates,
+  layoutFlightLabels, MARK_NAMES, nearbyRecords, parseCoordinate, projectPoint, recordCoordinate, SCROLL_PER_DECADE,
 } from "../lib/flight";
 import "../styles/flight.css";
 
@@ -134,10 +134,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
       .some((value) => value.toLowerCase().includes(normalizedQuery)))
     : showAll ? items : nearby.slice(0, 6).map((record) => byId.get(record.id)!);
   const stops = useMemo(() => landmarkCoordinates(model), [model]);
-  // Do not skip distinct lines with a visual-step tolerance. Jumps and URL
-  // restoration retain the exact coordinate, so an occupied stop is excluded.
-  const previous = [...stops].reverse().find((stop) => stop < at);
-  const next = stops.find((stop) => stop > at);
+  const { previous, next } = adjacentLandmarks(stops, at);
   const atlasUrl = `${base}explore/?center=${at.toFixed(4)}&span=4${selectedId ? `&entity=${encodeURIComponent(selectedId)}` : ""}`;
 
   function key(event: KeyboardEvent<HTMLDivElement>) {
@@ -205,7 +202,6 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
                   })}</div>
                   {!labels.length && <p className="flight-open-space">An open interval in this seed corpus.<br />Use “Next landmark” to find the next record.</p>}
                 </>}
-                <div classNameName="unused" hidden />
                 <div className="flight-floor-note"><span>{scrollMotion ? "SCROLL / SWIPE TO TRAVEL" : "USE THE RULER TO TRAVEL"}</span><span>DEPTH = LOG FREQUENCY</span></div>
               </div>
             </div>
