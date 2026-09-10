@@ -1,5 +1,4 @@
 import { expect, test, type Page } from "@playwright/test";
-import { readFileSync, readdirSync } from "node:fs";
 import type { ExplorerItem } from "../../src/lib/corpus";
 import { CARDIAC_OBSERVATION_IDS, PHENOMENON_IDENTITIES, identityFor } from "../../src/lib/phenomenon-identity";
 import { ATLAS_LABEL_HEIGHT, atlasBounds, extentOf, fitItems, layoutAtlas, matchesAtlas } from "../../src/lib/atlas-view";
@@ -24,16 +23,30 @@ async function biological(page: Page) {
   await expect(page.locator(".plot-label")).toHaveCount(3);
 }
 
-test("editorial identities resolve canonical records and contain no scientific values", () => {
-  const ids = new Set(readdirSync("examples").filter((file) => file.endsWith(".json"))
-    .map((file) => JSON.parse(readFileSync(`examples/${file}`, "utf8")).id as string));
-  for (const [id, identity] of Object.entries(PHENOMENON_IDENTITIES)) {
-    expect(ids.has(id), id).toBe(true);
-    expect(Object.keys(identity).every((key) => ["title", "subtitle", "symbol", "aliases"].includes(key))).toBe(true);
-    expect(identity.title.length).toBeGreaterThan(0);
-    expect(identity.subtitle.length).toBeGreaterThan(0);
-  }
-  expect(new Set(cases.map(({ id }) => identityFor(fixture(id)).symbol)).size).toBe(3);
+test("editorial identities resolve canonical records and contain no scientific values", async ({ browser, baseURL }) => {
+  // Validate against the real build-time corpus, including the no-JavaScript path.
+  // No Node-specific types or dependence on Astro's private props serializer.
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  try {
+    const page = await context.newPage();
+    await page.goto(route);
+    const links = page.locator("noscript a");
+    await expect(links.first()).toBeVisible();
+    const ids = new Set<string>();
+    for (const link of await links.all()) {
+      const href = await link.getAttribute("href");
+      const match = href?.match(/\/phenomena\/([^/]+)\/$/);
+      if (!match) throw new Error(`Expected a canonical phenomenon link, got ${href}`);
+      ids.add(decodeURIComponent(match[1]));
+    }
+    for (const [id, identity] of Object.entries(PHENOMENON_IDENTITIES)) {
+      expect(ids.has(id), id).toBe(true);
+      expect(Object.keys(identity).every((key) => ["title", "subtitle", "symbol", "aliases"].includes(key))).toBe(true);
+      expect(identity.title.length).toBeGreaterThan(0);
+      expect(identity.subtitle.length).toBeGreaterThan(0);
+    }
+    expect(new Set(cases.map(({ id }) => identityFor(fixture(id)).symbol)).size).toBe(3);
+  } finally { await context.close(); }
 });
 
 test("identity does not alter equal coordinates, event semantics or label packing", () => {
