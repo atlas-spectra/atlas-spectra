@@ -3,6 +3,7 @@ import type { ExplorerItem } from "../lib/corpus";
 import { clamp, formatCoordinate, geometryFor, itemCoordinate, laneColor, type AtlasLayout, type AtlasView } from "../lib/atlas-view";
 import { atlasLandmarks, distanceLabel, isInView, neighboringStops, neighborsAt, reciprocalLabel } from "../lib/atlas-neighborhood";
 import "../styles/atlas-context.css";
+import "../styles/atlas-context-refinements.css";
 
 type Visit = (coordinate: number, id?: string) => void;
 export function AtlasLandscape({ items, lanes, view, onVisit }: { items: ExplorerItem[]; lanes: string[]; view: AtlasView; onVisit: Visit }) {
@@ -39,6 +40,7 @@ export function AtlasNeighborhood({ items, lanes, at, view, activeIds, selectedI
 }) {
   const neighbors = useMemo(() => neighborsAt(items, at), [items, at]);
   const closest = neighbors[0];
+  const selected = items.find((item) => item.id === selectedId);
   const { previous, next } = useMemo(() => neighboringStops(items, at), [items, at]);
   return <div className="atlas-neighborhood" aria-label="Frequency neighborhood">
     <div className="atlas-neighborhood-title"><span className="atlas-live-dot" aria-hidden="true" /><span>AROUND YOUR LENS</span></div>
@@ -51,6 +53,10 @@ export function AtlasNeighborhood({ items, lanes, at, view, activeIds, selectedI
       <small>{distanceLabel(entry)}</small><strong>{entry.item.name}</strong><span>{itemCoordinate(entry.item)}</span>
       <em>{entry.item.display?.mode === "claim-reference" ? "Claim reference · " : ""}{entry.item.lane}{!activeIds.has(entry.item.id) ? " · outside filter" : !isInView(entry.item, view) ? " · off screen" : ""}</em>
     </button>)}</div>
+    {selected && selected.relationships.length > 0 && <details className="atlas-neighborhood-why"><summary>What supports the selected record’s connections?</summary>
+      {selected.relationships.map((edge) => <div key={edge.id}><strong>{edge.type.replaceAll("_", " ")}</strong><p>{edge.category} · mechanism: {(edge.evidence?.mechanism_status ?? "unspecified").replaceAll("_", " ")}</p>
+        <p>{edge.evidence?.derivation ?? edge.evidence?.locator ?? "Inspect the full record and linked provenance for the relationship’s conditions and source context."}</p></div>)}
+    </details>}
     <p className="atlas-context-caution">Neighbors are ranked across the whole corpus by numerical distance on the display scale. This does not establish a physical connection. The time ruler is 1/f, not a measured period.</p>
   </div>;
 }
@@ -85,9 +91,10 @@ export function AtlasRecordedLinks({ selected, layout, width }: { selected: Expl
       return <g key={edge.id} data-relationship-id={edge.id} data-category={edge.category}>
         <path d={`M${from.x},${from.y} C${from.x + bend},${from.y} ${to.x + bend},${to.y} ${to.x},${to.y}`}
           markerEnd={`url(#${id})`} strokeDasharray={edge.category === "physical" ? undefined : "4 5"} />
-        <text x={labelX} y={(from.y + to.y) / 2 - 5} textAnchor="middle">{edge.type.replaceAll("_", " ")}</text>
+        <text x={labelX} y={(from.y + to.y) / 2 - 5} textAnchor="middle">{edge.category === "numerical" ? "NUMERICAL COINCIDENCE" : edge.type.replaceAll("_", " ")}</text>
         <title>{`${edge.type} · ${edge.category} · mechanism: ${edge.evidence?.mechanism_status ?? "unspecified"}`}</title>
       </g>;
     })}
+    <text className="atlas-links-note" x={width / 2} y={layout.height - 40} textAnchor="middle">Arcs link records—not exact coordinate pairs. Inspect conditions & evidence.</text>
   </svg>;
 }

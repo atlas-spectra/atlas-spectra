@@ -1,0 +1,37 @@
+/* Context should be readable where inspection happens, not below a long mobile catalog. */
+.atlas-probe-input button { font-family: inherit; font-size: 11px; }
+.atlas-context-selection > p { font-size: 12px; line-height: 1.6; color: #657161; }
+.atlas-neighborhood-why { margin-top: 12px; font-size: 11px; color: #466552; }
+.atlas-neighborhood-why summary { cursor: pointer; line-height: 1.5; }
+.atlas-neighborhood-why > div { padding: 10px; border-left: 2px solid #b39b72; margin-top: 8px; background: #f8f6ed; }
+.atlas-neighborhood-why strong { font-size: 9px; }
+.atlas-neighborhood-why p { margin: 5px 0; font-size: 10px; line-height: 1.6; }
+.atlas-recorded-links .atlas-links-note { font-size: 8px; fill: #66766a; }
+@media (max-width: 980px) {
+  .atlas-workspace .atlas-main { display: flex; flex-direction: column; gap: 9px; }
+  .atlas-workspace .atlas-chart-column, .atlas-workspace .atlas-inspector { display: contents; }
+  .atlas-main .atlas-overview { order: 1; width: 100%; }
+  .atlas-main .atlas-probe-controls { order: 2; width: 100%; margin-bottom: 0; }
+  .atlas-main .atlas-neighborhood { order: 3; width: 100%; border: 1px solid #d4e0d2; border-radius: 10px; padding: 13px; margin: 0; background: #f2f7ec; }
+  .atlas-main .atlas-plot-heading { order: 4; width: 100%; }
+  .atlas-main .atlas-context-connection-controls { order: 5; width: 100%; }
+  .atlas-main .canvas-frame { order: 6; width: 100%; }
+  .atlas-main .explorer-footer { order: 7; width: 100%; }
+  .atlas-main .mark-legend { order: 8; width: 100%; }
+  .atlas-chart-column > .atlas-note { order: 9; width: 100%; }
+  .atlas-main .atlas-catalog { order: 10; width: 100%; }
+  .atlas-main .atlas-context-selection { order: 11; width: 100%; padding: 16px; border: 1px solid #d4e0d2; border-radius: 10px; background: #fffefa; }
+  .atlas-inspector > .atlas-flight-link { order: 12; }
+  .atlas-neighborhood > h2 { display: none; } /* The same value remains directly above in the lens control. */
+  .atlas-neighborhood-nearest { margin: 10px 0 5px; }
+  .atlas-neighborhood-nearest strong { display: inline; }
+  .atlas-neighborhood-summary { -webkit-line-clamp: 2; margin-bottom: 6px; }
+  .atlas-neighbor-list { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+  .atlas-neighbor-list > button:nth-child(n+3) { display: none; }
+  .atlas-neighborhood-steps { margin: 9px 0; }
+  .atlas-context-caution { font-size: 9px; margin-top: 8px; }
+}
+@media (max-width: 420px) {
+  .atlas-neighbor-list strong { font-size: 10px; }
+  .atlas-neighbor-list button { padding: 8px; }
+}
