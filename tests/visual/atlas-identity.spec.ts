@@ -18,14 +18,13 @@ function fixture(id: string): ExplorerItem {
     sources: [], relationships: [], provenance: [] };
 }
 async function biological(page: Page) {
-  await page.goto(`${route}?lane=Biological&center=0.111&span=1.2`);
+  // Identity-level comparisons belong to the explicit All observations view.
+  await page.goto(`${route}?lane=Biological&center=0.111&span=1.2&detail=observations`);
   await expect(shell(page)).toHaveAttribute("data-ready", "true");
   await expect(page.locator(".plot-label")).toHaveCount(3);
 }
 
 test("editorial identities resolve canonical records and contain no scientific values", async ({ browser, baseURL }) => {
-  // Validate against the real build-time corpus, including the no-JavaScript path.
-  // No Node-specific types or dependence on Astro's private props serializer.
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
   try {
     const page = await context.newPage();

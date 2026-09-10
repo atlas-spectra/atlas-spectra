@@ -4,7 +4,8 @@ const shots = "artifacts/screenshots";
 const shell = (page: Page) => page.locator(".atlas-workspace");
 const state = (page: Page) => shell(page).evaluate((el: HTMLElement) => ({ center: Number(el.dataset.viewCenter), span: Number(el.dataset.viewSpan), min: Number(el.dataset.boundMin), max: Number(el.dataset.boundMax) }));
 async function ready(page: Page, url = route) {
-  await page.goto(url); await expect(shell(page)).toHaveAttribute("data-ready", "true");
+  // These existing detailed comparison regressions now explicitly select All observations.
+  await page.goto(`${url}${url.includes("?") ? "&" : "?"}detail=observations`); await expect(shell(page)).toHaveAttribute("data-ready", "true");
   await expect(page.locator(".plot-label").first()).toBeVisible();
 }
 async function containedLabels(page: Page) {
@@ -21,8 +22,6 @@ async function containedLabels(page: Page) {
 }
 async function plotPoint(page: Page) {
   const canvas = page.locator(".frequency-canvas");
-  // Target the real canvas header, not a label that intentionally owns clicks.
-  // Leave room for the sticky site header when bringing this tall chart into view.
   await canvas.evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 110));
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Expected a visible canvas");
