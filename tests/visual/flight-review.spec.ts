@@ -33,6 +33,10 @@ async function replaceFlightItems(page: Page, items: ExplorerItem[]) {
     if (props.items?.[0] !== 1) throw new Error("Astro items serialization changed");
     props.items = encode(records);
     props.lanes = encode(["Biological", "Optical"]);
+    // The React adapter ignores hydration calls without the ssr marker.
+    // Re-arm it before changing props; Astro invokes the adapter with the
+    // existing React root and removes the marker after this test-only render.
+    island.setAttribute("ssr", "");
     island.setAttribute("props", JSON.stringify(props));
   }, items);
   await expect(page.locator(".flight-catalog-note")).toContainText(`${items.length} positioned · 0 unpositioned`);
