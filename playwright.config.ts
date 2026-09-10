@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const flightBrowserTests = ["**/flight.spec.ts", "**/flight-review.spec.ts"];
+
 export default defineConfig({
   testDir: "tests/visual",
   outputDir: "artifacts/playwright",
@@ -22,12 +24,12 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: "**/flight.spec.ts",
+      testIgnore: flightBrowserTests,
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "chromium-flight",
-      testMatch: "**/flight.spec.ts",
+      testMatch: flightBrowserTests,
       use: {
         ...devices["Desktop Chrome"],
         // Only the 3D test browser uses software WebGL on GPU-less CI runners.
