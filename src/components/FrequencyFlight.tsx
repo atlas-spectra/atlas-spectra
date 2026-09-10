@@ -26,6 +26,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
   const recordsById = useMemo(() => new Map(model.records.map((record) => [record.id, record])), [model]);
   const [at, setAt] = useState(model.start);
   const coordinateRef = useRef(model.start);
+  const synchronizedScrollTop = useRef<number | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [scrollMotion, setScrollMotion] = useState(false);
@@ -43,6 +44,9 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
     const rail = railRef.current;
     if (!rail) return;
     rail.scrollTop = (value - model.bounds.min) / range * Math.max(0, rail.scrollHeight - rail.clientHeight);
+    // The browser may round scrollTop to a device pixel. Its resulting scroll
+    // event is an acknowledgement, not a new scientific/navigation coordinate.
+    synchronizedScrollTop.current = rail.scrollTop;
   }, [model, range]);
 
   const jump = useCallback((value: number) => {
@@ -154,6 +158,11 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
             onScroll={(event) => {
               if (!scrollMotion || !ready) return;
               const rail = event.currentTarget;
+              if (synchronizedScrollTop.current !== null) {
+                const synchronized = Math.abs(rail.scrollTop - synchronizedScrollTop.current) < 0.01;
+                synchronizedScrollTop.current = null;
+                if (synchronized) return;
+              }
               const travel = rail.scrollHeight - rail.clientHeight;
               if (travel <= 0) return;
               const value = boundedCoordinate(model.bounds.min + rail.scrollTop / travel * range, model.bounds);
@@ -184,7 +193,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
                       <strong>{label.record.name}</strong><span>{MARK_NAMES[label.record.kind]} · {label.record.lane}</span>
                     </button>)}
                   </div>
-                  <div className="flight-gates" aria-hidden="true">{Array.from({ length: 5 }, (_, index) => Math.ceil(at) + index).map((decade) => {
+                  <div className="flight-gates" aria-hidden="true">{Array.from({ length: 2 }, (_, index) => Math.ceil(at) + index).map((decade) => {
                     const p = projectPoint(-6.7, -4.4, decade, at, size.width, size.height);
                     return p && p.x > 8 && p.y < size.height - 35 ? <span key={decade} style={{ left: p.x, top: p.y }}>10<sup>{decade}</sup></span> : null;
                   })}</div>
