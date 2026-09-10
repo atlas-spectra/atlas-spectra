@@ -17,6 +17,14 @@ export default defineConfig({
     timeout: 30_000,
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Software WebGL makes 3D evidence available on GPU-less CI runners.
+        // These flags apply only to the test browser, never to end users.
+        launchOptions: { args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] },
+      },
+    },
   ],
 });
