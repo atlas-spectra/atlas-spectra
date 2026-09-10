@@ -2,20 +2,14 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import FrequencyExplorer from "../components/FrequencyExplorer";
 import { explorerItems, lanes } from "../lib/corpus";
-import "../styles/explorer-review.css";
 ---
-<BaseLayout title="Explore" description="Explore the Atlas Spectra seed corpus on a logarithmic display coordinate.">
-  <section class="explorer-page">
-    <div class="page-intro">
-      <div>
-        <p class="eyebrow">Logarithmic explorer</p>
-        <h1>Across orders of magnitude</h1>
-      </div>
-      <p>
-        Position on the x-axis is a navigation aid. Event rates, wavelength, wavenumber, and perceptual
-        references retain their original semantics and show their display transform in the detail panel.
-      </p>
+<BaseLayout title="Explore" description="A precise, evidence-aware atlas of frequencies across nature and technology.">
+  <section class="atlas-page">
+    <div class="atlas-intro">
+      <div><p class="eyebrow">The frequency atlas</p><h1>Same scale. Different worlds.</h1></div>
+      <p>Explore rhythms, spectra, and references side by side. Follow a landmark into the original quantity—and the evidence behind it.</p>
     </div>
     <FrequencyExplorer client:load items={explorerItems} lanes={lanes} />
+    <noscript><p>The interactive atlas requires JavaScript. Every source record is also available as a static page.</p><ul>{explorerItems.map((item) => <li><a href={`${import.meta.env.BASE_URL}phenomena/${encodeURIComponent(item.id)}/`}>{item.name}</a></li>)}</ul></noscript>
   </section>
 </BaseLayout>
