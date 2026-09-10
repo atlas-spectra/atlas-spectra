@@ -15,10 +15,22 @@ async function ready(page: Page, url = route) {
   await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 }
 
+async function expectSingleLineStepNumbers(page: Page) {
+  for (const number of await page.locator(".flight-instruction b").all()) {
+    const lines = await number.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getClientRects().length;
+    });
+    expect(lines).toBe(1);
+  }
+}
+
 test("Flight renders, scrolls natively, selects records and restores deep links", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await ready(page);
   await expect(page.locator(".flight-label").first()).toBeVisible();
+  await expectSingleLineStepNumbers(page);
   await page.screenshot({ path: `${screenshots}/flight-overview.png`, fullPage: true });
 
   const start = await coordinate(page);
@@ -34,14 +46,19 @@ test("Flight renders, scrolls natively, selects records and restores deep links"
   await result.click();
   await expect(page.locator(".flight-inspector")).toHaveAttribute("data-selected-id", id!);
   await expect(page.getByRole("link", { name: "Full record & provenance" })).toBeVisible();
+  // Wait through the debounced URL update so the programmatic scroll event has
+  // settled. Rounding scrollTop must not turn a 440 Hz landmark into 439 Hz.
+  await page.waitForFunction((value) => new URL(location.href).searchParams.get("entity") === value, id);
+  await expect.poll(async () => Math.abs(await coordinate(page) - Math.log10(440))).toBeLessThan(0.0001);
+  await expect(page.locator(".flight-hud strong")).toHaveText("440 Hz");
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `${screenshots}/flight-detail.png`, fullPage: true });
-  await page.waitForFunction((value) => new URL(location.href).searchParams.get("entity") === value, id);
   const selectedAt = await coordinate(page);
   await page.reload();
   await expect(experience(page)).toHaveAttribute("data-renderer", "ready");
   await expect(page.locator(".flight-inspector")).toHaveAttribute("data-selected-id", id!);
-  await expect.poll(async () => Math.abs(await coordinate(page) - selectedAt)).toBeLessThan(0.01);
+  await expect.poll(async () => Math.abs(await coordinate(page) - selectedAt)).toBeLessThan(0.0001);
+  await expect(page.locator(".flight-hud strong")).toHaveText("440 Hz");
 });
 
 test("Flight clamps keyboard and malformed URL navigation, and resets", async ({ page }) => {
@@ -109,6 +126,7 @@ test("WebGL unavailable fallback retains searchable records and 2D navigation", 
   await expect(page.locator(".flight-canvas canvas")).toHaveCount(0);
   await page.getByLabel("Find a phenomenon").fill("quartz");
   await expect(page.locator(".flight-records button").first()).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `${screenshots}/flight-fallback.png`, fullPage: true });
 });
 
@@ -157,6 +175,7 @@ test.describe("touch Flight", () => {
       expect(labelBox!.x).toBeGreaterThanOrEqual(stageBox!.x - 1);
       expect(labelBox!.x + labelBox!.width).toBeLessThanOrEqual(stageBox!.x + stageBox!.width + 1);
     }
+    await expectSingleLineStepNumbers(page);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: `${screenshots}/flight-mobile.png`, fullPage: true });
   });
