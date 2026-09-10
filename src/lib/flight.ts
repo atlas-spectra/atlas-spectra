@@ -21,6 +21,8 @@ export interface FlightModel {
 }
 export interface FlightLabel {
   record: FlightRecord;
+  /** Exact coordinate of the rendered anchor, including later spectral lines. */
+  coordinate: number;
   anchorX: number;
   anchorY: number;
   left: number;
@@ -74,7 +76,7 @@ export function buildFlightModel(items: ExplorerItem[], lanes: string[]): Flight
 }
 
 export function boundedCoordinate(value: number, bounds: FlightBounds): number {
-  return clamp(Number.isFinite(value) ? value : bounds.min, bounds.min, bounds.max);
+  return clamp(Number.isFinite(value) ? value : bounds.min, bounds.max === undefined ? bounds.min : bounds.min, bounds.max);
 }
 
 export function parseCoordinate(raw: string | null, model: FlightModel): number {
@@ -89,8 +91,17 @@ export function anchorLog(record: FlightRecord, at: number): number {
   return clamp(at, record.low, record.high);
 }
 
-export function recordCoordinate(record: FlightRecord): number {
-  return record.lines.length ? record.lines[0] : (record.low + record.high) / 2;
+/** Search selects the nearest actual line; an explicit label anchor wins. */
+export function recordCoordinate(record: FlightRecord, near = record.low): number {
+  return record.lines.length
+    ? anchorLog(record, Number.isFinite(near) ? near : record.low)
+    : (record.low + record.high) / 2;
+}
+
+/** Distinct lines remain separate stops, even when closer than a UI step. */
+export function landmarkCoordinates(model: FlightModel): number[] {
+  return [...new Set(model.records.flatMap((record) =>
+    record.lines.length ? record.lines : [recordCoordinate(record)]))].sort((a, b) => a - b);
 }
 
 export function nearbyRecords(model: FlightModel, at: number): FlightRecord[] {
@@ -124,7 +135,7 @@ export function layoutFlightLabels(model: FlightModel, at: number, width: number
     const left = clamp(p.x + (record.x < 0 ? -labelWidth - 12 : 12), 10, width - labelWidth - 10);
     const top = clamp(p.y - 22, 85, height - 72);
     if (result.some((other) => left < other.left + other.width + 10 && left + labelWidth + 10 > other.left && top < other.top + 64 && top + 64 > other.top)) continue;
-    result.push({ record, anchorX: p.x, anchorY: p.y, left, top, width: labelWidth });
+    result.push({ record, coordinate: log, anchorX: p.x, anchorY: p.y, left, top, width: labelWidth });
     if (result.length >= (width < 600 ? 4 : 7)) break;
   }
   return result;
