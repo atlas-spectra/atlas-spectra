@@ -2,12 +2,14 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import FrequencyExplorer from "../components/FrequencyExplorer";
 import { explorerItems, lanes } from "../lib/corpus";
+import { validateProcessGroups } from "../lib/process-groups";
+validateProcessGroups(explorerItems);
 ---
 <BaseLayout title="Explore" description="A precise, evidence-aware atlas of frequencies across nature and technology.">
   <section class="atlas-page">
     <div class="atlas-intro">
       <div><p class="eyebrow">The frequency atlas</p><h1>Same scale. Different worlds.</h1></div>
-      <p>Explore rhythms, spectra, and references side by side. Follow a landmark into the original quantity—and the evidence behind it.</p>
+      <p>Start with a phenomenon, then explore its observations. Original quantities and evidence stay attached to each record.</p>
     </div>
     <FrequencyExplorer client:load items={explorerItems} lanes={lanes} />
     <noscript><p>The interactive atlas requires JavaScript. Every source record is also available as a static page.</p><ul>{explorerItems.map((item) => <li><a href={`${import.meta.env.BASE_URL}phenomena/${encodeURIComponent(item.id)}/`}>{item.name}</a></li>)}</ul></noscript>

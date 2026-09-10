@@ -3,6 +3,8 @@ import type { ExplorerItem } from "../lib/corpus";
 import { clamp, formatCoordinate, geometryFor, laneColor, type AtlasLayout, type AtlasView } from "../lib/atlas-view";
 import { atlasLandmarks, distanceLabel, isInView, neighboringStops, neighborsAt, reciprocalLabel } from "../lib/atlas-neighborhood";
 import { identityFor } from "../lib/phenomenon-identity";
+import { groupForAnchor, groupMembers, type ProcessGroup } from "../lib/process-groups";
+import { ProcessGroupFace } from "./ProcessGroup";
 import { PhenomenonFace, PhenomenonIcon, phenomenonValue } from "./PhenomenonIdentity";
 import "../styles/atlas-context.css";
 import "../styles/atlas-context-refinements.css";
@@ -12,12 +14,16 @@ export function AtlasLandscape({ items, lanes, view, onVisit }: { items: Explore
   const landmarks = useMemo(() => atlasLandmarks(items), [items]);
   return <section className="atlas-landscape" aria-label="Scale landmarks">
     <div className="atlas-landscape-intro"><span>TAKE A CLOSER LOOK</span><h2>Rhythms. Signals. Different worlds.</h2><p>Choose a landmark, then explore what shares its part of the scale.</p></div>
-    <div className="atlas-landmark-trail">{landmarks.map((landmark) => <button type="button" key={landmark.item.id}
-      data-context-landmark={landmark.item.id} data-in-view={isInView(landmark.item, view)}
-      style={{ "--context-color": laneColor(landmark.item.lane, lanes) } as CSSProperties}
-      onClick={() => onVisit(landmark.coordinate, landmark.item.id)} title={landmark.item.name}>
-      <PhenomenonIcon item={landmark.item} /><strong>{landmark.label}</strong><small>{phenomenonValue(landmark.item)}</small>
-    </button>)}</div>
+    <div className="atlas-landmark-trail">{landmarks.map((landmark) => {
+      const definition = groupForAnchor(landmark.item.id);
+      const group = definition && groupMembers(definition, items).length === definition.facets.length ? definition : undefined;
+      return <button type="button" key={landmark.item.id}
+        data-context-landmark={landmark.item.id} data-in-view={isInView(landmark.item, view)}
+        style={{ "--context-color": laneColor(landmark.item.lane, lanes) } as CSSProperties}
+        onClick={() => onVisit(landmark.coordinate, landmark.item.id)} title={group ? `${group.title} · ${group.anchorLabel}` : landmark.item.name}>
+        <PhenomenonIcon item={landmark.item} /><strong>{group?.title ?? landmark.label}</strong><small>{phenomenonValue(landmark.item)}{group && <><br />{group.anchorLabel}</>}</small>
+      </button>;
+    })}</div>
     <p className="atlas-landscape-note">Landmarks from this corpus—not continuous coverage of every frequency.</p>
   </section>;
 }
@@ -36,30 +42,34 @@ export function AtlasProbeControls({ at, view, pinned, onProbe, onPin, onVisit }
   </section>;
 }
 
-export function AtlasNeighborhood({ items, lanes, at, view, activeIds, selectedId, onVisit, onHover }: {
+export function AtlasNeighborhood({ items, lanes, at, view, activeIds, selectedId, selectedItem, groups, onVisit, onHover }: {
   items: ExplorerItem[]; lanes: string[]; at: number; view: AtlasView; activeIds: Set<string>; selectedId: string | null;
+  selectedItem?: ExplorerItem | null; groups?: Map<string, ProcessGroup>;
   onVisit: Visit; onHover: (id: string | null) => void;
 }) {
   const neighbors = useMemo(() => neighborsAt(items, at), [items, at]);
-  const closest = neighbors[0];
-  const selected = items.find((item) => item.id === selectedId);
+  const closest = neighbors[0], closestGroup = closest ? groups?.get(closest.item.id) : undefined;
+  const selected = selectedItem ?? items.find((item) => item.id === selectedId);
   const { previous, next } = useMemo(() => neighboringStops(items, at), [items, at]);
   return <div className="atlas-neighborhood" aria-label="Frequency neighborhood">
     <div className="atlas-neighborhood-title"><span className="atlas-live-dot" aria-hidden="true" /><span>AROUND YOUR LENS</span></div>
     <h2>{formatCoordinate(at)}</h2>
-    {closest ? <><p className="atlas-neighborhood-nearest">Nearest record: <strong>{identityFor(closest.item).title}</strong></p><p className="atlas-neighborhood-summary">{closest.item.summary}</p></> : <p>No positioned records are available.</p>}
+    {closest ? <><p className="atlas-neighborhood-nearest">Nearest entry: <strong>{closestGroup?.title ?? identityFor(closest.item).title}</strong></p><p className="atlas-neighborhood-summary">{closestGroup?.summary ?? closest.item.summary}</p></> : <p>No positioned records are available.</p>}
     <div className="atlas-neighborhood-steps"><button type="button" disabled={previous === undefined} onClick={() => previous !== undefined && onVisit(previous)}>← Lower landmark</button><button type="button" disabled={next === undefined} onClick={() => next !== undefined && onVisit(next)}>Higher landmark →</button></div>
-    <div className="atlas-neighbor-list">{neighbors.slice(0, selectedId ? 2 : 4).map((entry) => <button type="button" key={entry.item.id} data-neighbor-id={entry.item.id}
-      style={{ "--context-color": laneColor(entry.item.lane, lanes) } as CSSProperties} title={entry.item.name}
-      onClick={() => onVisit(entry.coordinate, entry.item.id)} onMouseEnter={() => onHover(entry.item.id)} onMouseLeave={() => onHover(null)} onFocus={() => onHover(entry.item.id)} onBlur={() => onHover(null)}>
-      <small>{distanceLabel(entry)}</small><PhenomenonFace item={entry.item} />
-      <em>{entry.item.display?.mode === "claim-reference" ? "Claim reference · " : ""}{entry.item.lane}{!activeIds.has(entry.item.id) ? " · outside filter" : !isInView(entry.item, view) ? " · off screen" : ""}</em>
-    </button>)}</div>
+    <div className="atlas-neighbor-list">{neighbors.slice(0, selectedId ? 2 : 4).map((entry) => {
+      const group = groups?.get(entry.item.id);
+      return <button type="button" key={entry.item.id} data-neighbor-id={entry.item.id} data-group-id={group?.id}
+        style={{ "--context-color": laneColor(entry.item.lane, lanes) } as CSSProperties} title={group?.title ?? entry.item.name}
+        onClick={() => onVisit(entry.coordinate, entry.item.id)} onMouseEnter={() => onHover(entry.item.id)} onMouseLeave={() => onHover(null)} onFocus={() => onHover(entry.item.id)} onBlur={() => onHover(null)}>
+        <small>{distanceLabel(entry)}</small>{group ? <ProcessGroupFace group={group} anchor={entry.item} /> : <PhenomenonFace item={entry.item} />}
+        <em>{entry.item.display?.mode === "claim-reference" ? "Claim reference · " : ""}{entry.item.lane}{!activeIds.has(entry.item.id) ? " · outside filter" : !isInView(entry.item, view) ? " · off screen" : ""}</em>
+      </button>;
+    })}</div>
     {selected && selected.relationships.length > 0 && <details className="atlas-neighborhood-why"><summary>What supports the selected record’s connections?</summary>
       {selected.relationships.map((edge) => <div key={edge.id}><strong>{edge.type.replaceAll("_", " ")}</strong><p>{edge.category} · mechanism: {(edge.evidence?.mechanism_status ?? "unspecified").replaceAll("_", " ")}</p>
         <p>{edge.evidence?.derivation ?? edge.evidence?.locator ?? "Inspect the full record and linked provenance for the relationship’s conditions and source context."}</p></div>)}
     </details>}
-    <p className="atlas-context-caution">Neighbors are ranked across the whole corpus by numerical distance on the display scale. This does not establish a physical connection. The time ruler is 1/f, not a measured period.</p>
+    <p className="atlas-context-caution">Neighbors use numerical display-coordinate distance. A grouped entry uses only its named reference observation; expand it for the other facets. Proximity does not establish a physical connection. The time ruler is 1/f, not a measured period.</p>
   </div>;
 }
 

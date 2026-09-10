@@ -3,6 +3,8 @@ import type { ExplorerItem, MarkKind } from "../lib/corpus";
 import FlightEvidence from "./FlightEvidence";
 import { AtlasLandscape, AtlasNeighborhood, AtlasProbeControls, AtlasLensOverlay, AtlasRecordedLinks } from "./AtlasNeighborhood";
 import { PhenomenonFace, PhenomenonIcon, CardiacContext } from "./PhenomenonIdentity";
+import { ProcessGroupFace, ProcessGroupPanel } from "./ProcessGroup";
+import { groupForRecord, groupMembers, projectDiscovery } from "../lib/process-groups";
 import { identityFor } from "../lib/phenomenon-identity";
 import { neighborAt, neighborsAt } from "../lib/atlas-neighborhood";
 import { useAtlasMotion } from "../lib/use-atlas-motion";
@@ -24,6 +26,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   const [lane, setLane] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [browseAll, setBrowseAll] = useState(false);
+  const [detailed, setDetailed] = useState(false);
   const [ready, setReady] = useState(false);
   const [width, setWidth] = useState(1000);
   const [probe, setProbe] = useState<number | null>(null);
@@ -31,6 +34,7 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   const [trace, setTrace] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const returnFocus = useRef<string | null>(null);
   const drag = useRef<{ id: number; x: number; y: number; view: AtlasView; moved: boolean } | null>(null);
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
   // A trace belongs to the selected record, not a hidden global filtering mode.
@@ -38,14 +42,19 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   const filtered = useMemo(() => items.filter((item) => matchesAtlas(item, query, lane)), [items, query, lane]);
   const activeIds = useMemo(() => new Set(filtered.map((item) => item.id)), [filtered]);
   const availableLanes = useMemo(() => lanes.filter((name) => items.some((item) => item.lane === name)), [items, lanes]);
-  const layout = useMemo(() => layoutAtlas(filtered, lanes, view, width), [filtered, lanes, view, width]);
+  // Grouping is a presentation projection. Canonical lookup, bounds and evidence keep ALL records.
+  const projection = useMemo(() => projectDiscovery(filtered, selectedId, detailed), [filtered, selectedId, detailed]);
+  const contextProjection = useMemo(() => projectDiscovery(items, null, detailed), [items, detailed]);
+  const selectedGroup = groupForRecord(selectedId);
+  const activeGroup = selectedGroup && groupMembers(selectedGroup, items).length === selectedGroup.facets.length ? selectedGroup : undefined;
+  const layout = useMemo(() => layoutAtlas(projection.items, lanes, view, width), [projection.items, lanes, view, width]);
   const g = useMemo(() => geometryFor(width, view), [width, view]);
   const contextAt = clamp(probe ?? (selected ? neighborAt(selected, view.center)?.coordinate : undefined) ?? view.center, g.min, g.max);
-  const nearbyIds = useMemo(() => new Set(neighborsAt(items, contextAt).slice(0, 4).map((entry) => entry.item.id)), [items, contextAt]);
+  const nearbyIds = useMemo(() => new Set(neighborsAt(contextProjection.items, contextAt).slice(0, 4).map((entry) => entry.item.id)), [contextProjection.items, contextAt]);
   const relatedIds = new Set([selectedId, ...(selected?.relationships.map((r) => r.peerId) ?? [])]);
   const positioned = filtered.filter((item) => extentOf(item));
   const hoveredMark = layout.marks.find((mark) => mark.item.id === hoveredId);
-  const catalog = query.trim() || browseAll ? filtered : layout.marks.slice(0, 6).map((mark) => mark.item);
+  const catalog = query.trim() ? filtered : browseAll ? projection.items : layout.marks.slice(0, 6).map((mark) => mark.item);
   const fitResults = fitItems(filtered, bounds);
   const fitSelection = selected ? fitItems([selected], bounds) : null;
   const connectionItems = selected ? [selected, ...selected.relationships.flatMap((r) => byId.has(r.peerId) ? [byId.get(r.peerId)!] : [])] : [];
@@ -71,11 +80,28 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
     travel(boundView({ center: coordinate, span: Math.min(3, view.span) }, bounds));
   }, [byId, bounds, travel, view.span]);
 
+  function collapseObservations() {
+    if (!activeGroup) return;
+    cancel(); returnFocus.current = activeGroup.anchorId;
+    setQuery(""); setLane(null); setDetailed(false); setTrace(false); setHoveredId(null); setSelectedId(null);
+  }
+  useEffect(() => {
+    const id = returnFocus.current;
+    if (!id) return;
+    const button = Array.from(frameRef.current?.querySelectorAll<HTMLButtonElement>("button[data-record-id]") ?? [])
+      .find((element) => element.dataset.recordId === id);
+    // A far-away selected facet may have no anchor in the current viewport. Keep a visible recovery control.
+    if (button) button.focus();
+    else document.getElementById("atlas-discover-mode")?.focus();
+    returnFocus.current = null;
+  }, [selectedId, detailed]);
+
   useEffect(() => {
     const restore = () => {
       cancel();
       const state = readAtlasState(location.search, bounds, items, availableLanes);
       setView(state.view); setSelectedId(state.selectedId); setLane(state.lane); setQuery("");
+      setDetailed(new URLSearchParams(location.search).get("detail") === "observations");
       setProbe(null); setPinned(false); setReady(true);
     };
     restore(); window.addEventListener("popstate", restore);
@@ -88,10 +114,11 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
       url.searchParams.set("center", String(view.center)); url.searchParams.set("span", String(view.span));
       selectedId ? url.searchParams.set("entity", selectedId) : url.searchParams.delete("entity");
       lane ? url.searchParams.set("lane", lane) : url.searchParams.delete("lane");
+      detailed ? url.searchParams.set("detail", "observations") : url.searchParams.delete("detail");
       history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
     }, 160);
     return () => window.clearTimeout(timer);
-  }, [view, selectedId, lane, ready, moving]);
+  }, [view, selectedId, lane, ready, moving, detailed]);
   useEffect(() => {
     const frame = frameRef.current;
     if (!frame) return;
@@ -216,28 +243,30 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
   }
   const overviewX = (log: number) => 10 + (log - bounds.min) / (bounds.max - bounds.min) * 980;
   const overviewMin = bounds.min + view.span / 2, overviewMax = bounds.max - view.span / 2;
+  const face = (item: ExplorerItem) => { const group = projection.collapsed.get(item.id); return group ? <ProcessGroupFace group={group} anchor={item} /> : <PhenomenonFace item={item} />; };
 
-  return <div className="explorer-shell atlas-workspace" data-ready={ready} data-moving={moving} data-view-center={view.center} data-view-span={view.span} data-bound-min={bounds.min} data-bound-max={bounds.max} data-lane={lane ?? "all"}>
-    <p className="atlas-selection-status" role="status" aria-live="polite" aria-atomic="true" style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap", border: 0 }}>{selected ? `Selected ${identityFor(selected).title}. ${identityFor(selected).subtitle}. ${itemCoordinate(selected)}. Details are available in the selected record panel.` : "No phenomenon selected."}</p>
+  return <div className="explorer-shell atlas-workspace" data-ready={ready} data-detail-mode={detailed ? "observations" : "discover"} data-moving={moving} data-view-center={view.center} data-view-span={view.span} data-bound-min={bounds.min} data-bound-max={bounds.max} data-lane={lane ?? "all"}>
+    <p className="atlas-selection-status" role="status" aria-live="polite" aria-atomic="true" style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clipPath: "inset(50%)", whiteSpace: "nowrap", border: 0 }}>{selected ? `${activeGroup ? `${activeGroup.title}: ${activeGroup.facets.length} observations expanded. ` : ""}Selected ${identityFor(selected).title}. ${identityFor(selected).subtitle}. ${itemCoordinate(selected)}. Details are available in the selected record panel.` : "No phenomenon selected."}</p>
     <div className="atlas-topbar">
       <nav className="atlas-mode" aria-label="Explorer mode"><span aria-current="page">Atlas <small>2D</small></span><a href={flightUrl}>Flight <small>3D ↗</small></a></nav>
-      <p><strong>{items.length}</strong> phenomena · one shared dataset</p>
+      <p><strong>{items.length}</strong> source records · one shared dataset</p>
     </div>
     <div className="explorer-toolbar">
       <div className="search-control"><label htmlFor="explorer-search">Find a phenomenon</label>
         <input id="explorer-search" type="search" placeholder="Try heartbeat, quartz, or a domain…" value={query} autoComplete="off" onChange={(event) => { cancel(); setQuery(event.target.value); }} />
         {query.trim() && <div className="search-results" role="region" aria-label="Search results">
-          {filtered.length ? filtered.map((item) => <button type="button" key={item.id} title={item.name} onClick={() => focusItem(item.id)}><PhenomenonFace item={item} /></button>) : <p>No records match. Clear the search or switch domains.</p>}
+          {filtered.length ? filtered.map((item) => <button type="button" key={item.id} title={item.name} onClick={() => focusItem(item.id)}><PhenomenonFace item={item} />{groupForRecord(item.id) && <small>Observation of {groupForRecord(item.id)!.title}</small>}</button>) : <p>No records match. Clear the search or switch domains.</p>}
         </div>}
       </div>
       <div className="toolbar-actions"><button type="button" onClick={() => apply((v) => zoomView(v, 0.75, 0.5, bounds))}>Zoom in</button><button type="button" onClick={() => apply((v) => zoomView(v, 1.35, 0.5, bounds))}>Zoom out</button><button type="button" onClick={() => apply(fitAll(bounds))}>Fit all</button><button type="button" disabled={!fitResults} onClick={() => fitResults && apply(fitResults)}>Fit results</button></div>
     </div>
+    <div className="atlas-detail-mode"><div role="group" aria-label="Level of detail"><button id="atlas-discover-mode" type="button" aria-pressed={!detailed} onClick={() => { cancel(); setDetailed(false); setTrace(false); if (activeGroup) setSelectedId(null); }}>Discover</button><button type="button" aria-pressed={detailed} onClick={() => { cancel(); setDetailed(true); }}>All observations</button></div><p>{detailed ? "Individual records side by side, including observations of the same process." : "Start with the phenomenon. Open a grouped card to explore its observations."}</p></div>
     <div className="atlas-domains" role="group" aria-label="Domain focus"><button type="button" aria-pressed={!lane} onClick={() => changeLane(null)}>All domains</button>{availableLanes.map((name) => <button key={name} type="button" aria-pressed={lane === name} style={{ "--lane-color": laneColor(name, lanes) } as CSSProperties} onClick={() => changeLane(name)}><i aria-hidden="true" />{name}</button>)}</div>
     <AtlasLandscape items={items} lanes={lanes} view={view} onVisit={visit} />
     <div className="atlas-main">
       <div className="atlas-chart-column">
         <section className="atlas-overview" aria-label="Full corpus overview">
-          <div className="atlas-overview-heading"><span>THE WHOLE ATLAS</span><small>{view.span.toFixed(1)} decades in view</small></div>
+          <div className="atlas-overview-heading"><span>THE WHOLE ATLAS · ALL OBSERVATIONS</span><small>{view.span.toFixed(1)} decades in view</small></div>
           <svg viewBox="0 0 1000 55" aria-hidden="true" preserveAspectRatio="none">
             <rect x="10" y="10" width="980" height="35" rx="5" fill="#eef0e9" />
             {items.map((item) => { const e = extentOf(item); if (!e) return null; const color = item.markKind === "reference" ? "#ac792a" : laneColor(item.lane, lanes); return e.lines.length ? e.lines.map((log) => <line key={`${item.id}:${log}`} x1={overviewX(log)} x2={overviewX(log)} y1="16" y2="39" stroke={color} strokeWidth="2" />) : <rect key={item.id} x={overviewX(e.low)} y={15 + Math.max(0, lanes.indexOf(item.lane)) % 4 * 6} width={Math.max(3, overviewX(e.high) - overviewX(e.low))} height="5" rx="2" fill={color} />; })}
@@ -247,32 +276,37 @@ export default function FrequencyExplorer({ items, lanes }: Props) {
           <div className="atlas-overview-ends"><span>{formatCoordinate(bounds.min)}</span><span>{formatCoordinate(bounds.max)}</span></div>
         </section>
         <AtlasProbeControls at={contextAt} view={view} pinned={pinned} onProbe={(value) => { cancel(); setProbe(value); setPinned(true); }} onPin={() => { setProbe(contextAt); setPinned(!pinned); }} onVisit={visit} />
-        <div className="atlas-plot-heading"><h2>{lane ?? "Across domains"}</h2><span>{layout.marks.length} in view · {positioned.length} positioned · {filtered.length - positioned.length} unpositioned</span></div>
-        <CardiacContext visibleItems={layout.marks.map((mark) => mark.item)} />
-        {selected && selected.relationships.length > 0 && <div className="atlas-context-connection-controls"><button type="button" aria-pressed={trace} onClick={() => setTrace(!trace)}>Trace recorded connections</button><button type="button" disabled={!fitConnections} onClick={() => { setQuery(""); setLane(null); setTrace(true); if (fitConnections) travel(fitConnections); }}>Frame connections</button>{trace && <small>{drawnConnections} of {selected.relationships.length} connections positioned in this window. Solid: physical category; dashed: other types. Mechanism status and sources remain in the inspector.</small>}</div>}
+        {activeGroup && <ProcessGroupPanel group={activeGroup} items={items} selectedId={selectedId} onSelect={(id) => { cancel(); setSelectedId(id); setHoveredId(null); }} onCollapse={collapseObservations} />}
+        <div className="atlas-plot-heading"><h2>{lane ?? "Across domains"}</h2><span>{layout.marks.length} entries in view · {positioned.length} positioned observations · {filtered.length - positioned.length} unpositioned</span></div>
+        {!activeGroup && <CardiacContext visibleItems={layout.marks.map((mark) => mark.item)} />}
+        {selected && selected.relationships.length > 0 && <div className="atlas-context-connection-controls"><button type="button" aria-pressed={trace} onClick={() => { if (!trace) setDetailed(true); setTrace(!trace); }}>Trace recorded connections</button><button type="button" disabled={!fitConnections} onClick={() => { setQuery(""); setLane(null); setDetailed(true); setTrace(true); if (fitConnections) travel(fitConnections); }}>Frame connections</button>{trace && <small>{drawnConnections} of {selected.relationships.length} connections positioned in this window. Tracing uses individual observations. Solid: physical category; dashed: other types. Mechanism status and sources remain in the inspector.</small>}</div>}
         <div ref={frameRef} className="canvas-frame" data-testid="explorer-plot" onPointerMove={probeMove}>
           <canvas ref={canvasRef} className="frequency-canvas" style={{ height: layout.height }} tabIndex={0} aria-label="Logarithmic frequency explorer. Drag horizontally to pan; wheel or buttons to zoom. Arrow keys pan, plus and minus zoom, Home fits all. Swipe vertically to scroll the page." onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }} onPointerLeave={() => { if (!drag.current) setHoveredId(null); }} onKeyDown={key} />
-          <AtlasLensOverlay at={contextAt} view={view} width={width} layout={layout} items={items} />
+          <AtlasLensOverlay at={contextAt} view={view} width={width} layout={layout} items={contextProjection.items} />
           {trace && <AtlasRecordedLinks selected={selected} layout={layout} width={width} />}
           <div className="atlas-lane-headings" aria-hidden="true">{layout.lanes.map((row) => <div key={row.name} style={{ top: row.top + 18, width: g.left - 18, "--lane-color": laneColor(row.name, lanes) } as CSSProperties}><i />{row.name}<small>{row.count} in view</small></div>)}</div>
           <svg className="atlas-leaders" width={width} height={layout.height} aria-hidden="true">{layout.marks.map((mark) => <line key={mark.item.id} x1={clamp(mark.x, mark.labelLeft + 8, mark.labelLeft + mark.labelWidth - 8)} y1={mark.labelTop + ATLAS_LABEL_HEIGHT - 1} x2={mark.x} y2={mark.y - 7} />)}</svg>
-          <div className="plot-label-layer" aria-label="Visible phenomenon labels">{layout.marks.map((mark) => <button key={mark.item.id} type="button" data-record-id={mark.item.id} className={`plot-label${mark.item.id === selectedId ? " is-selected" : ""}${mark.item.markKind === "reference" ? " is-reference" : ""}${nearbyIds.has(mark.item.id) ? " is-context-near" : ""}${trace && selected && !relatedIds.has(mark.item.id) ? " is-context-muted" : ""}`} style={{ left: mark.labelLeft, top: mark.labelTop, width: mark.labelWidth, height: ATLAS_LABEL_HEIGHT, "--lane-color": laneColor(mark.item.lane, lanes) } as CSSProperties} onClick={() => { cancel(); setSelectedId(mark.item.id); setProbe(mark.anchor); setPinned(false); }} onMouseEnter={() => { setHoveredId(mark.item.id); if (!pinned && !moving) setProbe(mark.anchor); }} onMouseLeave={() => setHoveredId(null)} onFocus={() => { setHoveredId(mark.item.id); if (!pinned && !moving) setProbe(mark.anchor); }} onBlur={() => setHoveredId(null)} title={`${mark.item.name} · ${itemCoordinate(mark.item)}`}><PhenomenonFace item={mark.item} /></button>)}</div>
-          {hoveredMark && <div className="plot-tooltip" role="status" style={{ left: clamp(hoveredMark.labelLeft, 8, Math.max(8, width - 280)), top: Math.min(hoveredMark.y + 14, layout.height - 108), maxWidth: Math.min(272, width - 16) }}><strong>{hoveredMark.item.name}</strong><span>{MARK_LABELS[hoveredMark.item.markKind]} · {hoveredMark.item.lane}</span><small>{itemCoordinate(hoveredMark.item)}</small></div>}
-          {!layout.marks.length && <div className="atlas-empty"><h3>{positioned.length ? "An open interval" : "No positioned records"}</h3><p>{positioned.length ? "This window has no plotted marks. The live neighborhood shows the nearest records on either side." : "Unresolved records remain available in the record browser; no frequency is invented."}</p><button type="button" disabled={!fitResults} onClick={() => fitResults && apply(fitResults)}>Return to results</button></div>}
+          <div className="plot-label-layer" aria-label="Visible phenomenon labels">{layout.marks.map((mark) => {
+            const group = projection.collapsed.get(mark.item.id);
+            return <button key={mark.item.id} type="button" data-record-id={mark.item.id} data-group-id={group?.id} aria-expanded={group ? false : undefined} className={`plot-label${mark.item.id === selectedId ? " is-selected" : ""}${mark.item.markKind === "reference" ? " is-reference" : ""}${nearbyIds.has(mark.item.id) ? " is-context-near" : ""}${trace && selected && !relatedIds.has(mark.item.id) ? " is-context-muted" : ""}`} style={{ left: mark.labelLeft, top: mark.labelTop, width: mark.labelWidth, height: ATLAS_LABEL_HEIGHT, "--lane-color": laneColor(mark.item.lane, lanes) } as CSSProperties} onClick={() => { cancel(); setSelectedId(mark.item.id); setProbe(mark.anchor); setPinned(false); }} onMouseEnter={() => { setHoveredId(mark.item.id); if (!pinned && !moving) setProbe(mark.anchor); }} onMouseLeave={() => setHoveredId(null)} onFocus={() => { setHoveredId(mark.item.id); if (!pinned && !moving) setProbe(mark.anchor); }} onBlur={() => setHoveredId(null)} title={group ? `${group.title} — ${group.facets.length} observations; mark: ${group.anchorLabel}` : `${mark.item.name} · ${itemCoordinate(mark.item)}`}>{face(mark.item)}</button>;
+          })}</div>
+          {hoveredMark && <div className="plot-tooltip" role="status" style={{ left: clamp(hoveredMark.labelLeft, 8, Math.max(8, width - 280)), top: Math.min(hoveredMark.y + 14, layout.height - 108), maxWidth: Math.min(272, width - 16) }}><strong>{projection.collapsed.get(hoveredMark.item.id)?.title ?? hoveredMark.item.name}</strong><span>{projection.collapsed.get(hoveredMark.item.id)?.summary ?? `${MARK_LABELS[hoveredMark.item.markKind]} · ${hoveredMark.item.lane}`}</span><small>{itemCoordinate(hoveredMark.item)}</small></div>}
+          {!layout.marks.length && <div className="atlas-empty"><h3>{positioned.length ? "An open interval" : "No positioned records"}</h3><p>{positioned.length ? "This window has no plotted entries. The neighborhood shows the nearest entries; All observations exposes every individual record." : "Unresolved records remain available in the record browser; no frequency is invented."}</p><button type="button" disabled={!fitResults} onClick={() => fitResults && apply(fitResults)}>Return to results</button></div>}
         </div>
         <div className="explorer-footer"><span>{formatCoordinate(g.min)}</span><span>×10 per decade</span><span>{formatCoordinate(g.max)}</span></div>
         <div className="mark-legend" aria-label="Explorer mark legend">{(Object.keys(MARK_LABELS) as MarkKind[]).map((kind) => <span key={kind}><Glyph kind={kind} />{MARK_LABELS[kind]}</span>)}</div>
-        <p className="atlas-note">Pictograms identify subjects, not measured shapes. Lane colors identify domains. Bars show frequency extents, not amplitude or waveforms. Position alone does not prove a connection.</p>
+        <p className="atlas-note">Grouped marks use a named reference observation, not an aggregate. Pictograms identify subjects, not measured shapes. Bars show frequency extents, not amplitude or waveforms. Position alone does not prove a connection.</p>
         <section className="atlas-catalog" aria-label="Atlas record browser"><div><h2>{query.trim() ? "Matching records" : browseAll ? "Record browser" : "In this window"}</h2><button type="button" onClick={() => setBrowseAll(!browseAll)}>{browseAll ? "Show current window" : "Browse all records"}</button></div>
-          <div className="atlas-record-list">{catalog.map((item) => <button key={item.id} type="button" data-record-id={item.id} title={item.name} onClick={() => focusItem(item.id)}><PhenomenonFace item={item} /><span aria-hidden="true">↗</span></button>)}</div>
+          <div className="atlas-record-list">{catalog.map((item) => <button key={item.id} type="button" data-record-id={item.id} title={item.name} onClick={() => focusItem(item.id)}>{query.trim() ? <PhenomenonFace item={item} /> : face(item)}<span aria-hidden="true">↗</span></button>)}</div>
           {!catalog.length && <p>No records here. Browse all records or change the active domain/search.</p>}
-          <p className="atlas-note">{filtered.length - positioned.length} unpositioned records in this filter. Browse all records to inspect them.</p>
+          <p className="atlas-note">{filtered.length - positioned.length} unpositioned records in this filter. Browse all records to inspect them. All observations lists every record separately.</p>
         </section>
       </div>
       <aside className="explorer-detail atlas-inspector" aria-label="Selected atlas record" data-selected-id={selected?.id ?? ""}>
-        <AtlasNeighborhood items={items} lanes={lanes} at={contextAt} view={view} activeIds={activeIds} selectedId={selectedId} onVisit={visit} onHover={setHoveredId} />
+        <AtlasNeighborhood items={contextProjection.items} groups={contextProjection.collapsed} selectedItem={selected} lanes={lanes} at={contextAt} view={view} activeIds={activeIds} selectedId={selectedId} onVisit={visit} onHover={setHoveredId} />
         {selected ? <div className="atlas-context-selection">
           <div className="detail-heading"><span className="detail-lane">{selected.lane}</span><button type="button" className="icon-button" aria-label="Close detail panel" onClick={() => setSelectedId(null)}>×</button></div>
+          {activeGroup && <p className="atlas-group-origin">Observation of <strong>{activeGroup.title}</strong></p>}
           <div className="atlas-identity-heading"><PhenomenonIcon item={selected} /><div><h2>{identityFor(selected).title}</h2><p>{identityFor(selected).subtitle}</p></div></div>
           <p className="atlas-canonical-name">Full record: {selected.name}</p>
           <div className="atlas-value"><small>{selected.display?.mode === "claim-reference" ? "REFERENCE COORDINATE" : "DISPLAY COORDINATE"}</small><strong>{itemCoordinate(selected)}</strong></div>
