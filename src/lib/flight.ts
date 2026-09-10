@@ -76,7 +76,7 @@ export function buildFlightModel(items: ExplorerItem[], lanes: string[]): Flight
 }
 
 export function boundedCoordinate(value: number, bounds: FlightBounds): number {
-  return clamp(Number.isFinite(value) ? value : bounds.min, bounds.max === undefined ? bounds.min : bounds.min, bounds.max);
+  return clamp(Number.isFinite(value) ? value : bounds.min, bounds.min, bounds.max);
 }
 
 export function parseCoordinate(raw: string | null, model: FlightModel): number {
@@ -102,6 +102,15 @@ export function recordCoordinate(record: FlightRecord, near = record.low): numbe
 export function landmarkCoordinates(model: FlightModel): number[] {
   return [...new Set(model.records.flatMap((record) =>
     record.lines.length ? record.lines : [recordCoordinate(record)]))].sort((a, b) => a - b);
+}
+
+export function adjacentLandmarks(stops: number[], at: number) {
+  // Jumps and URL state preserve exact coordinates: no visual-step tolerance
+  // should discard a distinct line, including after a page reload.
+  return {
+    previous: [...stops].reverse().find((stop) => stop < at),
+    next: stops.find((stop) => stop > at),
+  };
 }
 
 export function nearbyRecords(model: FlightModel, at: number): FlightRecord[] {
