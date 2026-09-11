@@ -49,7 +49,7 @@ export default function RecordedPaths({ items, catalog, base, startingId, inspec
   const to = state.toId ? byId.get(state.toId) : undefined;
   const nonphysical = result.steps.filter((step) => step.edge.category !== "physical").length;
   const reversed = result.steps.filter((step) => step.reversed).length;
-  const summary = result.status === "found" ? `One shortest recorded path · ${result.steps.length} ${result.steps.length === 1 ? "link" : "links"}`
+  const summary = result.status === "found" ? `One shortest recorded path · ${result.steps.length} ${result.steps.length === 1 ? "link" : "links"}.`
     : result.status === "same" ? "Same observation selected. No connecting link is required or inferred."
     : result.status === "invalid" ? "Choose two valid observations to search."
     : result.status === "hop-limit" ? `No path found within ${PATH_MAX_HOPS} links. Longer routes were not searched.`
@@ -81,7 +81,7 @@ export default function RecordedPaths({ items, catalog, base, startingId, inspec
     {result.status === "found" && <>
       <p className="recorded-path-caution" role="note">A path is a sequence of recorded links, not a new end-to-end physical claim. Even physical-category links do not prove transitive causation, identical signals or compatible conditions.</p>
       {(nonphysical > 0 || reversed > 0) && <div className="recorded-path-warning" role="note">
-        {nonphysical > 0 && <p><strong>{nonphysical} nonphysical {nonphysical === 1 ? "link" : "links"}.</strong> This path includes a coincidence, association or qualified claim; it is not a physical signal journey.</p>}
+        {nonphysical > 0 && <p><strong>{nonphysical} nonphysical {nonphysical === 1 ? "link" : "links"}.</strong> This path includes nonphysical relationships; it is not a physical signal journey.</p>}
         {reversed > 0 && <p><strong>{reversed} reverse {reversed === 1 ? "traversal" : "traversals"}.</strong> Browsing a stored link backwards does not establish reverse signal flow.</p>}
       </div>}
       <ol className="recorded-path-steps" aria-label="Recorded path links">{result.steps.map((step, i) => {

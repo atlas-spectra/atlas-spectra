@@ -54,7 +54,12 @@ test("a three-link cardiac path opens each original link without changing the ch
     await expect(choices.nth(i)).toHaveAttribute("aria-current", "true");
   }
   await expect(page.locator("body")).toHaveAttribute("data-path-mounted", "same");
-  await expect(page.locator(".connections-evidence")).toHaveAttribute("data-owner-id", sensor);
+  // The transduction edge lives in resting-ppg-optical-variation.json, not its target.
+  const evidence = page.locator(".connections-evidence");
+  await expect(evidence).toHaveAttribute("data-owner-id", "wearable.ppg.resting-adult-optical-variation");
+  await expect(evidence.locator("[data-source-id]")).toHaveCount(1);
+  await expect(evidence.locator("[data-source-id]")).toHaveAttribute("data-source-id", "source.charlton.ppg-optical-modulation");
+  await expect(evidence.locator("[data-source-id] a")).toHaveAttribute("href", "https://pmc.ncbi.nlm.nih.gov/articles/PMC7612541/");
 });
 
 test("mixed heart-to-quartz browsing requires both opt-ins and keeps reverse direction explicit", async ({ page }) => {
@@ -178,5 +183,21 @@ test.describe("touch recorded paths", () => {
     }
     await page.setViewportSize({ width: 390, height: 844 }); await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: "artifacts/screenshots/paths-mobile.png", fullPage: true });
+  });
+  test("each inspected step exposes its heading below the sticky header on a narrow screen", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await ready(page, pathQuery(electrical, sensor));
+    for (const width of [390, 320]) {
+      await page.setViewportSize({ width, height: 844 });
+      for (let i = 1; i <= 3; i++) {
+        await panel(page).getByRole("link", { name: `Inspect path link ${i} and evidence` }).tap();
+        await expect(page.locator("#connections-selected-detail")).toBeFocused();
+        await expect.poll(async () => {
+          const heading = await page.locator(".connections-meaning h2").boundingBox();
+          const header = await page.locator(".site-header").boundingBox();
+          return !!heading && !!header && heading.y >= header.y + header.height && heading.y + heading.height <= 844;
+        }).toBe(true);
+      }
+    }
   });
 });
