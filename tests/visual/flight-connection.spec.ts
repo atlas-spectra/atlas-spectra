@@ -22,12 +22,29 @@ async function start(page: Page, id: string) {
 async function open(page: Page) { await trace(page).locator(":scope > summary").click(); await expect(trace(page)).toHaveJSProperty("open", true); }
 async function coordinate(page: Page) { return root(page).getAttribute("data-coordinate"); }
 async function aligned(page: Page) {
-  for (const mark of await trace(page).locator("[data-trace-mark]").all()) {
-    const id = await mark.locator("..").getAttribute("data-trace-record-id");
-    const original = page.locator(`[data-overview-record-id="${id}"]`).first();
-    const a = await mark.boundingBox(), b = await original.boundingBox();
-    expect(a).not.toBeNull(); expect(b).not.toBeNull();
-    expect(a!.x).toBeCloseTo(b!.x, 1);
+  // Compare the geometry's screen coordinate, not the differently styled stroke
+  // edges included in Playwright's painted bounding boxes. Keep <0.05px precision.
+  const positions = await trace(page).locator("[data-trace-mark]").evaluateAll((marks) => {
+    const originals = Array.from(document.querySelectorAll<SVGGraphicsElement>("[data-overview-record-id]"));
+    const rawX = (node: Element) => Number(node.getAttribute(node.tagName.toLowerCase() === "line" ? "x1" : "x"));
+    const screenX = (node: SVGGraphicsElement) => {
+      const matrix = node.getScreenCTM();
+      if (!matrix) throw new Error("Expected a rendered SVG coordinate transform");
+      return new DOMPoint(rawX(node), 0).matrixTransform(matrix).x;
+    };
+    return marks.map((node) => {
+      const mark = node as SVGGraphicsElement;
+      const id = mark.closest("[data-trace-record-id]")?.getAttribute("data-trace-record-id");
+      const original = originals.find((candidate) => candidate.getAttribute("data-overview-record-id") === id && rawX(candidate) === rawX(mark));
+      if (!original || !mark.ownerSVGElement || !original.ownerSVGElement) throw new Error("Missing matching original scale mark");
+      const a = mark.ownerSVGElement.getBoundingClientRect(), b = original.ownerSVGElement.getBoundingClientRect();
+      return { traceX: screenX(mark), overviewX: screenX(original), traceOrigin: a.x, overviewOrigin: b.x, traceWidth: a.width, overviewWidth: b.width };
+    });
+  });
+  for (const position of positions) {
+    expect(position.traceX).toBeCloseTo(position.overviewX, 1);
+    expect(position.traceOrigin).toBeCloseTo(position.overviewOrigin, 1);
+    expect(position.traceWidth).toBeCloseTo(position.overviewWidth, 1);
   }
 }
 

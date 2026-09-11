@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useMemo } from "react";
 import type { ExplorerItem } from "../lib/corpus";
 import type { FlightJourney } from "../lib/flight-journeys";
 import { formatFlightHz, MARK_NAMES, type FlightModel } from "../lib/flight";
@@ -13,7 +13,7 @@ export default function FlightConnectionTrace({ journey, stageId, model, items, 
   journey: FlightJourney; stageId: string; model: FlightModel; items: ExplorerItem[]; onVisit: (id: string) => void;
 }) {
   const captionId = useId();
-  const connection = buildFlightConnection(journey, stageId, items, model);
+  const connection = useMemo(() => buildFlightConnection(journey, stageId, items, model), [journey, stageId, items, model]);
   if (!connection) return null;
   const { source, target, hop, placement } = connection;
   const endpoints = [source, target];
@@ -34,28 +34,38 @@ export default function FlightConnectionTrace({ journey, stageId, model, items, 
         </div>)}
       </div>
       <figure className="flight-connection-figure" aria-describedby={captionId}>
-        <svg viewBox="0 0 1000 110" preserveAspectRatio="none" aria-hidden="true">
-          {endpoints.map((endpoint, index) => {
-            const y = index === 0 ? 28 : 77, record = endpoint.position;
-            return <g key={index} data-trace-role={index === 0 ? "source" : "target"} data-trace-record-id={endpoint.item.id} className={`flight-trace-row trace-${index}`}>
-              <text x="10" y={y - 12}>{index === 0 ? "A" : "B"}</text>
-              <line x1="10" x2="990" y1={y} y2={y} className="flight-trace-baseline" />
-              {record && (record.lines.length ? record.lines.map((log) => <line key={log}
-                data-trace-mark="line" data-log-low={log} data-log-high={log}
-                x1={x(log)} x2={x(log)} y1={y - 6} y2={y + 6} className="flight-trace-mark" />)
-                : record.low === record.high ? <line data-trace-mark="point" data-log-low={record.low} data-log-high={record.high}
-                  x1={x(record.low)} x2={x(record.low)} y1={y - 7} y2={y + 7} className={`flight-trace-mark${record.kind === "reference" ? " is-reference" : ""}`} />
-                  : <rect data-trace-mark="extent" data-log-low={record.low} data-log-high={record.high}
-                    x={x(record.low)} y={y - 6} width={x(record.high) - x(record.low)} height="12"
-                    className={`flight-trace-mark${record.kind === "reference" ? " is-reference" : ""}`} />)}
-            </g>;
-          })}
-        </svg>
+        <div className="flight-connection-plot">
+          <svg viewBox="0 0 1000 110" preserveAspectRatio="none" aria-hidden="true">
+            {endpoints.map((endpoint, index) => {
+              const y = index === 0 ? 28 : 77, record = endpoint.position;
+              return <g key={index} data-trace-role={index === 0 ? "source" : "target"} data-trace-record-id={endpoint.item.id} className={`flight-trace-row trace-${index}`}>
+                <line x1="10" x2="990" y1={y} y2={y} className="flight-trace-baseline" />
+                {record && (record.lines.length ? record.lines.map((log) => <line key={log}
+                  data-trace-mark="line" data-log-low={log} data-log-high={log}
+                  x1={x(log)} x2={x(log)} y1={y - 6} y2={y + 6} className="flight-trace-mark" />)
+                  : record.low === record.high ? <line data-trace-mark="point" data-log-low={record.low} data-log-high={record.high}
+                    x1={x(record.low)} x2={x(record.low)} y1={y - 7} y2={y + 7} className={`flight-trace-mark${record.kind === "reference" ? " is-reference" : ""}`} />
+                    : <rect data-trace-mark="extent" data-log-low={record.low} data-log-high={record.high}
+                      x={x(record.low)} y={y - 6} width={x(record.high) - x(record.low)} height="12"
+                      className={`flight-trace-mark${record.kind === "reference" ? " is-reference" : ""}`} />)}
+              </g>;
+            })}
+          </svg>
+          <span className="flight-trace-row-name row-a" aria-hidden="true">A · Source</span>
+          <span className="flight-trace-row-name row-b" aria-hidden="true">B · Target</span>
+        </div>
         <div className="flight-connection-axis"><span>{formatFlightHz(model.bounds.min)}</span><span>Same whole-atlas scale ↑</span><span>{formatFlightHz(model.bounds.max)}</span></div>
         <figcaption id={captionId}>Rows separate source and target for readability; only horizontal position encodes the display coordinate. Marks show documented points, lines or extents—not a signal travelling between them.</figcaption>
       </figure>
       <p className="flight-connection-explanation" role="status" aria-live="polite" aria-atomic="true">{source.label} → {target.label}. {CONNECTION_PLACEMENT_COPY[placement]}</p>
-      <p className="flight-connection-evidence-link"><span>Mechanism: {readable(hop.evidence.mechanism_status)}</span><a href={`#flight-journey-edge-${hop.id}`}>Evidence for this connection ↗</a></p>
+      <p className="flight-connection-evidence-link"><span>Mechanism: {readable(hop.evidence.mechanism_status)}</span><a href={`#flight-journey-edge-${hop.id}`} onClick={(event) => {
+        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        const target = document.getElementById(`flight-journey-edge-${hop.id}`);
+        if (!target) return;
+        // A hash-navigation entry would discard the saved browsing snapshot.
+        // Ordinary inspection moves focus, not the camera or history state.
+        event.preventDefault(); target.scrollIntoView({ block: "nearest", behavior: "auto" }); target.focus({ preventScroll: true });
+      }}>Evidence for this connection ↗</a></p>
     </section>
   </details>;
 }
