@@ -93,6 +93,7 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
   const model = useMemo(() => buildFlightModel(items, [...new Set(items.map((item) => item.lane))]), [items]);
   const [state, setState] = useState(() => readConnectionState("", catalog, items));
   const [ready, setReady] = useState(false);
+  const [inspectionRequest, setInspectionRequest] = useState(0);
   const selected = state.entityId ? byId.get(state.entityId) : undefined;
   const edges = connectionsFor(catalog, state.entityId, state.category);
   const allEdges = connectionsFor(catalog, state.entityId);
@@ -109,6 +110,19 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
     restore(); window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
   }, [items, catalog]);
+  useEffect(() => {
+    if (!inspectionRequest) return;
+    // Run only after an explicit path inspection, once the NEW pair and link list
+    // have committed. Focusing a tall container alone can hide its heading.
+    const detail = document.getElementById("connections-selected-detail");
+    if (!detail) return;
+    detail.focus({ preventScroll: true });
+    const headerBottom = Math.max(0, document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0);
+    const top = window.scrollY + detail.getBoundingClientRect().top - headerBottom - 16;
+    window.scrollTo({ top: Math.max(0, top), behavior: "instant" });
+    // A repeated inspection still reveals the pair without creating history;
+    // initial hydration and native back/forward do not request focus or scrolling.
+  }, [inspectionRequest]);
   function visit(next: ConnectionState, replace = false) {
     if (!ready) return;
     const safe = readConnectionState(connectionSearch("", next), catalog, items);
@@ -131,7 +145,7 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
     <p className="connections-live" role="status" aria-live="polite" aria-atomic="true">{selected ? `Browsing links for ${identityFor(selected).title}. ` : ""}{edge && source && target ? `${CONNECTION_MEANING[edge.category].label}: ${identityFor(source).title} to ${identityFor(target).title}.` : selected ? `${allEdges.length} recorded record-level connections. Choose a connection to inspect.` : "No observations available."}</p>
     <RecordedPaths items={items} catalog={catalog} base={base} startingId={state.entityId} inspectedEdgeId={edge?.id ?? null} onInspect={(step) => {
       visit({ entityId: step.fromId, edgeId: step.edge.id, category: "all", query: "" });
-      document.getElementById("connections-selected-detail")?.focus();
+      setInspectionRequest((request) => request + 1);
     }} />
     <div className="connections-workspace">
       <aside className="connections-browser" aria-label="Choose an observation and connection">
