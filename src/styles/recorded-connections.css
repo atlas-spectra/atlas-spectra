@@ -1,0 +1,104 @@
+.connections-page { max-width: 1320px; margin: 0 auto; padding: 38px 28px 64px; color: #233d31; }
+.connections-intro { max-width: 780px; margin-bottom: 28px; }
+.connections-intro h1 { font-size: clamp(30px, 4vw, 48px); font-weight: 500; letter-spacing: -.035em; line-height: 1.12; margin: 12px 0; }
+.connections-intro > p:last-child { font-size: 16px; line-height: 1.65; color: #63705e; }
+.connections-app *, .connections-app *::before, .connections-app *::after { box-sizing: border-box; }
+.connections-app :is(button, input, select) { font: inherit; }
+.connections-app :is(button, summary, a, select, input):focus-visible { outline: 3px solid #4a8687; outline-offset: 3px; }
+.connections-app button { cursor: pointer; }
+.connections-app button:disabled { cursor: default; opacity: .6; }
+.connections-app a { color: #325e49; text-underline-offset: 3px; }
+.connections-app .phenomenon-symbol { display: inline-flex; width: 32px; height: 32px; flex: 0 0 32px; }
+.connections-app .phenomenon-symbol svg { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
+.connections-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.connections-workspace { display: grid; grid-template-columns: minmax(250px, 290px) minmax(0, 1fr); gap: 22px; align-items: start; }
+.connections-browser { padding: 20px; border: 1px solid #d9dfd1; border-radius: 15px; background: #f1f4ea; min-width: 0; }
+.connections-browser > label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+.connections-browser > :is(select, input) { display: block; width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid #bdcdb9; border-radius: 8px; background: #fffef9; color: #294635; font-size: 13px; margin-bottom: 18px; }
+.connections-starting { display: flex; align-items: center; gap: 12px; margin: 26px 0 16px; }
+.connections-starting h2 { font-size: 21px; font-weight: 550; line-height: 1.25; margin: 0; }
+.connections-starting p { font-size: 11px; color: #69795f; line-height: 1.5; margin: 6px 0 0; }
+.connections-filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+.connections-filters button { border: 1px solid #bfcdb6; background: #f9fbf4; color: #4c6644; padding: 9px 11px; border-radius: 20px; font-size: 11px; min-height: 38px; text-transform: capitalize; }
+.connections-filters button[aria-pressed=true] { background: #355945; border-color: #355945; color: white; }
+.connections-edge-list { display: grid; gap: 9px; }
+.connections-edge-list > button { display: grid; gap: 8px; width: 100%; text-align: left; padding: 14px; border-radius: 11px; border: 1px solid #d3ddcc; background: #fffef9; color: #36533f; overflow-wrap: anywhere; }
+.connections-edge-list > button:hover { border-color: #7a9c81; }
+.connections-edge-list > button[aria-pressed=true] { border: 2px solid #50745d; padding: 13px; background: #e5eddf; }
+.connections-edge-list > button[data-category=numerical] .connections-category { color: #866021; }
+.connections-category { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; line-height: 1.5; }
+.connections-peer { display: flex; align-items: center; gap: 10px; }
+.connections-peer strong { font-size: 15px; font-weight: 550; }
+.connections-edge-list small { font-size: 11px; line-height: 1.4; color: #66755d; }
+.connections-empty-list { font-size: 13px; line-height: 1.7; color: #62715b; }
+.connections-empty-list button, .connections-search-results > button:last-child { border: 1px solid #bdccb6; border-radius: 8px; background: #fffef8; padding: 10px; color: #355e43; min-height: 42px; }
+.connections-search-results { display: grid; gap: 7px; margin-bottom: 20px; }
+.connections-search-results button { display: flex; gap: 10px; align-items: center; padding: 9px; border: 1px solid #c9d6c0; border-radius: 8px; background: #fffef9; text-align: left; color: #31523e; font-size: 13px; }
+.connections-search-results span { min-width: 0; }
+.connections-search-results small { display: block; font-size: 10px; color: #6a7862; line-height: 1.5; margin-top: 4px; }
+.connections-search-results p { font-size: 13px; }
+.connections-detail { min-width: 0; }
+.connections-eyebrow { font-size: 10px; letter-spacing: .09em; line-height: 1.6; color: #61765a; }
+.connections-meaning { padding: 22px 24px; border: 1px solid #bed1b8; border-radius: 15px; background: #eaf1e4; margin-bottom: 16px; }
+.connections-meaning h2 { font-size: 28px; font-weight: 520; letter-spacing: -.025em; margin: 8px 0; line-height: 1.2; }
+.connections-meaning p { font-size: 14px; line-height: 1.65; margin: 10px 0; max-width: 700px; }
+.connections-meaning > strong { display: inline-block; font-size: 12px; padding-top: 6px; font-weight: 550; }
+.connections-meaning.is-numerical, .connections-meaning.is-epistemic, .connections-meaning.is-subjective { background: #f8f0db; border-color: #d9cba2; color: #6c5123; }
+.connections-meaning.is-numerical .connections-eyebrow, .connections-meaning.is-epistemic .connections-eyebrow { color: #806333; }
+.connections-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.connections-endpoint { min-width: 0; padding: 20px; border: 1px solid #d5dfcc; border-radius: 14px; background: #fffef9; }
+.connections-identity { display: flex; align-items: center; gap: 12px; margin: 14px 0 8px; }
+.connections-identity .phenomenon-symbol { width: 38px; height: 38px; flex-basis: 38px; }
+.connections-identity h3 { margin: 0; font-size: 21px; line-height: 1.2; font-weight: 550; letter-spacing: -.02em; }
+.connections-observable { font-size: 13px; line-height: 1.5; color: #63715c; margin: 10px 0 18px; }
+.connections-value { display: block; font-size: 22px; line-height: 1.35; font-weight: 550; overflow-wrap: anywhere; }
+.connections-quantity-kind { font-size: 11px; line-height: 1.6; color: #63745d; margin: 8px 0; }
+.connections-conversion { font-size: 13px; line-height: 1.55; color: #315b41; }
+.connections-endpoint-actions { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 18px; align-items: center; }
+.connections-endpoint-actions button { width: 100%; border: 1px solid #b7cbb0; border-radius: 8px; min-height: 44px; padding: 10px 12px; text-align: left; background: #eff4e9; color: #345a41; font-size: 12px; line-height: 1.5; }
+.connections-endpoint-actions a { font-size: 12px; min-height: 28px; display: inline-flex; align-items: center; }
+.connections-observation-evidence { margin-top: 14px; border-top: 1px solid #e1e6d8; padding-top: 12px; }
+.connections-observation-evidence summary { cursor: pointer; font-size: 12px; line-height: 1.6; min-height: 36px; }
+.connections-observation-evidence :is(p, a) { font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.connections-observation-evidence h3 { font-size: 15px; }
+.connections-direction { font-size: 12px; color: #66775c; line-height: 1.6; margin: 16px 4px; }
+.connections-scale { padding: 20px; border: 1px solid #d6dfce; border-radius: 14px; background: #f4f7ee; }
+.connections-scale h3 { font-size: 18px; font-weight: 550; margin: 0 0 8px; }
+.connections-scale > p { font-size: 12px; color: #617158; line-height: 1.65; }
+.connections-scale-row { margin-top: 18px; }
+.connections-scale-row > div { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.connections-scale-row strong { font-size: 12px; }
+.connections-scale-row span { font-size: 11px; color: #67765e; }
+.connections-scale-row svg { display: block; width: 100%; height: 30px; overflow: visible; margin-top: 6px; }
+.connections-scale-track { stroke: #bdcdb5; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.connections-scale-mark { fill: #5d8972; stroke: #315d48; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.connections-scale-mark > * { vector-effect: non-scaling-stroke; }
+.connections-scale-mark.is-target { fill: none; stroke: #597a82; stroke-dasharray: 4 2; }
+.connections-scale-mark.is-reference { fill: none; stroke: #997235; stroke-dasharray: 3 2; }
+.connections-scale-ends { display: flex; justify-content: space-between; gap: 14px; font-size: 10px; line-height: 1.6; color: #708265; margin: 8px 0 14px; }
+.connections-scale-ends span:last-child { text-align: right; }
+.connections-scale-note { margin-bottom: 0; }
+.connections-evidence { padding: 24px; border: 1px solid #d4dfca; border-radius: 14px; margin-top: 16px; background: #fffef9; }
+.connections-evidence h3 { font-size: 23px; font-weight: 550; letter-spacing: -.02em; margin: 0 0 16px; }
+.connections-evidence p { font-size: 13px; line-height: 1.75; overflow-wrap: anywhere; }
+.connections-evidence .connections-explanation { font-size: 15px; line-height: 1.75; }
+.connections-evidence dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 18px 0; margin: 18px 0; border-top: 1px solid #e0e6d6; border-bottom: 1px solid #e0e6d6; }
+.connections-evidence dt { font-size: 11px; color: #6c7a62; margin-bottom: 8px; }
+.connections-evidence dd { font-size: 13px; line-height: 1.5; margin: 0; text-transform: capitalize; }
+.connections-evidence h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; font-weight: 550; }
+.connections-derivation { background: #f3f6ec; border-left: 2px solid #a2b894; padding: 8px 16px; }
+.connections-sources small { display: block; color: #728069; font-size: 11px; margin-top: 4px; }
+.connections-provenance summary { cursor: pointer; font-size: 12px; padding: 12px 0; }
+.connections-provenance code { font-size: 11px; overflow-wrap: anywhere; }
+.connections-welcome { border: 1px solid #d4dfca; border-radius: 15px; background: #fafbf5; min-height: 380px; padding: 34px; }
+.connections-welcome h2 { font-size: 29px; font-weight: 500; line-height: 1.25; margin: 14px 0; }
+.connections-welcome p { font-size: 15px; line-height: 1.7; color: #65725e; }
+.connections-welcome > div { display: flex; gap: 18px; align-items: baseline; }
+.connections-welcome b { font-size: 12px; color: #8a9c80; }
+.connections-footer { margin-top: 24px; color: #6b7963; font-size: 12px; line-height: 1.7; }
+.connections-footer summary { cursor: pointer; min-height: 36px; padding: 8px 0; }
+.connections-footer li { overflow-wrap: anywhere; }
+.connections-static { padding: 24px; border: 1px solid #cbd8c2; line-height: 1.8; }
+.connections-static li { margin-bottom: 14px; }
+@media(max-width: 900px) { .connections-workspace { grid-template-columns: 1fr; } .connections-edge-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } .connections-browser { padding: 18px; } }
+@media(max-width: 600px) { .connections-page { padding: 25px 16px 44px; } .connections-pair, .connections-edge-list { grid-template-columns: 1fr; } .connections-meaning, .connections-evidence { padding: 20px; } .connections-meaning h2 { font-size: 25px; } .connections-endpoint { padding: 18px; } .connections-welcome { padding: 22px; min-height: 0; } .connections-evidence dl { grid-template-columns: 1fr; gap: 14px; } .connections-evidence dt { margin-bottom: 4px; } .connections-scale { padding: 16px; } }
