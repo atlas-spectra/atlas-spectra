@@ -4,6 +4,13 @@ const shell = (page: Page) => page.locator(".journey-app");
 const cardiac = ["cardiology.ventricular-activation.resting-adult", "cardiology.arterial-pulse.resting-adult", "wearable.ppg.resting-adult-optical-variation", "wearable.ppg.resting-adult-pulse"];
 const hair = "hearing.cochlea.hair-cell-electrical-signal";
 async function ready(page: Page, search = "") { await page.goto(`${route}${search}`); await expect(shell(page)).toHaveAttribute("data-ready", "true"); }
+async function capture(page: Page, name: string) {
+  // Keep the real sticky header at the page top instead of overlaying the selected
+  // stage in a full-page/element capture after an auto-scrolled interaction.
+  await page.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await page.screenshot({ path: `artifacts/screenshots/${name}.png`, fullPage: true });
+}
 
 test("a journey shows connected stages with bounded, user-directed navigation", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1100 }); await ready(page);
@@ -12,7 +19,7 @@ test("a journey shows connected stages with bounded, user-directed navigation", 
   await expect(page.getByRole("button", { name: "Previous stage", exact: false })).toBeDisabled();
   await expect(page.locator(".journey-step[aria-current=step]")).toHaveAttribute("data-stage-id", cardiac[0]);
   await expect(page.locator(".journey-stage-detail")).toContainText("Ventricular electrical activation count");
-  await page.screenshot({ path: "artifacts/screenshots/journey-heart-overview.png", fullPage: true });
+  await capture(page, "journey-heart-overview");
   for (const id of cardiac.slice(1)) {
     await page.getByRole("button", { name: "Next stage", exact: false }).click();
     await expect(shell(page)).toHaveAttribute("data-stage", id);
@@ -22,7 +29,7 @@ test("a journey shows connected stages with bounded, user-directed navigation", 
   await expect(page.locator(".journey-connection-detail")).toHaveAttribute("data-edge-id", "relationship.ppg-optical-to-electrical");
   await expect(page.locator(".journey-edge-description")).toContainText("photodetector");
   await expect(page.locator(".journey-edge-evidence")).toContainText("physical");
-  await page.screenshot({ path: "artifacts/screenshots/journey-sensor-connection.png", fullPage: true });
+  await capture(page, "journey-sensor-connection");
 });
 
 test("keyboard selection, reload and browser history restore exact stage IDs", async ({ page }) => {
@@ -52,7 +59,7 @@ test("unknown coordinates remain navigable and edge evidence comes from its owne
   expect([...params.keys()]).toEqual(["entity"]); expect(params.get("entity")).toBe(hair);
   await page.locator(".journey-edge-origin summary").click();
   await expect(page.locator(".journey-edge-origin")).toContainText("Cochlear hair-cell electrical response");
-  await page.screenshot({ path: "artifacts/screenshots/journey-unpositioned.png", fullPage: true });
+  await capture(page, "journey-unpositioned");
   await atlas.click(); await expect(page.locator(".atlas-workspace")).toHaveAttribute("data-ready", "true");
   await expect(page.locator(".atlas-inspector")).toHaveAttribute("data-selected-id", hair);
   await expect(page.locator(`.plot-label[data-record-id="${hair}"]`)).toHaveCount(0);
@@ -121,7 +128,7 @@ test.describe("touch journeys", () => {
       const box = await button.boundingBox(); expect(box!.x).toBeGreaterThanOrEqual(0); expect(box!.x + box!.width).toBeLessThanOrEqual(390); expect(box!.height).toBeGreaterThanOrEqual(44);
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    await page.locator(".journey-story").screenshot({ path: "artifacts/screenshots/journey-mobile.png" });
+    await capture(page, "journey-mobile");
     await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Atlas", exact: true }).tap();
     await expect(page.locator(".atlas-workspace")).toHaveAttribute("data-ready", "true");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
