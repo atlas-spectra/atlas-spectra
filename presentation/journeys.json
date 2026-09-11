@@ -1,0 +1,45 @@
+{
+  "version": "0.1.0",
+  "journeys": [
+    {
+      "id": "cardiac-sensing",
+      "title": "From heart to wearable",
+      "summary": "Follow one cardiac process through electrical activation, an arterial pulse, changing light, and a detector's electrical output.",
+      "steps": [
+        { "recordId": "cardiology.ventricular-activation.resting-adult", "label": "Electrical activation" },
+        { "recordId": "cardiology.arterial-pulse.resting-adult", "label": "Arterial pulse" },
+        { "recordId": "wearable.ppg.resting-adult-optical-variation", "label": "Changing light" },
+        { "recordId": "wearable.ppg.resting-adult-pulse", "label": "Sensor output" }
+      ],
+      "edgeIds": [
+        "relationship.ventricular-activation-to-arterial-pulse",
+        "relationship.arterial-pulse-modulates-ppg-optical",
+        "relationship.ppg-optical-to-electrical"
+      ]
+    },
+    {
+      "id": "sound-to-nerve",
+      "title": "From sound to nerve signal",
+      "summary": "Follow an acoustic input into sensory-cell and nerve responses, without copying the sound's frequency onto the nervous system.",
+      "steps": [
+        { "recordId": "acoustics.standard-pitch.a4-440hz", "label": "A4 sound" },
+        { "recordId": "hearing.cochlea.hair-cell-electrical-signal", "label": "Sensory-cell response" },
+        { "recordId": "hearing.auditory-nerve.electrical-signal", "label": "Auditory nerve" }
+      ],
+      "edgeIds": [
+        "relationship.a4.transduces-to-hair-cell-signal",
+        "relationship.hair-cell-signal-to-auditory-nerve"
+      ]
+    },
+    {
+      "id": "quartz-clock",
+      "title": "From crystal to clock tick",
+      "summary": "See the recorded frequency-division relationship between a quartz resonator and a clock's one-second output.",
+      "steps": [
+        { "recordId": "timekeeping.quartz-wristwatch.resonance", "label": "Quartz resonance" },
+        { "recordId": "timekeeping.quartz-wristwatch.one-second-tick", "label": "One-second output" }
+      ],
+      "edgeIds": ["relationship.quartz-wristwatch.divided-to-one-hz"]
+    }
+  ]
+}

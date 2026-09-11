@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atlas-spectra.github.io/atlas-spectra/schema/journey.schema.json",
+  "title": "Atlas Spectra presentation journeys",
+  "description": "Ordered record and edge references; scientific quantities and evidence remain in the canonical corpus.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "journeys"],
+  "properties": {
+    "version": { "const": "0.1.0" },
+    "journeys": { "type": "array", "minItems": 1, "maxItems": 24, "items": { "$ref": "#/$defs/journey" } }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "pattern": "\\S" },
+    "step": {
+      "type": "object", "additionalProperties": false,
+      "required": ["recordId", "label"],
+      "properties": { "recordId": { "$ref": "#/$defs/text" }, "label": { "$ref": "#/$defs/text" } }
+    },
+    "journey": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "title", "summary", "steps", "edgeIds"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "title": { "$ref": "#/$defs/text" }, "summary": { "$ref": "#/$defs/text" },
+        "steps": { "type": "array", "minItems": 2, "maxItems": 12, "items": { "$ref": "#/$defs/step" } },
+        "edgeIds": { "type": "array", "minItems": 1, "maxItems": 11, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } }
+      }
+    }
+  }
+}

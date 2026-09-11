@@ -5,6 +5,7 @@ on:
     paths:
       - "schema/**"
       - "examples/**"
+      - "presentation/**"
       - "scripts/validate-schema.py"
       - "scripts/validate-corpus.py"
       - "tests/**"
@@ -15,6 +16,7 @@ on:
     paths:
       - "schema/**"
       - "examples/**"
+      - "presentation/**"
       - "scripts/validate-schema.py"
       - "scripts/validate-corpus.py"
       - "tests/**"

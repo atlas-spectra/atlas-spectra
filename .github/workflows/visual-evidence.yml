@@ -5,6 +5,8 @@ on:
     paths:
       - "src/**"
       - "examples/**"
+      - "presentation/**"
+      - "schema/journey.schema.json"
       - "package.json"
       - "package-lock.json"
       - "playwright.config.ts"
