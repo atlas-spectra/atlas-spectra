@@ -67,7 +67,7 @@ export function buildFlightModel(items: ExplorerItem[], lanes: string[]): Flight
 }
 
 export function boundedCoordinate(value: number, bounds: FlightBounds): number {
-  return clamp(Number.isFinite(value) ? value : bounds.min, bounds.min, bounds.max);
+  return clamp(Number.isFinite(value) ? value : bounds.min, bounds.max);
 }
 export function parseCoordinate(raw: string | null, model: FlightModel): number {
   const n = raw === null || raw.trim() === "" ? model.start : Number(raw);
@@ -158,15 +158,19 @@ export function planFlightLabels(model: FlightModel, at: number, width: number, 
     if (candidates.length > FLIGHT_LABEL_CANDIDATES) candidates.pop();
   }
   const labels: FlightLabel[] = [];
-  const maxTop = height - FLIGHT_LABEL_BOTTOM - FLIGHT_LABEL_HEIGHT;
+  const stride = FLIGHT_LABEL_HEIGHT + 8;
+  const lastSlot = Math.floor((height - FLIGHT_LABEL_BOTTOM - FLIGHT_LABEL_HEIGHT - FLIGHT_LABEL_TOP) / stride);
   for (const candidate of candidates) {
     const outward = candidate.record.x < 0 ? candidate.x - labelWidth - 12 : candidate.x + 12;
     const inward = candidate.record.x < 0 ? candidate.x + 12 : candidate.x - labelWidth - 12;
+    // Align complete rectangles to common slots instead of leaving unusable
+    // fractions at both edges of a narrow single-column layout.
+    const preferredSlot = clamp(Math.round((candidate.y - FLIGHT_LABEL_HEIGHT / 2 - FLIGHT_LABEL_TOP) / stride), 0, lastSlot);
     let placed = false;
     for (const x of [outward, inward, width / 2 - labelWidth / 2]) {
       const left = clamp(x, 10, width - labelWidth - 10);
       for (const offset of [0, -1, 1, -2, 2, -3, 3]) {
-        const top = clamp(candidate.y - FLIGHT_LABEL_HEIGHT / 2 + offset * (FLIGHT_LABEL_HEIGHT + 8), FLIGHT_LABEL_TOP, maxTop);
+        const top = FLIGHT_LABEL_TOP + clamp(preferredSlot + offset, 0, lastSlot) * stride;
         const collides = labels.some((other) => left < other.left + other.width + 8 && left + labelWidth + 8 > other.left
           && top < other.top + other.height + 8 && top + FLIGHT_LABEL_HEIGHT + 8 > other.top);
         if (collides) continue;
