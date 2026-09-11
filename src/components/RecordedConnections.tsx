@@ -10,6 +10,7 @@ import { CONNECTION_CATEGORIES, CONNECTION_MEANING, connectionsFor, connectionSe
   type ConnectionCatalog, type ConnectionState, type RecordedConnection } from "../lib/recorded-connections";
 import { PhenomenonIcon, phenomenonValue } from "./PhenomenonIdentity";
 import FlightEvidence from "./FlightEvidence";
+import RecordedPaths from "./RecordedPaths";
 import "../styles/recorded-connections.css";
 
 const readable = (value: string | null | undefined, fallback = "unspecified") => (value ?? fallback).replaceAll("_", " ");
@@ -128,6 +129,10 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
   }
   return <div className="connections-app" data-ready={ready} data-entity-id={state.entityId ?? ""} data-edge-id={edge?.id ?? ""}>
     <p className="connections-live" role="status" aria-live="polite" aria-atomic="true">{selected ? `Browsing links for ${identityFor(selected).title}. ` : ""}{edge && source && target ? `${CONNECTION_MEANING[edge.category].label}: ${identityFor(source).title} to ${identityFor(target).title}.` : selected ? `${allEdges.length} recorded record-level connections. Choose a connection to inspect.` : "No observations available."}</p>
+    <RecordedPaths items={items} catalog={catalog} base={base} startingId={state.entityId} inspectedEdgeId={edge?.id ?? null} onInspect={(step) => {
+      visit({ entityId: step.fromId, edgeId: step.edge.id, category: "all", query: "" });
+      document.getElementById("connections-selected-detail")?.focus();
+    }} />
     <div className="connections-workspace">
       <aside className="connections-browser" aria-label="Choose an observation and connection">
         <label htmlFor="connections-record">Start with an observation</label>
@@ -161,7 +166,7 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
           {selected && !allEdges.length && <a href={`${base}phenomena/${encodeURIComponent(selected.id)}/`}>Inspect the original source record ↗</a>}
         </div>}
       </aside>
-      <div className="connections-detail" aria-label="Selected recorded connection">
+      <div id="connections-selected-detail" tabIndex={-1} className="connections-detail" aria-label="Selected recorded connection">
         {edge && source && target ? <div key={edge.id} data-connection-category={edge.category}>
           <header className={`connections-meaning is-${edge.category}`}><span className="connections-eyebrow">RECORDED LINK · NOT A NEW SUGGESTION</span>
             <h2>{CONNECTION_MEANING[edge.category].label}</h2><p>{CONNECTION_MEANING[edge.category].caution}</p>
