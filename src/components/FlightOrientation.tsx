@@ -1,8 +1,9 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import type { ExplorerItem } from "../lib/corpus";
 import { groupForAnchor, type ProcessGroup } from "../lib/process-groups";
 import { identityFor } from "../lib/phenomenon-identity";
 import { flightDepthWindow, formatFlightHz, MARK_NAMES, type FlightModel } from "../lib/flight";
+import { flightOverviewX } from "../lib/flight-connection";
 import { eventRateReading, FLIGHT_OVERVIEW_ANCHORS, formatScaleRate } from "../lib/flight-presentation";
 import { PhenomenonIcon, phenomenonValue } from "./PhenomenonIdentity";
 import "../styles/flight-orientation.css";
@@ -24,14 +25,14 @@ export function FlightLandmarkFace({ item, group, compact = false }: { item: Exp
 }
 
 /** One visible navigator: the native range input sits ON the whole-corpus diagram. */
-export function FlightDepthOverview({ model, items, at, width, height, labeled, eligible, available, onJump, onChoose }: {
+export function FlightDepthOverview({ model, items, at, width, height, labeled, eligible, available, onJump, onChoose, connection }: {
   model: FlightModel; items: ExplorerItem[]; at: number; width: number; height: number;
   labeled: number; eligible: number; available: boolean; onJump: (at: number) => void; onChoose: (id: string) => void;
+  connection?: ReactNode;
 }) {
   const clipId = useId();
   const window = flightDepthWindow(model, at, width, height);
-  const span = Math.max(Number.EPSILON, model.bounds.max - model.bounds.min);
-  const x = (log: number) => 10 + (log - model.bounds.min) / span * 980;
+  const x = (log: number) => flightOverviewX(log, model.bounds);
   const shortcuts = FLIGHT_OVERVIEW_ANCHORS.flatMap((id) => {
     const item = items.find((entry) => entry.id === id), record = model.records.find((entry) => entry.id === id);
     return item && record ? [item] : [];
@@ -55,6 +56,7 @@ export function FlightDepthOverview({ model, items, at, width, height, labeled, 
         aria-valuetext={`${formatScaleRate(at)}; ${formatFlightHz(at)} equivalent, your position on the scale`} onChange={(event) => onJump(Number(event.target.value))} />
     </div>
     <div className="flight-scale-ends"><span>Slower</span><span>Each decade is a tenfold change</span><span>Faster</span></div>
+    {connection}
     <div className="flight-overview-shortcuts" role="group" aria-label="Jump to a known landmark">{shortcuts.map((item) => <button
       type="button" key={item.id} data-jump-id={item.id} title={`${item.name}: ${phenomenonValue(item)}`} onClick={() => onChoose(item.id)}>
       <PhenomenonIcon item={item} /><span><strong>{groupForAnchor(item.id)?.title ?? identityFor(item).title}</strong><small>{phenomenonValue(item)}</small></span>

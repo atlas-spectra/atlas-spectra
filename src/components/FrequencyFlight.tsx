@@ -4,6 +4,7 @@ import {
 } from "react";
 import type { ExplorerItem } from "../lib/corpus";
 import FlightEvidence from "./FlightEvidence";
+import FlightConnectionTrace from "./FlightConnectionTrace";
 import { PhenomenonIcon } from "./PhenomenonIdentity";
 import { FlightDepthOverview, FlightLandmarkFace, FlightRateContext, FlightScaleHelp } from "./FlightOrientation";
 import { ProcessGroupPanel } from "./ProcessGroup";
@@ -292,7 +293,9 @@ export default function FrequencyFlight({ items, lanes, base, journeys = NO_JOUR
         </div>}
         <div className="flight-scale">
           <FlightDepthOverview model={model} items={items} at={at} width={size.width} height={size.height} labeled={labels.length} eligible={plan.eligibleCount}
-            available={renderer === "ready"} onJump={jump} onChoose={(id) => choose(id)} />
+            available={renderer === "ready"} onJump={jump} onChoose={(id) => choose(id)}
+            connection={guide && guideStep ? <FlightConnectionTrace key={guide.id} journey={guide} stageId={guideStep.recordId} model={model} items={items}
+              onVisit={(id) => visitJourney(guide.id, id)} /> : undefined} />
           <div className="flight-step-buttons"><button type="button" disabled={previous === undefined} onClick={() => previous !== undefined && jump(previous)}>← Previous landmark</button><button type="button" disabled={next === undefined} onClick={() => next !== undefined && jump(next)}>Next landmark →</button></div>
           {plan.deferredIds.size > 0 && <div className="flight-signal-entry"><a href={`${base}journeys/?journey=${FLIGHT_SIGNAL_GUIDE.journeyId}`} onClick={(event) => {
             if (journeys.some((entry) => entry.id === FLIGHT_SIGNAL_GUIDE.journeyId) && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
