@@ -7,6 +7,9 @@ import FlightEvidence from "./FlightEvidence";
 import { PhenomenonIcon } from "./PhenomenonIdentity";
 import { FlightDepthOverview, FlightLandmarkFace, FlightRateContext, FlightScaleHelp } from "./FlightOrientation";
 import { ProcessGroupPanel } from "./ProcessGroup";
+import { FlightJourneyPicker, FlightJourneyPanel, FlightJourneyConnection } from "./FlightJourney";
+import { flightJourneyCoordinate, flightJourneySearch, readFlightJourney, readFlightBrowseState, type FlightJourney, type FlightBrowseState } from "../lib/flight-journeys";
+import type { JourneyState } from "../lib/signal-journeys";
 import { groupForRecord, groupMembers, projectDiscovery } from "../lib/process-groups";
 import { identityFor, identitySearchText } from "../lib/phenomenon-identity";
 import { FLIGHT_SIGNAL_GUIDE, formatScaleRate, quietFlightPlan } from "../lib/flight-presentation";
@@ -18,18 +21,27 @@ import {
 import "../styles/flight.css";
 
 const FlightScene = lazy(() => import("./FlightScene"));
+const NO_JOURNEYS: FlightJourney[] = [];
 class SceneBoundary extends Component<{ children: ReactNode; onError: () => void }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
   componentDidCatch() { this.props.onError(); }
   render() { return this.state.failed ? null : this.props.children; }
 }
-interface Props { items: ExplorerItem[]; lanes: string[]; base: string }
+interface Props { items: ExplorerItem[]; lanes: string[]; base: string; journeys?: FlightJourney[] }
 
-export default function FrequencyFlight({ items, lanes, base }: Props) {
+/** Preserve unrelated URL and history state; navigation controls never reload the page. */
+function saveFlightLocation(view: FlightBrowseState, guide: JourneyState | null, returnView: FlightBrowseState | null, method: "pushState" | "replaceState") {
+  const url = new URL(window.location.href);
+  url.search = flightJourneySearch(url.search, view, guide);
+  window.history[method]({ ...window.history.state, atlasFlightView: view, atlasFlightReturn: returnView }, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+export default function FrequencyFlight({ items, lanes, base, journeys = NO_JOURNEYS }: Props) {
   // Full model owns bounds, lateral offsets, exact coordinates and every record lookup.
   const model = useMemo(() => buildFlightModel(items, lanes), [items, lanes]);
   const byId = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
+  const ids = useMemo(() => new Set(items.map((item) => item.id)), [items]);
   const recordsById = useMemo(() => new Map(model.records.map((record) => [record.id, record])), [model]);
   const [at, setAt] = useState(model.start);
   const coordinateRef = useRef(model.start);
@@ -42,6 +54,10 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
   const [query, setQuery] = useState("");
   const [showAll, setShowAll] = useState(false);
   const [detailed, setDetailed] = useState(false);
+  const [guideState, setGuideState] = useState<JourneyState | null>(null);
+  const returnBrowse = useRef<FlightBrowseState | null>(null);
+  const guide = journeys.find((journey) => journey.id === guideState?.journey);
+  const guideStep = guide?.steps.find((step) => step.recordId === guideState?.stage);
   const [size, setSize] = useState({ width: 900, height: 570 });
   const railRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -73,16 +89,45 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
     coordinateRef.current = next; setAt(next);
     if (scrollMotion) syncScroll(next);
   }, [model, scrollMotion, syncScroll]);
-  const choose = useCallback((id: string, anchor?: number) => {
+  function snapshot(): FlightBrowseState { return { at: coordinateRef.current, selectedId, detailed, query, showAll }; }
+  function visitJourney(id: string, stageId?: string) {
+    if (!ready) return;
+    const journey = journeys.find((entry) => entry.id === id);
+    const stage = journey?.steps.find((step) => step.recordId === stageId) ?? (stageId ? undefined : journey?.steps[0]);
+    if (!journey || !stage || !byId.has(stage.recordId)) return;
+    const before = snapshot();
+    // Flush any debounced camera update before creating a history entry.
+    saveFlightLocation(before, guideState, returnBrowse.current, "replaceState");
+    if (!guideState) returnBrowse.current = before;
+    const next = flightJourneyCoordinate(model, stage.recordId, before.at) ?? before.at;
+    const state = { journey: journey.id, stage: stage.recordId };
+    const view = { ...before, at: next, selectedId: stage.recordId, query: "", showAll: false };
+    setGuideState(state); setSelectedId(stage.recordId); setQuery(""); setShowAll(false); jump(next);
+    saveFlightLocation(view, state, returnBrowse.current, "pushState");
+  }
+  function leaveJourney() {
+    const before = snapshot(), view = returnBrowse.current ?? before;
+    saveFlightLocation(before, guideState, returnBrowse.current, "replaceState");
+    setGuideState(null); returnBrowse.current = null;
+    setSelectedId(view.selectedId); setDetailed(view.detailed); setQuery(view.query); setShowAll(view.showAll); jump(view.at);
+    saveFlightLocation(view, null, null, "pushState");
+    document.getElementById("flight-journey-picker")?.focus({ preventScroll: true });
+  }
+  function leaveGuideForSelection(id: string | null, next: number) {
+    if (!guideState) return;
+    saveFlightLocation(snapshot(), guideState, returnBrowse.current, "replaceState");
+    setGuideState(null); returnBrowse.current = null;
+    saveFlightLocation({ ...snapshot(), at: next, selectedId: id }, null, null, "pushState");
+  }
+  function choose(id: string, anchor?: number) {
     if (!byId.has(id)) return;
-    setSelectedId(id);
     const record = recordsById.get(id);
     // Opening a grouped scene label reveals its facets without moving the camera.
     // Search and named overview shortcuts deliberately travel to the observation.
-    if (record && !(anchor !== undefined && projection.collapsed.has(id))) {
-      jump(recordCoordinate(record, anchor ?? coordinateRef.current));
-    }
-  }, [byId, recordsById, jump, projection]);
+    const next = record && !(anchor !== undefined && projection.collapsed.has(id))
+      ? recordCoordinate(record, anchor ?? coordinateRef.current) : coordinateRef.current;
+    leaveGuideForSelection(id, next); setSelectedId(id); jump(next);
+  }
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -93,27 +138,30 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
   useEffect(() => {
     const sync = () => {
       const params = new URLSearchParams(window.location.search);
-      const id = params.get("entity"), next = parseCoordinate(params.get("at"), model);
-      coordinateRef.current = next; setAt(next);
+      const state = readFlightJourney(window.location.search, journeys);
+      const id = state?.stage ?? params.get("entity");
+      const raw = params.get("at");
+      const fallback = state ? flightJourneyCoordinate(model, state.stage, model.start) ?? model.start : model.start;
+      const next = raw !== null && raw.trim() && Number.isFinite(Number(raw)) ? parseCoordinate(raw, model) : fallback;
+      const saved = readFlightBrowseState(window.history.state?.atlasFlightView, model, ids);
+      returnBrowse.current = state ? readFlightBrowseState(window.history.state?.atlasFlightReturn, model, ids) : null;
+      coordinateRef.current = next; setAt(next); setGuideState(state);
       setSelectedId(id && byId.has(id) ? id : null);
       setDetailed(params.get("detail") === "observations");
+      setQuery(saved?.query ?? ""); setShowAll(saved?.showAll ?? false);
       syncScroll(next); setReady(true);
     };
     sync(); window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
-  }, [model, byId, syncScroll]);
+  }, [model, byId, ids, syncScroll, journeys]);
   useEffect(() => { if (ready && scrollMotion) syncScroll(coordinateRef.current); }, [ready, scrollMotion, syncScroll, size]);
   useEffect(() => {
     if (!ready) return;
     const timer = window.setTimeout(() => {
-      const url = new URL(window.location.href);
-      url.searchParams.set("at", String(at));
-      selectedId ? url.searchParams.set("entity", selectedId) : url.searchParams.delete("entity");
-      detailed ? url.searchParams.set("detail", "observations") : url.searchParams.delete("detail");
-      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+      saveFlightLocation({ at, selectedId, detailed, query, showAll }, guideState, returnBrowse.current, "replaceState");
     }, 180);
     return () => window.clearTimeout(timer);
-  }, [at, selectedId, ready, detailed]);
+  }, [at, selectedId, ready, detailed, query, showAll, guideState]);
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
@@ -167,19 +215,21 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
   }
 
   return <div className="flight-experience" data-ready={ready} data-renderer={renderer} data-detail-mode={detailed ? "observations" : "discover"}
-    data-coordinate={at} data-min={model.bounds.min} data-max={model.bounds.max}>
+    data-guided={!!guide} data-coordinate={at} data-min={model.bounds.min} data-max={model.bounds.max}>
     <p className="flight-status" role="status" aria-live="polite" aria-atomic="true">{selected ? `Selected ${identityFor(selected).title}.${activeGroup ? ` Observation of ${activeGroup.title}.` : ""} Original evidence is in the selected flight record panel.` : "No flight observation selected."}</p>
     <div className="flight-toolbar">
       <div className="flight-mode"><a href={atlasUrl}>Atlas · 2D</a><span aria-current="page">Flight · 3D</span></div>
+      {journeys.length > 0 && <FlightJourneyPicker journeys={journeys} disabled={!ready} onStart={(id) => visitJourney(id)} />}
       <label className="flight-motion"><input type="checkbox" checked={scrollMotion} onChange={(event) => setScrollMotion(event.target.checked)} /> Scroll to fly</label>
       <button type="button" onClick={() => jump(model.start)}>Reset flight</button>
     </div>
     <div className="flight-discovery-mode"><div role="group" aria-label="Flight level of detail">
-      <button id="flight-discover-mode" type="button" aria-pressed={!detailed} onClick={() => { setDetailed(false); if (activeGroup) setSelectedId(null); }}>Discover</button>
+      <button id="flight-discover-mode" type="button" aria-pressed={!detailed} onClick={() => { setDetailed(false); if (activeGroup && !guide) setSelectedId(null); }}>Discover</button>
       <button type="button" aria-pressed={detailed} onClick={() => setDetailed(true)}>All observations</button>
     </div><p>{detailed ? "Individual observations. Select a name for its quantity and evidence." : "Recognize a landmark. Open it to discover what happens within."}</p></div>
     {reducedMotion && <p className="flight-motion-note">Reduced motion: scroll flight starts off. Use the ruler or buttons for discrete steps, or enable it explicitly.</p>}
     <div className="flight-layout">
+      {guide && guideStep && <FlightJourneyPanel journey={guide} stageId={guideStep.recordId} positioned={recordsById.has(guideStep.recordId)} onVisit={visitJourney} onLeave={leaveJourney} base={base} />}
       <section className="flight-instrument" aria-label="Frequency Flight instrument">
         <div className="flight-theater">
           <div ref={railRef} className="flight-rail" tabIndex={0} role="region" aria-label="Frequency flight navigation" onKeyDown={key}
@@ -244,10 +294,14 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
           <FlightDepthOverview model={model} items={items} at={at} width={size.width} height={size.height} labeled={labels.length} eligible={plan.eligibleCount}
             available={renderer === "ready"} onJump={jump} onChoose={(id) => choose(id)} />
           <div className="flight-step-buttons"><button type="button" disabled={previous === undefined} onClick={() => previous !== undefined && jump(previous)}>← Previous landmark</button><button type="button" disabled={next === undefined} onClick={() => next !== undefined && jump(next)}>Next landmark →</button></div>
-          {plan.deferredIds.size > 0 && <div className="flight-signal-entry"><a href={`${base}journeys/?journey=${FLIGHT_SIGNAL_GUIDE.journeyId}`}>Follow the signal: heart → wearable</a><span>{plan.deferredIds.size} sensing stages available in the journey and record browser</span></div>}
+          {plan.deferredIds.size > 0 && <div className="flight-signal-entry"><a href={`${base}journeys/?journey=${FLIGHT_SIGNAL_GUIDE.journeyId}`} onClick={(event) => {
+            if (journeys.some((entry) => entry.id === FLIGHT_SIGNAL_GUIDE.journeyId) && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) {
+              event.preventDefault(); visitJourney(FLIGHT_SIGNAL_GUIDE.journeyId);
+            }
+          }}>Follow the signal: heart → wearable</a><span>{plan.deferredIds.size} sensing stages available in the journey and record browser</span></div>}
           <FlightScaleHelp />
         </div>
-        {activeGroup && <ProcessGroupPanel group={activeGroup} items={items} selectedId={selectedId} onSelect={(id) => setSelectedId(id)} onCollapse={collapseGroup} />}
+        {activeGroup && !guide && <ProcessGroupPanel group={activeGroup} items={items} selectedId={selectedId} onSelect={(id) => setSelectedId(id)} onCollapse={collapseGroup} />}
         <div className="flight-legend" aria-label="Flight mark legend"><span>● Point</span><span>▱ Range / extent</span><span>┆ Discrete lines</span><span>◇ Claim reference</span></div>
         <p className="flight-caution">Sideways placement organizes domains, not physical distance. Proximity does not establish a mechanism. Each landmark retains its own quantities and evidence.</p>
         <section className="flight-catalog" aria-label="Flight record browser">
@@ -267,11 +321,13 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
       </section>
       <aside className="flight-inspector" aria-label="Selected flight record" data-selected-id={selected?.id ?? ""}>
         {selected ? <>
-          <div className="flight-inspector-heading"><span className="flight-kicker">{selected.lane}</span><button type="button" aria-label="Close flight detail" onClick={() => setSelectedId(null)}>×</button></div>
+          <div className="flight-inspector-heading"><span className="flight-kicker">{selected.lane}</span><button type="button" aria-label="Close flight detail" onClick={() => { leaveGuideForSelection(null, coordinateRef.current); setSelectedId(null); }}>×</button></div>
           {activeGroup && <p className="flight-group-origin">Observation of <strong>{activeGroup.title}</strong></p>}
           <div className="flight-identity-heading"><PhenomenonIcon item={selected} /><h2>{identityFor(selected).title}</h2></div>
           <p className="flight-canonical-name">{selected.name}</p><p>{selected.summary}</p>
+          {guideStep && <dl className="flight-journey-observable"><div><dt>System</dt><dd>{guideStep.system}</dd></div><div><dt>What is observed</dt><dd>{guideStep.observable}</dd></div></dl>}
           <FlightRateContext item={selected} />
+          {guide && guideStep && <FlightJourneyConnection journey={guide} stageId={guideStep.recordId} base={base} />}
           <dl><div><dt>Representation</dt><dd>{selected.profileType.replaceAll("_", " ")}</dd></div>
             <div><dt>Native axis</dt><dd>{selected.axisKind.replaceAll("_", " ")}</dd></div>
             <div><dt>Native value</dt><dd>{selected.display?.nativeLabel ?? "Unresolved"}</dd></div>
