@@ -180,6 +180,12 @@ test("deferred sensing stages remain searchable and independently selectable", a
   }
   await ready(page);
   await page.locator(".flight-signal-entry a").click();
+  // The enhanced link now opens the guide in place. The full story remains reachable.
+  expect(new URL(page.url()).pathname).toBe(route);
+  const guide = page.getByRole("region", { name: "Guided flight journey", exact: true });
+  await expect(guide).toHaveAttribute("data-journey-id", "cardiac-sensing");
+  await expect(guide.getByLabel("Journey stage").locator("option")).toHaveCount(4);
+  await guide.getByRole("link", { name: /Full journey & sources/ }).click();
   await expect(page).toHaveURL(/\/journeys\/\?journey=cardiac-sensing/);
   await expect(page.locator(".journey-app")).toHaveAttribute("data-ready", "true");
   await expect(page.locator(".journey-step")).toHaveCount(4);
