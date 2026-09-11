@@ -63,10 +63,10 @@ test("native history restores the pair without replaying an explicit inspection 
   await page.evaluate(() => {
     const original = window.scrollTo.bind(window);
     document.documentElement.dataset.inspectionScrolls = "0";
-    window.scrollTo = (...args: Parameters<typeof window.scrollTo>) => {
+    Object.defineProperty(window, "scrollTo", { configurable: true, value: (...args: unknown[]) => {
       document.documentElement.dataset.inspectionScrolls = String(Number(document.documentElement.dataset.inspectionScrolls) + 1);
       Reflect.apply(original, window, args);
-    };
+    } });
   });
   await page.goBack();
   await expect(page.locator(".connections-app")).toHaveAttribute("data-edge-id", first!);
