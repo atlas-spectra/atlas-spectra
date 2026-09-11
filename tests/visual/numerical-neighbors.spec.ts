@@ -8,6 +8,13 @@ const peer = (p: Page, id: string) => panel(p).locator(`[data-numerical-peer="${
 const query = (id = heart, refs = false) => `?entity=${heart}&numbers=overlap&numbers_from=${id}${refs ? "&numbers_refs=include" : ""}`;
 async function ready(p: Page, search = "") { await p.goto(route + search); await expect(p.locator(".connections-app")).toHaveAttribute("data-ready", "true"); await expect(p.locator("#numerical-trigger, #numerical-anchor")).toBeEnabled(); }
 async function openDetails(p: Page, id: string) { await peer(p, id).getByText("Calculation & original observation evidence", { exact: true }).click(); }
+async function captureFullPage(p: Page, name: string) {
+  // Tall element screenshots scroll internally, placing the sticky site header over
+  // the element. Capture the real document from its top instead; do not hide the header.
+  await p.evaluate(() => window.scrollTo({ top: 0, left: 0, behavior: "instant" }));
+  await expect.poll(() => p.evaluate(() => window.scrollY)).toBe(0);
+  await p.screenshot({ path: `artifacts/screenshots/${name}.png`, fullPage: true });
+}
 
 test("numerical discovery starts closed, opens from current browsing observation and restores focus", async ({ page }) => {
   await ready(page, `?entity=${tick}`); await expect(panel(page)).toHaveCount(0);
@@ -23,12 +30,12 @@ test("the heartbeat-watch numerical hit is explicitly a boundary, not the whole 
   await expect(peer(page, tick)).toHaveAttribute("data-numerical-kind", "boundary-only");
   await expect(peer(page, tick)).toContainText("Only an endpoint matches—not the whole range.");
   await expect(panel(page).locator(".numerical-anchor-card")).toContainText("60–100");
-  await panel(page).screenshot({ path: "artifacts/screenshots/numerical-heart-overview.png" });
+  await captureFullPage(page, "numerical-heart-overview");
   await openDetails(page, tick);
   const calculation = peer(page, tick).locator(".numerical-calculation > ul > li > code");
   await expect(calculation).toHaveCount(1); await expect(calculation).toContainText("∩ [1, 1] = [1, 1]");
   await expect(peer(page, tick)).toContainText("not spectral power");
-  await panel(page).screenshot({ path: "artifacts/screenshots/numerical-heart-boundary.png" });
+  await captureFullPage(page, "numerical-heart-boundary");
   await peer(page, tick).screenshot({ path: "artifacts/screenshots/numerical-boundary-detail.png" });
 });
 test("matching physiological reference ranges remain observations, not independent discoveries", async ({ page }) => {
@@ -126,6 +133,6 @@ test.describe("touch numerical neighbors", () => {
       const calculation = peer(page, tick).locator(".numerical-calculation > ul > li > code");
       await expect(calculation).toHaveCount(1); await expect(calculation).toBeVisible();
     }
-    await page.setViewportSize({ width: 390, height: 844 }); await panel(page).screenshot({ path: "artifacts/screenshots/numerical-mobile.png" });
+    await page.setViewportSize({ width: 390, height: 844 }); await captureFullPage(page, "numerical-mobile");
   });
 });
