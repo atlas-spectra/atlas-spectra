@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "0.1.0",
+  "method": "documented-coordinate-intersection-v1",
+  "interpretation": "numerical-only",
+  "reviewStatus": "unreviewed-computation",
+  "status": "complete",
+  "anchorId": "a",
+  "includeReferences": false,
+  "anchor": {
+    "id": "a", "name": "Fixture event rate", "profileType": "event_rate", "axisKind": "event_rate",
+    "coordinateMode": "normalized", "nativeLabel": "60–120 bpm", "coordinateNote": "Fixture rate divided by 60",
+    "quantityTargets": ["/frequency_profile/rate"], "segmentsHz": [[1, 2]], "status": "eligible", "reason": null
+  },
+  "reason": null,
+  "counts": { "catalogRecords": 3, "comparedPeers": 1, "excludedPeers": 1, "matches": 1 },
+  "matches": [{
+    "peer": {
+      "id": "b", "name": "Fixture clock", "profileType": "periodic", "axisKind": "temporal_frequency",
+      "coordinateMode": "native", "nativeLabel": "1 Hz", "coordinateNote": "Native temporal-frequency coordinate",
+      "quantityTargets": ["/frequency_profile/fundamental"], "segmentsHz": [[1, 1]], "status": "eligible", "reason": null
+    },
+    "kind": "boundary-only",
+    "intersections": [{ "anchorHz": [1, 2], "peerHz": [1, 1], "sharedHz": [1, 1] }]
+  }],
+  "exclusions": [{ "id": "c", "reason": "No supported common-scale coordinate is assigned." }]
+}
