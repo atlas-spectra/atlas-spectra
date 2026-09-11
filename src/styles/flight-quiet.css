@@ -1,0 +1,59 @@
+/* Compact landmarks leave the instrument visible. Full quantities live in the inspector. */
+.flight-experience .flight-label { border-color: #68878170; border-radius: 8px; background: #10272ddd; box-shadow: none; }
+.flight-experience .flight-label[data-group-id] { box-shadow: none; border-color: #afc4a699; }
+.flight-experience .flight-label.is-selected { border-color: #e7c890; background: #293c3b; }
+.flight-experience .flight-label .flight-landmark-face > .phenomenon-symbol { width: 26px; height: 28px; flex-basis: 26px; }
+.flight-experience .is-compact .flight-landmark-copy strong { font-size: 13px; line-height: 17px; }
+.flight-experience .is-compact .flight-landmark-qualifier { font-size: 9px; line-height: 12px; }
+.flight-experience .flight-leaders line { opacity: .28; }
+.flight-experience .flight-leaders circle { r: 2; opacity: .65; }
+.flight-experience .flight-hud { right: 18px; gap: 6px; }
+.flight-experience .flight-hud > span { font-size: 9px; letter-spacing: .1em; }
+.flight-experience .flight-hud > b { font-size: clamp(26px, 3.6vw, 36px); font-weight: 450; letter-spacing: -.04em; line-height: 1.15; }
+.flight-experience .flight-hud small { font-size: 10px; line-height: 1.4; }
+.flight-experience .flight-hud strong { font-size: inherit; font-weight: 500; letter-spacing: 0; }
+.flight-experience .flight-depth-overview { margin: 0; }
+.flight-experience .flight-depth-heading { align-items: baseline; margin: 0 0 12px; }
+.flight-experience .flight-depth-heading > strong { font-size: 16px; letter-spacing: -.02em; }
+.flight-ruler-label { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; font-size: 11px; }
+.flight-ruler-label > span { font-size: 10px; color: #5d7062; }
+.flight-navigator-track { position: relative; margin: 10px 0 6px; height: 64px; border-radius: 8px; }
+.flight-navigator-track svg { height: 64px; }
+.flight-navigator-track:focus-within { outline: 3px solid #598d8f; outline-offset: 3px; }
+.flight-scale .flight-navigator-track input { position: absolute; inset: 0; width: 100%; height: 64px; margin: 0; padding: 0; appearance: none; background: transparent; cursor: ew-resize; border: 0; border-radius: 8px; touch-action: pan-y; }
+.flight-scale .flight-navigator-track input:focus-visible { outline: none; }
+.flight-navigator-track input::-webkit-slider-runnable-track { height: 64px; background: transparent; }
+.flight-navigator-track input::-webkit-slider-thumb { appearance: none; width: 18px; height: 60px; margin-top: 2px; border: 2px solid #274e46; border-radius: 6px; background: #f6fbeb75; box-shadow: 0 0 0 2px #fff8; }
+.flight-navigator-track input::-moz-range-track { height: 64px; background: transparent; }
+.flight-navigator-track input::-moz-range-thumb { width: 14px; height: 56px; border: 2px solid #274e46; border-radius: 6px; background: #f6fbeb75; }
+.flight-overview-shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 15px; }
+.flight-overview-shortcuts button { display: flex; align-items: center; gap: 7px; min-width: 0; min-height: 46px; padding: 8px; text-align: left; border: 1px solid #d9e1d2; border-radius: 8px; background: #f7f9f1; color: #315447; }
+.flight-overview-shortcuts button:hover { border-color: #64866b; background: #eaf2e1; }
+.flight-overview-shortcuts .phenomenon-symbol { flex: 0 0 25px; width: 25px; height: 27px; }
+.flight-overview-shortcuts button > span { min-width: 0; }
+.flight-overview-shortcuts strong { display: block; font-size: 11px; line-height: 15px; font-weight: 600; }
+.flight-overview-shortcuts small { display: block; font-size: 9px; line-height: 13px; margin-top: 2px; color: #70806a; }
+.flight-scale-details, .flight-scale-help { font-size: 11px; color: #617160; line-height: 1.65; }
+.flight-scale-details { margin-top: 12px; }
+.flight-scale-help { margin-top: 14px; padding-top: 12px; border-top: 1px solid #dbe3d2; }
+.flight-scale-details summary, .flight-scale-help summary { cursor: pointer; min-height: 26px; color: #3e5e49; }
+.flight-unit-equivalence { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 0 0; color: #31543c; font-size: 16px; }
+.flight-unit-sources { font-size: 10px; }
+.flight-signal-entry { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; margin: 14px 0 0; padding: 10px 12px; background: #eff4e7; border-radius: 8px; font-size: 11px; color: #54704e; }
+.flight-signal-entry a { font-weight: 650; }
+.flight-signal-entry span { font-size: 10px; }
+.flight-rate-context { padding: 14px; border: 1px solid #cbdcc3; border-radius: 10px; background: #eff6e9; margin: 15px 0; }
+.flight-rate-context > span { display: block; font-size: 8px; letter-spacing: .08em; color: #64835b; }
+.flight-rate-context > strong { display: block; font-size: 24px; letter-spacing: -.03em; margin-top: 6px; color: #34583f; }
+.flight-inspector .flight-rate-context p { margin: 8px 0; color: #406346; font-size: 12px; }
+.flight-rate-context small { display: block; font-size: 10px; line-height: 1.6; color: #687d5f; }
+.flight-inspector .flight-canonical-name { font-size: 11px; margin-top: -4px; color: #77816e; }
+@media(max-width:600px) {
+  .flight-experience .flight-label .flight-landmark-face > .phenomenon-symbol { flex-basis: 22px; width: 22px; }
+  .flight-experience .is-compact .flight-landmark-copy strong { font-size: 12px; }
+  .flight-experience .flight-hud > b { font-size: 27px; }
+  .flight-experience .flight-hud small { font-size: 9px; }
+  .flight-overview-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flight-overview-shortcuts strong { font-size: 11px; }
+  .flight-ruler-label { flex-direction: column; gap: 4px; }
+}

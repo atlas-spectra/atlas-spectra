@@ -5,13 +5,14 @@ import {
 import type { ExplorerItem } from "../lib/corpus";
 import FlightEvidence from "./FlightEvidence";
 import { PhenomenonIcon } from "./PhenomenonIdentity";
-import { FlightDepthOverview, FlightLandmarkFace } from "./FlightOrientation";
+import { FlightDepthOverview, FlightLandmarkFace, FlightRateContext, FlightScaleHelp } from "./FlightOrientation";
 import { ProcessGroupPanel } from "./ProcessGroup";
 import { groupForRecord, groupMembers, projectDiscovery } from "../lib/process-groups";
 import { identityFor, identitySearchText } from "../lib/phenomenon-identity";
+import { FLIGHT_SIGNAL_GUIDE, formatScaleRate, quietFlightPlan } from "../lib/flight-presentation";
 import {
   adjacentLandmarks, buildFlightModel, boundedCoordinate, flightDepthWindow, flightRecordLocation,
-  formatFlightHz, landmarkCoordinates, nearbyRecords, parseCoordinate, planFlightLabels,
+  formatFlightHz, landmarkCoordinates, nearbyRecords, parseCoordinate,
   projectPoint, recordCoordinate, SCROLL_PER_DECADE,
 } from "../lib/flight";
 import "../styles/flight.css";
@@ -77,7 +78,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
     setSelectedId(id);
     const record = recordsById.get(id);
     // Opening a grouped scene label reveals its facets without moving the camera.
-    // Search/catalog navigation still takes the user to the requested observation.
+    // Search and named overview shortcuts deliberately travel to the observation.
     if (record && !(anchor !== undefined && projection.collapsed.has(id))) {
       jump(recordCoordinate(record, anchor ?? coordinateRef.current));
     }
@@ -129,11 +130,11 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
   const onReady = useCallback(() => setRenderer("ready"), []);
   const onLost = useCallback(() => setRenderer("unavailable"), []);
 
-  const plan = useMemo(() => planFlightLabels(sceneModel, at, size.width, size.height, selectedId), [sceneModel, at, size, selectedId]);
+  const plan = useMemo(() => quietFlightPlan(sceneModel, at, size.width, size.height, selectedId, detailed), [sceneModel, at, size, selectedId, detailed]);
   const labels = plan.labels;
   const labeledIds = new Set(renderer === "ready" ? labels.map((label) => label.record.id) : []);
   const depthWindow = flightDepthWindow(model, at, size.width, size.height);
-  const nearby = useMemo(() => nearbyRecords(contextModel, at), [contextModel, at]);
+  const nearby = useMemo(() => nearbyRecords(contextModel, at).filter((record) => !plan.deferredIds.has(record.id)), [contextModel, at, plan]);
   const normalizedQuery = query.trim().toLowerCase();
   const catalog = normalizedQuery ? items.filter((item) => {
     const group = groupForRecord(item.id);
@@ -176,7 +177,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
     <div className="flight-discovery-mode"><div role="group" aria-label="Flight level of detail">
       <button id="flight-discover-mode" type="button" aria-pressed={!detailed} onClick={() => { setDetailed(false); if (activeGroup) setSelectedId(null); }}>Discover</button>
       <button type="button" aria-pressed={detailed} onClick={() => setDetailed(true)}>All observations</button>
-    </div><p>{detailed ? "Every observation stays distinct. Shared numbers do not imply a shared process." : "One process first. Select a grouped landmark to explore its observations."}</p></div>
+    </div><p>{detailed ? "Individual observations. Select a name for its quantity and evidence." : "Recognize a landmark. Open it to discover what happens within."}</p></div>
     {reducedMotion && <p className="flight-motion-note">Reduced motion: scroll flight starts off. Use the ruler or buttons for discrete steps, or enable it explicitly.</p>}
     <div className="flight-layout">
       <section className="flight-instrument" aria-label="Frequency Flight instrument">
@@ -202,7 +203,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
                     <Suspense fallback={null}><FlightScene model={sceneModel} at={at} selectedId={selectedId} onReady={onReady} onLost={onLost} /></Suspense>
                   </SceneBoundary>}
                 </div>
-                <div className="flight-hud"><span>YOUR DISPLAY COORDINATE</span><strong>{formatFlightHz(at)}</strong><small>log₁₀ = {at.toFixed(2)} · each gate is ×10</small></div>
+                <div className="flight-hud"><span>Your position on the scale</span><b>{formatScaleRate(at)}</b><small><strong>{formatFlightHz(at)}</strong> equivalent · each gate is ×10</small></div>
                 {renderer === "unavailable" ? <div className="flight-fallback" role="status">
                   <span className="flight-kicker">The atlas is still here</span><h2>3D is unavailable on this device.</h2>
                   <p>Search, step through frequencies, and inspect every record below. Or continue in the precise 2D atlas.</p><a href={atlasUrl}>Open the 2D atlas →</a>
@@ -217,9 +218,9 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
                       return <button type="button" key={item.id}
                         className={`flight-label${item.id === selectedId ? " is-selected" : ""}${label.record.kind === "reference" ? " is-reference" : ""}`}
                         data-record-id={item.id} data-anchor-coordinate={label.coordinate} data-group-id={group?.id}
-                        aria-expanded={group ? false : undefined} aria-label={`${group?.title ?? identityFor(item).title}: ${item.name}${group ? `; explore ${group.facets.length} observations` : ""}`}
+                        aria-expanded={group ? false : undefined} aria-label={`${group?.title ?? identityFor(item).title}: ${item.name}${group ? `; explore ${group.facets.length} observations` : ""}${item.display?.mode === "claim-reference" ? "; claim reference" : ""}`}
                         title={item.name} style={{ left: label.left, top: label.top, width: label.width, height: label.height }} onClick={() => choose(item.id, label.coordinate)}>
-                        <FlightLandmarkFace item={item} group={group} />
+                        <FlightLandmarkFace item={item} group={group} compact />
                       </button>;
                     })}
                   </div>
@@ -227,9 +228,9 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
                     const p = projectPoint(-6.7, -4.4, decade, at, size.width, size.height);
                     return p && p.x > 8 && p.y < size.height - 35 ? <span key={decade} style={{ left: p.x, top: p.y }}>10<sup>{decade}</sup></span> : null;
                   })}</div>
-                  {!labels.length && <p className="flight-open-space">No label anchors in this view.<br />Use the ruler or nearby records below to continue.</p>}
+                  {!labels.length && <p className="flight-open-space">An open stretch of the atlas.<br />Choose a landmark in the overview to continue.</p>}
                 </>}
-                <div className="flight-floor-note"><span>{scrollMotion ? "SCROLL / SWIPE TO TRAVEL" : "USE THE RULER TO TRAVEL"}</span><span>DEPTH = LOG FREQUENCY</span></div>
+                <div className="flight-floor-note"><span>{scrollMotion ? "SCROLL / SWIPE TO TRAVEL" : "USE THE OVERVIEW TO TRAVEL"}</span><span>SELECT A NAME TO EXPLORE</span></div>
               </div>
             </div>
           </div>
@@ -240,16 +241,15 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
           {selectedRecord && <button type="button" onClick={() => jump(recordCoordinate(selectedRecord, coordinateRef.current))}>Return to selection</button>}
         </div>}
         <div className="flight-scale">
-          <FlightDepthOverview model={model} at={at} width={size.width} height={size.height} labeled={labels.length} eligible={plan.eligibleCount} available={renderer === "ready"} />
-          <label htmlFor="flight-coordinate">Frequency ruler <span>Hz-equivalent display coordinate</span></label>
-          <input id="flight-coordinate" type="range" min={model.bounds.min} max={model.bounds.max} step="0.01" value={at}
-            aria-valuetext={`${formatFlightHz(at)}, logarithmic display coordinate`} onChange={(event) => jump(Number(event.target.value))} />
-          <div className="flight-scale-ends"><span>{formatFlightHz(model.bounds.min)}</span><span>{range.toFixed(1)} decades in this corpus</span><span>{formatFlightHz(model.bounds.max)}</span></div>
+          <FlightDepthOverview model={model} items={items} at={at} width={size.width} height={size.height} labeled={labels.length} eligible={plan.eligibleCount}
+            available={renderer === "ready"} onJump={jump} onChoose={(id) => choose(id)} />
           <div className="flight-step-buttons"><button type="button" disabled={previous === undefined} onClick={() => previous !== undefined && jump(previous)}>← Previous landmark</button><button type="button" disabled={next === undefined} onClick={() => next !== undefined && jump(next)}>Next landmark →</button></div>
+          {plan.deferredIds.size > 0 && <div className="flight-signal-entry"><a href={`${base}journeys/?journey=${FLIGHT_SIGNAL_GUIDE.journeyId}`}>Follow the signal: heart → wearable</a><span>{plan.deferredIds.size} sensing stages available in the journey and record browser</span></div>}
+          <FlightScaleHelp />
         </div>
         {activeGroup && <ProcessGroupPanel group={activeGroup} items={items} selectedId={selectedId} onSelect={(id) => setSelectedId(id)} onCollapse={collapseGroup} />}
         <div className="flight-legend" aria-label="Flight mark legend"><span>● Point</span><span>▱ Range / extent</span><span>┆ Discrete lines</span><span>◇ Claim reference</span></div>
-        <p className="flight-caution">Depth uses the atlas’s existing display transforms. Sideways placement organizes domains, not physical distance. Grouped marks use a named reference observation, not an aggregate frequency. Proximity does not establish a mechanism.</p>
+        <p className="flight-caution">Sideways placement organizes domains, not physical distance. Proximity does not establish a mechanism. Each landmark retains its own quantities and evidence.</p>
         <section className="flight-catalog" aria-label="Flight record browser">
           <div className="flight-catalog-heading"><h2>{normalizedQuery ? "Search results" : showAll ? "All records" : "Nearby landmarks"}</h2>
             <button type="button" onClick={() => { setQuery(""); setShowAll(!showAll); }}>{showAll ? "Show nearby" : `Browse all ${items.length}`}</button></div>
@@ -258,7 +258,7 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
             const group = !normalizedQuery && !showAll ? contextProjection.collapsed.get(item.id) : undefined;
             return <button type="button" key={item.id} data-record-id={item.id} data-group-id={group?.id} data-positioned={recordsById.has(item.id)}
               aria-label={`${group?.title ?? identityFor(item).title}: ${item.name}`} onClick={() => choose(item.id)}>
-              <FlightLandmarkFace item={item} group={group} /><small className="flight-record-location">{flightRecordLocation(recordsById.get(item.id), at, depthWindow, labeledIds)}</small>
+              <FlightLandmarkFace item={item} group={group} /><small className="flight-record-location">{plan.deferredIds.has(item.id) ? "Available in Follow the signal · scene label deferred" : flightRecordLocation(recordsById.get(item.id), at, depthWindow, labeledIds)}</small>
             </button>;
           })}</div>
           {!catalog.length && <p>No matching records. Try another name or domain.</p>}
@@ -269,7 +269,9 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
         {selected ? <>
           <div className="flight-inspector-heading"><span className="flight-kicker">{selected.lane}</span><button type="button" aria-label="Close flight detail" onClick={() => setSelectedId(null)}>×</button></div>
           {activeGroup && <p className="flight-group-origin">Observation of <strong>{activeGroup.title}</strong></p>}
-          <div className="flight-identity-heading"><PhenomenonIcon item={selected} /><h2>{selected.name}</h2></div><p>{selected.summary}</p>
+          <div className="flight-identity-heading"><PhenomenonIcon item={selected} /><h2>{identityFor(selected).title}</h2></div>
+          <p className="flight-canonical-name">{selected.name}</p><p>{selected.summary}</p>
+          <FlightRateContext item={selected} />
           <dl><div><dt>Representation</dt><dd>{selected.profileType.replaceAll("_", " ")}</dd></div>
             <div><dt>Native axis</dt><dd>{selected.axisKind.replaceAll("_", " ")}</dd></div>
             <div><dt>Native value</dt><dd>{selected.display?.nativeLabel ?? "Unresolved"}</dd></div>
@@ -283,11 +285,11 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
           {selected.sources.length > 0 && <section><h3>Sources</h3>{selected.sources.slice(0, 3).map((source) => <p className="flight-source" key={source.id}>{source.url ? <a href={source.url}>{source.title}</a> : source.title}</p>)}</section>}
           <a className="flight-detail-link" href={`${base}phenomena/${encodeURIComponent(selected.id)}/`}>Full record & provenance →</a><a className="flight-detail-link" href={atlasUrl}>Compare in the 2D atlas →</a>
         </> : <>
-          <span className="flight-kicker">A different perspective</span><h2>Travel through scale.</h2><p>Move forward from slow rhythms to faster oscillations. Each frame marks a tenfold change in the display coordinate.</p>
-          <div className="flight-instruction"><b>01</b><p>Scroll or swipe inside the corridor. The shaded overview shows the local depth window.</p></div>
-          <div className="flight-instruction"><b>02</b><p>Recognize a subject, then open it. Heart activity unfolds into independently inspectable observations.</p></div>
-          <div className="flight-instruction"><b>03</b><p>Use All observations for comparison. Nearby records stay accessible when their labels do not fit.</p></div>
-          <p className="flight-mapping">Hollow amber objects are claim references, not measurements of the phenomenon’s physical spectrum.</p><a className="flight-detail-link" href={atlasUrl}>Open the precise 2D atlas →</a>
+          <span className="flight-kicker">Explore, then inspect</span><h2>Room to discover.</h2><p>The big number is your position on the scale. The landmarks around it have their own values.</p>
+          <div className="flight-instruction"><b>01</b><p>Scroll through the corridor or drag the whole-atlas overview.</p></div>
+          <div className="flight-instruction"><b>02</b><p>Select an icon and name to see what it represents. Its quantity and evidence appear here.</p></div>
+          <div className="flight-instruction"><b>03</b><p>Open Heart activity for its observations, or Follow the signal into its sensing stages.</p></div>
+          <p className="flight-mapping">Hollow amber objects are claim references, not measurements of a physical spectrum.</p><a className="flight-detail-link" href={atlasUrl}>Open the precise 2D atlas →</a>
         </>}
       </aside>
     </div>
