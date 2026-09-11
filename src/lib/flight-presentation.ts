@@ -1,5 +1,5 @@
 import type { ExplorerItem } from "./corpus";
-import journeyDocument from "../../presentation/journeys.json";
+import journeyDocument from "../../presentation/journeys.json" with { type: "json" };
 import { PROCESS_GROUPS } from "./process-groups";
 import { planFlightLabels, type FlightModel } from "./flight";
 
