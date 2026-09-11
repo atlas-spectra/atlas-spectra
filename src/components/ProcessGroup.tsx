@@ -42,5 +42,6 @@ export function ProcessGroupPanel({ group, items, selectedId, onSelect, onCollap
       </button>;
     })}</div>
     <details className="process-explanation"><summary>Why do these have the same numbers?</summary><p>{group.rationale}</p><p>The detailed records retain their own sources and derivations. The list is not a timing diagram, and its order does not describe propagation delays.</p></details>
+    {group.id === "heart-activity" && <p><a href={`${import.meta.env.BASE_URL}journeys/?journey=cardiac-sensing`}>Follow the signal from heart to wearable →</a></p>}
   </section>;
 }

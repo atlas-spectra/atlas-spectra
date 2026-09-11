@@ -31,6 +31,7 @@ const base = import.meta.env.BASE_URL;
       <nav aria-label="Primary navigation">
         <a href={`${base}explore/`}>Atlas</a>
         <a href={`${base}flight/`}>Flight</a>
+        <a href={`${base}journeys/`}>Journeys</a>
         <a href="https://github.com/atlas-spectra/atlas-spectra">GitHub</a>
       </nav>
     </header>
@@ -39,3 +40,9 @@ const base = import.meta.env.BASE_URL;
     </main>
   </body>
 </html>
+<style>
+  @media (max-width: 600px) {
+    .site-header { flex-wrap: wrap; gap: 10px; }
+    .site-header nav { flex-wrap: wrap; gap: 14px; }
+  }
+</style>

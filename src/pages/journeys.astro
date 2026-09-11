@@ -1,0 +1,15 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SignalJourneys from "../components/SignalJourneys";
+import { signalJourneys } from "../lib/journey-data";
+const base = import.meta.env.BASE_URL;
+---
+<BaseLayout title="Follow the signal" description="Follow source-backed connections through heart sensing, hearing, and timekeeping—one observation at a time.">
+  <section class="journey-page">
+    <div class="journey-intro"><span class="journey-eyebrow">ATLAS SPECTRA · GUIDED CONNECTIONS</span><h1>Follow the signal.</h1><p>Start with something familiar. Discover what changes along the way—and why the stages belong together.</p></div>
+    <SignalJourneys client:load journeys={signalJourneys} />
+    <noscript><section aria-label="Signal journeys without JavaScript"><h2>Explore the original records</h2><p>Interactive stage selection needs JavaScript. The same ordered records and connections are available here.</p>
+      {signalJourneys.map((journey) => <section><h3>{journey.title}</h3><p>{journey.summary}</p><ol>{journey.steps.map((step, index) => <li><a href={`${base}phenomena/${encodeURIComponent(step.item.id)}/`}>{step.label}</a>{journey.hops[index] && <p>{journey.hops[index].description} <a href={`${base}phenomena/${encodeURIComponent(journey.hops[index].ownerId)}/`}>Connection evidence</a></p>}</li>)}</ol></section>)}
+    </section></noscript>
+  </section>
+</BaseLayout>
