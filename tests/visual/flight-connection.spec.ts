@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
+// The overview capture fits below the real sticky site header on desktop.
+// Mobile evidence uses the full page instead of clipping an oversized element.
+test.use({ viewport: { width: 1440, height: 1100 } });
 const route = "/atlas-spectra/flight/";
 const quartz = "timekeeping.quartz-wristwatch.resonance";
 const tick = "timekeeping.quartz-wristwatch.one-second-tick";
@@ -47,6 +50,14 @@ async function aligned(page: Page) {
     expect(position.traceWidth).toBeCloseTo(position.overviewWidth, 1);
   }
 }
+async function captureOverview(page: Page, name: string) {
+  const overview = page.locator(".flight-depth-overview");
+  await overview.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+  const box = await overview.boundingBox();
+  expect(box!.y).toBeGreaterThanOrEqual(70);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+  await overview.screenshot({ path: `artifacts/screenshots/${name}.png` });
+}
 
 test("trace is opt-in, camera-stable and does not add corridor labels or replace its canvas", async ({ page }) => {
   await ready(page); await expect(trace(page)).toHaveCount(0);
@@ -61,7 +72,7 @@ test("trace is opt-in, camera-stable and does not add corridor labels or replace
 });
 
 test("quartz traces a lower-frequency target on exactly the same full-atlas scale", async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 1000 }); await ready(page, "?journey=quartz-clock"); await open(page);
+  await ready(page, "?journey=quartz-clock"); await open(page);
   await expect(trace(page)).toHaveAttribute("data-placement", "lower");
   const source = trace(page).locator('[data-trace-role="source"] [data-trace-mark]');
   const target = trace(page).locator('[data-trace-role="target"] [data-trace-mark]');
@@ -69,7 +80,8 @@ test("quartz traces a lower-frequency target on exactly the same full-atlas scal
   await expect(target).toHaveAttribute("data-log-low", "0"); await aligned(page);
   expect((await target.boundingBox())!.x).toBeLessThan((await source.boundingBox())!.x);
   await expect(trace(page)).toContainText("B is lower on the frequency scale");
-  await page.locator(".flight-depth-overview").screenshot({ path: "artifacts/screenshots/flight-connection-quartz.png" });
+  await expect(trace(page).locator(".flight-connection-value").first()).toHaveCSS("font-size", "15px");
+  await captureOverview(page, "flight-connection-quartz");
   await trace(page).getByRole("button", { name: "Inspect target", exact: true }).click();
   await expect(page.locator(".flight-inspector")).toHaveAttribute("data-selected-id", tick); expect(await coordinate(page)).toBe("0");
   await expect(root(page)).toHaveAttribute("data-guided", "true");
@@ -84,7 +96,7 @@ test("equal cardiac extents stay separately labeled and stepping updates the act
   const boxes = await marks.evaluateAll((els) => els.map((el) => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width }; }));
   expect(boxes[0].x).toBe(boxes[1].x); expect(boxes[0].width).toBe(boxes[1].width); expect(boxes[0].y).not.toBe(boxes[1].y);
   await expect(trace(page)).toContainText("different observations"); await aligned(page);
-  await page.locator(".flight-depth-overview").screenshot({ path: "artifacts/screenshots/flight-connection-cardiac.png" });
+  await captureOverview(page, "flight-connection-cardiac");
   await page.getByRole("combobox", { name: "Journey stage" }).selectOption(sensor);
   await expect(trace(page)).toHaveJSProperty("open", true);
   await expect(trace(page)).toHaveAttribute("data-edge-id", "relationship.ppg-optical-to-electrical");
@@ -95,6 +107,7 @@ test("equal cardiac extents stay separately labeled and stepping updates the act
   expect(await link.getAttribute("href")).toBe(`#${await evidence.getAttribute("id")}`);
   await link.click(); await expect(evidence).toBeFocused();
   await evidence.locator("summary").click(); await expect(evidence).toContainText("Sources resolved from");
+  await evidence.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
   await evidence.screenshot({ path: "artifacts/screenshots/flight-connection-evidence.png" });
 });
 
@@ -106,7 +119,7 @@ test("unknown endpoints have no plotted mark and can still be inspected without 
   await trace(page).getByRole("button", { name: "Inspect target", exact: true }).click();
   await expect(page.locator(".flight-inspector")).toHaveAttribute("data-selected-id", hair);
   expect(await coordinate(page)).toBe(before); await expect(trace(page)).toContainText("does not inherit its peer's value");
-  await page.locator(".flight-depth-overview").screenshot({ path: "artifacts/screenshots/flight-connection-unpositioned.png" });
+  await captureOverview(page, "flight-connection-unpositioned");
   await page.getByRole("combobox", { name: "Journey stage" }).selectOption(nerve);
   await expect(trace(page).locator("[data-trace-mark]")).toHaveCount(0); expect(await coordinate(page)).toBe(before);
 });
@@ -162,6 +175,7 @@ test.describe("touch connection trace", () => {
       }
     }
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.locator(".flight-depth-overview").screenshot({ path: "artifacts/screenshots/flight-connection-mobile.png" });
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await page.screenshot({ path: "artifacts/screenshots/flight-connection-mobile.png", fullPage: true });
   });
 });

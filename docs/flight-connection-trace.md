@@ -16,7 +16,7 @@ The view takes original `ExplorerItem` and `FlightRecord` objects plus the curre
 
 The trace is a native details disclosure. Opening or closing it changes no camera, stage or selection state. While open, it follows the current connection as the existing stage controls advance. First stage previews its outgoing edge; later stages show their incoming edge, matching the inspector.
 
-Inspect source/target uses canonical journey stage navigation; unknown stages still do not move the camera. An evidence link targets the exact current connection section in the existing inspector. Quantity evidence and owner-resolved relationship evidence remain separate.
+Inspect source/target uses canonical journey stage navigation; unknown stages still do not move the camera. An evidence link targets the exact current connection section in the existing inspector. Ordinary activation moves focus and page scroll without adding a fragment-history entry or discarding the saved pre-journey view. Modified clicks retain the normal link destination. Quantity evidence and owner-resolved relationship evidence remain separate.
 
 The disclosure is keyed by journey, unmounted on exit and recreated closed for a different or newly entered journey. Reload retains the existing exact journey/stage/camera state but starts the optional disclosure closed. Changing a stage within a journey does not replace the native controls or move focus. The original full-corpus ruler remains the only camera slider. No state is stored in the scientific corpus.
 
@@ -24,6 +24,8 @@ The disclosure is keyed by journey, unmounted on exit and recreated closed for a
 
 Model tests cover original object/evidence preservation, falling and rising frequency order, equal and overlapping extents, real line gaps, reference/event qualifiers, missing frequencies, invalid endpoints and scale projection.
 
-Browser tests cover opt-in behavior, stable camera/canvas and scene budgets, full-scale alignment between overview and trace marks, canonical endpoint selection, edge updates, history/reload/exit, focus, source-evidence targeting, reduced motion, WebGL-unavailable use and native mobile taps at 390/320px. Screenshots capture the quartz pair, overlapping cardiac ranges, unknown endpoint, relationship evidence and mobile overview. Existing regression cases remain enabled; screenshots are visual inspection evidence, not pixel-difference goldens.
+Browser tests cover opt-in behavior, stable camera/canvas and scene budgets, full-scale alignment between overview and trace marks, canonical endpoint selection, edge updates, history/reload/exit, focus, source-evidence targeting, reduced motion, WebGL-unavailable use and native mobile taps at 390/320px. Alignment checks compare SVG geometry transformed to screen coordinates (under 0.05px), not painted stroke edges: overview strokes scale with the SVG, while trace strokes intentionally retain screen width. The coordinate and SVG-container alignment assertions remain strict.
+
+Screenshots capture the quartz pair, overlapping cardiac ranges, unknown endpoint, relationship evidence and full mobile layout. Desktop captures are framed below the actual sticky header; mobile uses a full-page capture rather than clipping an element taller than the viewport. No elements are hidden or replaced for screenshots. Existing regression cases remain enabled; screenshots are visual inspection evidence, not pixel-difference goldens.
 
 This does not implement arbitrary graph comparison, general candidate discovery, narrated/animated tours, full-scene performance budgets, Safari certification or a manual assistive-technology audit.
