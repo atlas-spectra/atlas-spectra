@@ -111,9 +111,14 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
   function visit(next: ConnectionState, replace = false) {
     if (!ready) return;
     const safe = readConnectionState(connectionSearch("", next), catalog, items);
+    if (connectionSearch("", safe) === connectionSearch("", state)) return;
     setState(safe); save(safe, replace ? "replaceState" : "pushState");
   }
-  function start(id: string, keepEdge: string | null = null) { visit({ entityId: id, edgeId: keepEdge, category: "all", query: "" }); }
+  function start(id: string, keepEdge: string | null = null, recoverFocus = false) {
+    visit({ entityId: id, edgeId: keepEdge, category: "all", query: "" });
+    // The search result unmounts when its query clears; return to a stable control.
+    if (recoverFocus) document.getElementById("connections-record")?.focus({ preventScroll: true });
+  }
   return <div className="connections-app" data-ready={ready} data-entity-id={state.entityId ?? ""} data-edge-id={edge?.id ?? ""}>
     <p className="connections-live" role="status" aria-live="polite" aria-atomic="true">{edge && source && target ? `${CONNECTION_MEANING[edge.category].label}: ${identityFor(source).title} to ${identityFor(target).title}.` : selected ? `${allEdges.length} recorded record-level connections for ${identityFor(selected).title}. Choose a connection to inspect.` : "No observations available."}</p>
     <div className="connections-workspace">
@@ -125,15 +130,15 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
         <label htmlFor="connections-search">Find an observation</label>
         <input id="connections-search" type="search" disabled={!ready} value={state.query} onChange={(event) => visit({ ...state, query: event.target.value }, true)} placeholder="Heart, quartz, ECG, light…" />
         {query && <div className="connections-search-results" role="group" aria-label="Matching observations">
-          {matching.map((item) => <button type="button" key={item.id} data-search-record={item.id} onClick={() => start(item.id)}><PhenomenonIcon item={item} /><span>{identityFor(item).title}<small>{item.name}</small></span></button>)}
+          {matching.map((item) => <button type="button" key={item.id} data-search-record={item.id} onClick={() => start(item.id, null, true)}><PhenomenonIcon item={item} /><span>{identityFor(item).title}<small>{item.name}</small></span></button>)}
           {!matching.length && <p>No observations match this search.</p>}
-          <button type="button" onClick={() => visit({ ...state, query: "" }, true)}>Clear search</button>
+          <button type="button" onClick={() => { visit({ ...state, query: "" }, true); document.getElementById("connections-search")?.focus({ preventScroll: true }); }}>Clear search</button>
         </div>}
         {selected && <div className="connections-starting"><PhenomenonIcon item={selected} /><div><h2>{identityFor(selected).title}</h2><p>{allEdges.length} recorded {allEdges.length === 1 ? "link" : "links"} · incoming and outgoing</p></div></div>}
         <div className="connections-filters" role="group" aria-label="Filter relationship category">
           {(["all", ...CONNECTION_CATEGORIES.filter((category) => allEdges.some((entry) => entry.category === category) || state.category === category)] as ConnectionState["category"][]).map((category) =>
-            <button type="button" key={category} data-kind={category} aria-pressed={state.category === category} disabled={!ready}
-              onClick={() => visit({ ...state, category, edgeId: null })}>{category === "all" ? "All types" : category}</button>)}
+            <button type="button" key={category} data-kind={category} id={category === "all" ? "connections-all-types" : undefined} aria-pressed={state.category === category} disabled={!ready}
+              onClick={() => { if (state.category !== category) visit({ ...state, category, edgeId: null }); }}>{category === "all" ? "All types" : category}</button>)}
         </div>
         <div className="connections-edge-list" role="group" aria-label="Recorded links for this observation">{edges.map((entry) => {
           const outgoing = entry.sourceId === state.entityId, peerId = outgoing ? entry.targetId : entry.sourceId, peer = byId.get(peerId)!;
@@ -145,7 +150,8 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
           </button>;
         })}</div>
         {!edges.length && <div className="connections-empty-list"><p>{allEdges.length ? "No links match this category." : "No record-level connections are recorded for this observation. That does not prove it is physically unrelated to everything else."}</p>
-          {state.category !== "all" && <button type="button" onClick={() => visit({ ...state, category: "all", edgeId: null })}>Show all types</button>}
+          {state.category !== "all" && <button type="button" onClick={() => { visit({ ...state, category: "all", edgeId: null }); document.getElementById("connections-all-types")?.focus({ preventScroll: true }); }}>Show all types</button>}
+          {selected && !allEdges.length && <a href={`${base}phenomena/${encodeURIComponent(selected.id)}/`}>Inspect the original source record ↗</a>}
         </div>}
       </aside>
       <div className="connections-detail" aria-label="Selected recorded connection">

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import graphSchema from "../../schema/v0/graph.schema.json" with { type: "json" };
 import type { ExplorerItem } from "../../src/lib/corpus";
 import { buildFlightModel } from "../../src/lib/flight";
 import { connectionPlacement } from "../../src/lib/flight-connection";
@@ -38,10 +38,10 @@ test("incoming browsing never reverses a stored edge, merges parallel edges or d
   expect(connectionsFor(catalog, "a").filter((entry) => entry.id === "self")).toHaveLength(1);
 });
 test("every current schema relationship category remains explicit rather than falling back to physical", () => {
-  const schema = JSON.parse(readFileSync("schema/v0/graph.schema.json", "utf8"));
-  for (const branch of schema.$defs.relationship.allOf[0].oneOf) {
+  for (const branch of graphSchema.$defs.relationship.allOf[0].oneOf) {
     const category = branch.properties.category.const;
-    const types: string[] = branch.properties.type.enum ?? [branch.properties.type.const];
+    const definition = branch.properties.type as { enum?: string[]; const?: string };
+    const types = definition.enum ?? [definition.const!];
     for (const type of types) {
       const input = records(); Object.assign(input[2].relationships![0], { type, category });
       expect(buildRecordedConnections(input, items).edges[0].category).toBe(category);
