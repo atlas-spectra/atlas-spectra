@@ -119,8 +119,15 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
     // The search result unmounts when its query clears; return to a stable control.
     if (recoverFocus) document.getElementById("connections-record")?.focus({ preventScroll: true });
   }
+  function continueFrom(id: string, edgeId: string) {
+    const changed = state.entityId !== id || state.category !== "all" || state.query !== "";
+    start(id, edgeId);
+    // Bring the newly relevant links back into view, especially above the mobile pair.
+    // Focus is discrete, not a camera animation; repeated current actions remain no-ops.
+    if (changed) document.getElementById("connections-record")?.focus();
+  }
   return <div className="connections-app" data-ready={ready} data-entity-id={state.entityId ?? ""} data-edge-id={edge?.id ?? ""}>
-    <p className="connections-live" role="status" aria-live="polite" aria-atomic="true">{edge && source && target ? `${CONNECTION_MEANING[edge.category].label}: ${identityFor(source).title} to ${identityFor(target).title}.` : selected ? `${allEdges.length} recorded record-level connections for ${identityFor(selected).title}. Choose a connection to inspect.` : "No observations available."}</p>
+    <p className="connections-live" role="status" aria-live="polite" aria-atomic="true">{selected ? `Browsing links for ${identityFor(selected).title}. ` : ""}{edge && source && target ? `${CONNECTION_MEANING[edge.category].label}: ${identityFor(source).title} to ${identityFor(target).title}.` : selected ? `${allEdges.length} recorded record-level connections. Choose a connection to inspect.` : "No observations available."}</p>
     <div className="connections-workspace">
       <aside className="connections-browser" aria-label="Choose an observation and connection">
         <label htmlFor="connections-record">Start with an observation</label>
@@ -159,7 +166,7 @@ export default function RecordedConnections({ items, catalog, base }: { items: E
           <header className={`connections-meaning is-${edge.category}`}><span className="connections-eyebrow">RECORDED LINK · NOT A NEW SUGGESTION</span>
             <h2>{CONNECTION_MEANING[edge.category].label}</h2><p>{CONNECTION_MEANING[edge.category].caution}</p>
             <strong>{readable(edge.type).toLowerCase()}</strong></header>
-          <div className="connections-pair"><Endpoint item={source} letter="A" base={base} onContinue={() => start(source.id, edge.id)} /><Endpoint item={target} letter="B" base={base} onContinue={() => start(target.id, edge.id)} /></div>
+          <div className="connections-pair"><Endpoint item={source} letter="A" base={base} onContinue={() => continueFrom(source.id, edge.id)} /><Endpoint item={target} letter="B" base={base} onContinue={() => continueFrom(target.id, edge.id)} /></div>
           <p className="connections-direction">Stored link: A → B. For coincidences and associations, this is record direction—not signal flow or causation.</p>
           <PairScale source={source} target={target} model={model} />
           <RelationshipEvidence edge={edge} base={base} />

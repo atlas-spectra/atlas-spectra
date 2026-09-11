@@ -19,3 +19,20 @@ test("reselecting the active link or filter does not fill history with duplicate
   expect(await page.evaluate(() => history.length)).toBe(before); expect(page.url()).toBe(url);
   await expect(page.locator(".connections-app")).toHaveAttribute("data-edge-id", edge);
 });
+test("continuing from the peer brings its links into view and announces the new browsing perspective", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(`${route}?entity=${heart}&edge=${edge}`); await expect(page.locator(".connections-app")).toHaveAttribute("data-ready", "true");
+  const next = page.getByRole("button", { name: "Continue from Watch tick →", exact: true });
+  await next.scrollIntoViewIfNeeded(); await next.focus();
+  const before = await page.evaluate(() => scrollY), status = await page.locator(".connections-live").textContent();
+  await next.press("Enter");
+  const browser = page.getByLabel("Start with an observation", { exact: true });
+  await expect(browser).toBeFocused(); await expect(browser).toBeInViewport();
+  await expect(browser).toHaveValue("timekeeping.quartz-wristwatch.one-second-tick");
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeLessThan(before);
+  await expect(page.locator(".connections-app")).toHaveAttribute("data-edge-id", edge);
+  await expect(page.locator(".connections-live")).toContainText("Browsing links for Watch tick");
+  expect(await page.locator(".connections-live").textContent()).not.toBe(status);
+  await expect(page.locator('.connections-edge-list [data-category="physical"]')).toHaveCount(1);
+});
