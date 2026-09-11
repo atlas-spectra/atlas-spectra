@@ -116,12 +116,13 @@ export function flightDepthWindow(model: FlightModel, at: number, width: number,
     max: Math.min(model.bounds.max, center + 4, center + (115 - distance) / DEPTH_PER_DECADE),
   };
 }
-export function flightRecordLocation(record: FlightRecord | undefined, at: number, window: FlightBounds, labeledIds: Set<string>): string {
+export function flightRecordLocation(record: FlightRecord | undefined, _at: number, window: FlightBounds, labeledIds: Set<string>): string {
   if (!record) return "Unpositioned";
   if (labeledIds.has(record.id)) return "Labeled in view";
-  const anchor = anchorLog(record, at);
-  if (anchor < window.min) return "Behind this depth window";
-  if (anchor > window.max) return "Ahead of this depth window";
+  if (record.high < window.min) return "Behind this depth window";
+  if (record.low > window.max) return "Ahead of this depth window";
+  // A line envelope can intersect the window while every actual line lies outside it.
+  if (record.lines.length && !record.lines.some((line) => line >= window.min && line <= window.max)) return "Between spectral lines · not labeled";
   return "In depth window · not labeled";
 }
 
@@ -136,12 +137,20 @@ export function planFlightLabels(model: FlightModel, at: number, width: number, 
   let eligibleCount = 0;
   const compare = (a: Candidate, b: Candidate) => a.priority - b.priority || a.distance - b.distance || a.record.id.localeCompare(b.record.id);
   for (const record of model.records) {
-    const coordinate = anchorLog(record, at);
-    if (Math.abs(coordinate - at) > 4) continue;
-    const p = projectPoint(record.x, record.y, coordinate, at, width, height);
-    if (!p || p.x < 8 || p.x > width - 8 || p.y < 60 || p.y > height - 45) continue;
+    let candidate: Candidate | null = null;
+    // Choose the nearest VISIBLE real line. A nearer line behind the camera must
+    // not suppress a later line that is actually visible. One label per record.
+    for (const coordinate of record.lines.length ? record.lines : [anchorLog(record, at)]) {
+      const distance = Math.abs(coordinate - at);
+      if (distance > 4) continue;
+      const p = projectPoint(record.x, record.y, coordinate, at, width, height);
+      if (!p || p.x < 8 || p.x > width - 8 || p.y < 60 || p.y > height - 45) continue;
+      if (!candidate || distance < candidate.distance || (distance === candidate.distance && coordinate < candidate.coordinate)) {
+        candidate = { record, coordinate, x: p.x, y: p.y, distance, priority: record.id === selectedId ? 0 : 1 };
+      }
+    }
+    if (!candidate) continue;
     eligibleCount += 1;
-    const candidate = { record, coordinate, x: p.x, y: p.y, distance: Math.abs(coordinate - at), priority: record.id === selectedId ? 0 : 1 };
     if (candidates.length === FLIGHT_LABEL_CANDIDATES && compare(candidate, candidates[candidates.length - 1]) >= 0) continue;
     let lo = 0, hi = candidates.length;
     while (lo < hi) { const mid = (lo + hi) >>> 1; if (compare(candidates[mid], candidate) <= 0) lo = mid + 1; else hi = mid; }
