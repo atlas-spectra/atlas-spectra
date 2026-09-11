@@ -17,7 +17,9 @@ const LABELS: Record<NumericalMatch["kind"], string> = {
 const readable = ([a, b]: NumericRange) => a === b ? a.toLocaleString("en-US", { maximumSignificantDigits: 7 })
   : `${a.toLocaleString("en-US", { maximumSignificantDigits: 7 })}–${b.toLocaleString("en-US", { maximumSignificantDigits: 7 })}`;
 const exact = ([a, b]: NumericRange) => `[${a}, ${b}]`;
-const qualifier = (input: NumericalInput) => input.coordinateMode === "claim-reference" ? "Navigational claim reference"
+const qualifier = (input: NumericalInput) => input.status === "unpositioned" ? "Unpositioned observation"
+  : input.status === "unsupported" ? "Unsupported comparison input"
+  : input.coordinateMode === "claim-reference" ? "Navigational claim reference"
   : input.profileType === "event_rate" ? "Event rate, not a waveform" : input.coordinateMode === "transformed" ? "Transformed coordinate" : "Documented frequency coordinate";
 
 export default function NumericalNeighbors({ items, inputs, catalog, base }: {
@@ -89,7 +91,7 @@ export default function NumericalNeighbors({ items, inputs, catalog, base }: {
             <p>These are coordinate extents, not spectral power, phase, coherence, a harmonic analysis, or a significance test. Different conditions and measurement methods may apply.</p>
             <p><strong>Anchor conversion:</strong> {anchor.coordinateNote}<br /><strong>Peer conversion:</strong> {match.peer.coordinateNote}</p>
             <details><summary>Exact input fields</summary><p>{anchor.id}: {anchor.quantityTargets.join(", ")}</p><p>{peer.id}: {match.peer.quantityTargets.join(", ")}</p></details>
-            <h4>Recorded links are separate</h4>{links.length ? <ul>{links.map((e) => <li key={e.id}><a href={`${base}connections/?${connectionSearch(numericalSearch(location.search, state), { entityId: anchor.id, edgeId: e.id, category: "all", query: "" })}#connections-selected-detail`}>{CONNECTION_MEANING[e.category].label} · open original link & evidence ↗</a></li>)}</ul>
+            <h4>Recorded links are separate</h4>{links.length ? <><p>Open a standalone pair view with this numerical comparison retained. The independent path finder is not carried into that destination.</p><ul>{links.map((e) => <li key={e.id}><a href={`${base}connections/?${connectionSearch(numericalSearch("", state), { entityId: anchor.id, edgeId: e.id, category: "all", query: "" })}#connections-selected-detail`}>{CONNECTION_MEANING[e.category].label} · open original link & evidence ↗</a></li>)}</ul></>
               : <p>No direct record-level link between this pair is currently recorded. The numerical comparison does not create one, and absence of a link does not prove that the observations are unrelated.</p>}
             <details><summary>Anchor observation evidence</summary><FlightEvidence item={anchorItem} connectionsLink={false} /></details>
             <details><summary>Peer observation evidence</summary><FlightEvidence item={peer} connectionsLink={false} /></details>
@@ -104,7 +106,7 @@ export default function NumericalNeighbors({ items, inputs, catalog, base }: {
       <p>Exact intersections of documented coordinates, ordered by record ID—not confidence. Claim references are excluded unless enabled. No p-value, statistical significance, or multiple-comparison correction is claimed. Counts report the comparisons performed.</p>
       <p>One anchor versus at most {NUMERICAL_MAX_RECORDS.toLocaleString("en-US")} records; up to {NUMERICAL_MAX_SEGMENTS} original line positions per input. Ranged lines are excluded rather than compared at invented midpoints. A maximum of {PAGE_SIZE} match cards is rendered per page; the JSON contains every result.</p>
       <p>The exported snapshots record the inputs used, not a reviewed scientific finding or an immutable copy of the whole corpus.</p>
-      {report.exclusions.length ? <ul>{report.exclusions.map((entry) => <li key={entry.id}><strong>{byId.get(entry.id) ? identityFor(byId.get(entry.id)!).title : entry.id}:</strong> {entry.reason}</li>)}</ul> : <p>No peer exclusions were recorded for this calculation.</p>}
+      {report.status !== "complete" ? <p>Peer comparison was not performed for this selection.</p> : report.exclusions.length ? <ul>{report.exclusions.map((entry) => <li key={entry.id}><strong>{byId.get(entry.id) ? identityFor(byId.get(entry.id)!).title : entry.id}:</strong> {entry.reason}</li>)}</ul> : <p>No peer exclusions were recorded for this calculation.</p>}
     </details>
   </section>;
 }

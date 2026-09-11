@@ -23,9 +23,13 @@ test("the heartbeat-watch numerical hit is explicitly a boundary, not the whole 
   await expect(peer(page, tick)).toHaveAttribute("data-numerical-kind", "boundary-only");
   await expect(peer(page, tick)).toContainText("Only an endpoint matches—not the whole range.");
   await expect(panel(page).locator(".numerical-anchor-card")).toContainText("60–100");
-  await openDetails(page, tick); await expect(peer(page, tick).locator("code")).toContainText("∩ [1, 1] = [1, 1]");
+  await panel(page).screenshot({ path: "artifacts/screenshots/numerical-heart-overview.png" });
+  await openDetails(page, tick);
+  const calculation = peer(page, tick).locator(".numerical-calculation > ul > li > code");
+  await expect(calculation).toHaveCount(1); await expect(calculation).toContainText("∩ [1, 1] = [1, 1]");
   await expect(peer(page, tick)).toContainText("not spectral power");
   await panel(page).screenshot({ path: "artifacts/screenshots/numerical-heart-boundary.png" });
+  await peer(page, tick).screenshot({ path: "artifacts/screenshots/numerical-boundary-detail.png" });
 });
 test("matching physiological reference ranges remain observations, not independent discoveries", async ({ page }) => {
   await ready(page, query()); const electrical = peer(page, "cardiology.ventricular-activation.resting-adult");
@@ -119,7 +123,8 @@ test.describe("touch numerical neighbors", () => {
       for (const control of await panel(page).locator("button, select").all()) {
         const box = await control.boundingBox(); expect(box!.x).toBeGreaterThanOrEqual(0); expect(box!.x + box!.width).toBeLessThanOrEqual(width); expect(box!.height).toBeGreaterThanOrEqual(44);
       }
-      await expect(peer(page, tick).locator("code")).toBeVisible();
+      const calculation = peer(page, tick).locator(".numerical-calculation > ul > li > code");
+      await expect(calculation).toHaveCount(1); await expect(calculation).toBeVisible();
     }
     await page.setViewportSize({ width: 390, height: 844 }); await panel(page).screenshot({ path: "artifacts/screenshots/numerical-mobile.png" });
   });
