@@ -1,5 +1,5 @@
 /* Compact landmarks leave the instrument visible. Full quantities live in the inspector. */
-.flight-experience .flight-label { border-color: #68878170; border-radius: 8px; background: #10272ddd; box-shadow: none; }
+.flight-experience .flight-label { min-height: 48px; border-color: #68878170; border-radius: 8px; background: #10272ddd; box-shadow: none; }
 .flight-experience .flight-label[data-group-id] { box-shadow: none; border-color: #afc4a699; }
 .flight-experience .flight-label.is-selected { border-color: #e7c890; background: #293c3b; }
 .flight-experience .flight-label .flight-landmark-face > .phenomenon-symbol { width: 26px; height: 28px; flex-basis: 26px; }
