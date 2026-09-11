@@ -1,0 +1,52 @@
+/* Pictograms identify the subject; the scientific mark below still encodes the data type. */
+.atlas-workspace .phenomenon-symbol { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: 0 0 44px; border-radius: 12px; color: #53697c; background: #eaf0f4; }
+.phenomenon-symbol svg { display: block; width: 38px; height: 38px; }
+.atlas-workspace .phenomenon-symbol[data-symbol="heart"] { color: #a94459; background: #f8e7ea; }
+.atlas-workspace .phenomenon-symbol[data-symbol="artery"] { color: #267c91; background: #e3f1f5; }
+.atlas-workspace .phenomenon-symbol[data-symbol="electrodes"] { color: #936126; background: #fbefd9; }
+.atlas-workspace .phenomenon-symbol:is([data-symbol="brain"], [data-symbol="nerve"], [data-symbol="ear"]) { color: #77539b; background: #efe9f7; }
+.atlas-workspace .phenomenon-symbol:is([data-symbol="light"], [data-symbol="eye"], [data-symbol="color"]) { color: #536dab; background: #e9eefb; }
+.atlas-workspace .phenomenon-symbol:is([data-symbol="crystal"], [data-symbol="watch"], [data-symbol="atom"]) { color: #52705a; background: #e9f1e5; }
+.atlas-workspace .phenomenon-face { display: flex; align-items: center; gap: 10px; min-width: 0; width: 100%; color: #293d37; font-family: ui-sans-serif, system-ui, sans-serif; text-align: left; }
+.atlas-workspace .phenomenon-copy { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; font-family: inherit; }
+.atlas-workspace .phenomenon-title { display: block; font: 650 14px/1.18 ui-sans-serif, system-ui, sans-serif; color: #263e35; letter-spacing: -.02em; white-space: normal; }
+.atlas-workspace .phenomenon-subtitle { display: block; color: #596b65; font: 11px/1.25 ui-sans-serif, system-ui, sans-serif; }
+.atlas-workspace .phenomenon-value { display: flex; flex-wrap: wrap; gap: 3px 7px; color: #465e52; font: 10px/1.3 ui-monospace, monospace; }
+.atlas-workspace .phenomenon-qualifier { font: 9px/1.4 ui-sans-serif, system-ui, sans-serif; color: #6d766b; }
+.atlas-workspace .plot-label { display: flex; align-items: center; height: 82px; padding: 7px 9px; border-radius: 10px; }
+.atlas-workspace .plot-label .phenomenon-face { height: 100%; }
+.atlas-workspace .plot-label .phenomenon-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px; line-height: 15px; }
+.atlas-workspace .plot-label .phenomenon-subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10.5px; }
+.atlas-workspace .plot-label .phenomenon-value { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.atlas-workspace .plot-label .phenomenon-qualifier { margin-left: 7px; }
+.atlas-workspace .plot-label.is-reference .phenomenon-qualifier { color: #805719; font-weight: 650; }
+.atlas-workspace .atlas-neighbor-list .phenomenon-face { padding: 3px 0; }
+.atlas-workspace .atlas-neighbor-list .phenomenon-symbol { width: 38px; height: 38px; flex-basis: 38px; border-radius: 10px; }
+.atlas-workspace .atlas-neighbor-list .phenomenon-symbol svg { width: 33px; height: 33px; }
+.atlas-workspace .atlas-neighbor-list .phenomenon-title { font-size: 13px; }
+.atlas-workspace .atlas-neighbor-list .phenomenon-subtitle { font-size: 10.5px; }
+.atlas-workspace .atlas-record-list > button { min-height: 92px; }
+.atlas-workspace .search-results button { display: block; min-height: 84px; }
+.atlas-workspace .atlas-landmark-trail:before { display: none; }
+.atlas-workspace .atlas-landmark-trail button { min-height: 121px; gap: 6px; }
+.atlas-workspace .atlas-landmark-trail .phenomenon-symbol { width: 40px; height: 40px; flex-basis: 40px; }
+.atlas-workspace .atlas-landmark-trail .phenomenon-symbol svg { width: 35px; height: 35px; }
+.atlas-identity-heading { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
+.atlas-workspace .atlas-identity-heading .phenomenon-symbol { width: 58px; height: 58px; flex-basis: 58px; }
+.atlas-identity-heading .phenomenon-symbol svg { width: 48px; height: 48px; }
+.atlas-workspace .atlas-identity-heading h2 { font-size: 25px; margin: 0 0 5px; }
+.atlas-workspace .atlas-identity-heading p { font-size: 12px; margin: 0; color: #586b61; }
+.atlas-workspace .atlas-canonical-name { font-size: 10px; line-height: 1.5; color: #6a746b; margin: 8px 0; }
+.atlas-family-context { display: grid; gap: 5px; margin: 8px 0 12px; padding: 12px 15px; border-left: 3px solid #90a797; background: #eef3ed; border-radius: 0 8px 8px 0; }
+.atlas-family-context strong { font: 600 13px/1.4 ui-sans-serif, system-ui, sans-serif; color: #344c3f; }
+.atlas-family-context > span { color: #586c5d; font: 11px/1.5 ui-sans-serif, system-ui, sans-serif; }
+@media(max-width:600px) {
+  .atlas-workspace .plot-label { padding: 6px 7px; }
+  .atlas-workspace .plot-label .phenomenon-face { gap: 7px; }
+  .atlas-workspace .plot-label .phenomenon-symbol { width: 34px; height: 38px; flex-basis: 34px; border-radius: 9px; }
+  .atlas-workspace .plot-label .phenomenon-symbol svg { width: 31px; height: 34px; }
+  .atlas-workspace .plot-label .phenomenon-title { font-size: 12px; line-height: 14px; }
+  .atlas-workspace .plot-label .phenomenon-subtitle { font-size: 10px; }
+  .atlas-workspace .plot-label .phenomenon-value { font-size: 9px; }
+  .atlas-workspace .plot-label .phenomenon-qualifier { font-size: 8px; margin-left: 4px; }
+}

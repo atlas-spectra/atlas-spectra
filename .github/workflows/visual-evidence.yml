@@ -32,12 +32,14 @@ jobs:
         run: |
           mkdir -p artifacts/screenshots
           npm run test:visual
-      - name: Upload explorer screenshots
+      - name: Upload explorer screenshots and interaction clip
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: explorer-screenshots
-          path: artifacts/screenshots/*.png
+          path: |
+            artifacts/screenshots/*.png
+            artifacts/screenshots/*.webm
           if-no-files-found: error
           retention-days: 14
       - name: Upload Playwright diagnostics
