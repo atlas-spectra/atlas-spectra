@@ -67,7 +67,7 @@ export function buildFlightModel(items: ExplorerItem[], lanes: string[]): Flight
 }
 
 export function boundedCoordinate(value: number, bounds: FlightBounds): number {
-  return clamp(Number.isFinite(value) ? value : bounds.min, bounds.max);
+  return clamp(Number.isFinite(value) ? value : bounds.min, bounds.min, bounds.max);
 }
 export function parseCoordinate(raw: string | null, model: FlightModel): number {
   const n = raw === null || raw.trim() === "" ? model.start : Number(raw);
