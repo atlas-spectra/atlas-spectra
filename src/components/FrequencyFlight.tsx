@@ -8,7 +8,7 @@ import { PhenomenonIcon } from "./PhenomenonIdentity";
 import { FlightDepthOverview, FlightLandmarkFace } from "./FlightOrientation";
 import { ProcessGroupPanel } from "./ProcessGroup";
 import { groupForRecord, groupMembers, projectDiscovery } from "../lib/process-groups";
-import { identityFor } from "../lib/phenomenon-identity";
+import { identityFor, identitySearchText } from "../lib/phenomenon-identity";
 import {
   adjacentLandmarks, buildFlightModel, boundedCoordinate, flightDepthWindow, flightRecordLocation,
   formatFlightHz, landmarkCoordinates, nearbyRecords, parseCoordinate, planFlightLabels,
@@ -136,8 +136,8 @@ export default function FrequencyFlight({ items, lanes, base }: Props) {
   const nearby = useMemo(() => nearbyRecords(contextModel, at), [contextModel, at]);
   const normalizedQuery = query.trim().toLowerCase();
   const catalog = normalizedQuery ? items.filter((item) => {
-    const identity = identityFor(item), group = groupForRecord(item.id);
-    return [item.name, item.id, item.summary, item.lane, ...item.domains, identity.title, identity.subtitle, ...(identity.aliases ?? []), group?.title ?? ""]
+    const group = groupForRecord(item.id);
+    return [item.name, item.id, item.summary, item.lane, ...item.domains, identitySearchText(item), group?.title ?? ""]
       .some((value) => value.toLowerCase().includes(normalizedQuery));
   }) : showAll ? items : nearby.slice(0, 6).map((record) => byId.get(record.id)!);
   const stops = useMemo(() => landmarkCoordinates(model), [model]);
