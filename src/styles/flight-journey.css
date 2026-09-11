@@ -1,13 +1,14 @@
-.flight-journey-picker { position: relative; font-size: 12px; }
+.flight-toolbar { position: relative; }
+.flight-journey-picker { position: static; font-size: 12px; }
 .flight-journey-picker > summary { cursor: pointer; padding: 12px 16px; border: 1px solid #baccc0; border-radius: 20px; background: #f5f8ee; color: #345846; min-height: 42px; }
-.flight-journey-picker > div { position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; width: min(320px, 82vw); padding: 8px; border: 1px solid #cbd6c5; border-radius: 12px; background: #fffef9; box-shadow: 0 12px 36px #17392a20; display: grid; gap: 6px; }
+.flight-journey-picker > div { position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; width: min(320px, 100%); padding: 8px; border: 1px solid #cbd6c5; border-radius: 12px; background: #fffef9; box-shadow: 0 12px 36px #17392a20; display: grid; gap: 6px; box-sizing: border-box; }
 .flight-journey-picker button { padding: 12px; min-height: 54px; text-align: left; border: 1px solid #e1e7db; border-radius: 8px; background: #f5f7ee; color: #365744; }
 .flight-journey-picker button strong, .flight-journey-picker button span { display: block; }
 .flight-journey-picker button span { font-size: 11px; margin-top: 5px; color: #6a7b65; }
 .flight-experience[data-guided=true] .flight-layout { grid-template-rows: auto 1fr; }
 .flight-experience[data-guided=true] .flight-instrument { grid-column: 1; grid-row: 1 / span 2; }
 .flight-experience[data-guided=true] .flight-inspector { grid-column: 2; grid-row: 2; }
-.flight-journey-panel { grid-column: 2; grid-row: 1; background: #edf3e8; border: 1px solid #bccdb6; border-radius: 15px; padding: 20px; min-width: 0; }
+.flight-journey-panel { grid-column: 2; grid-row: 1; background: #edf3e8; border: 1px solid #bccdb6; border-radius: 15px; padding: 20px; min-width: 0; scroll-margin-top: 90px; }
 .flight-journey-kicker { font-size: 9px; letter-spacing: .12em; color: #607858; }
 .flight-journey-panel h2 { font-size: 22px; font-weight: 550; letter-spacing: -.03em; line-height: 1.2; margin: 10px 0 14px; }
 .flight-journey-current { font-size: 12px; line-height: 1.6; margin: 8px 0; }
@@ -39,5 +40,5 @@
 @media(max-width:600px) {
   .flight-journey-panel { padding: 16px; }
   .flight-journey-panel h2 { font-size: 21px; }
-  .flight-journey-picker > div { right: auto; left: 0; }
+  .flight-journey-picker > div { right: 0; left: 0; width: auto; }
 }
