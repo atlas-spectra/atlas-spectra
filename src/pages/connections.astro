@@ -1,8 +1,9 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import RecordedConnections from "../components/RecordedConnections";
+import ConnectionsWorkspace from "../components/ConnectionsWorkspace";
 import { explorerItems } from "../lib/corpus";
 import { recordedConnections } from "../lib/recorded-connections-data";
+import { numericalInputs } from "../lib/numerical-neighbors-data";
 import "../styles/recorded-connections.css";
 const base = import.meta.env.BASE_URL;
 ---
@@ -10,8 +11,8 @@ const base = import.meta.env.BASE_URL;
   <section class="connections-page">
     <header class="connections-intro"><p class="eyebrow">Explore the recorded graph</p><h1>Why are these connected?</h1>
       <p>Start with something familiar. Follow its recorded links, compare the observations, and see what the evidence actually says.</p></header>
-    <RecordedConnections client:load items={explorerItems} catalog={recordedConnections} base={base} />
-    <noscript><section class="connections-static"><h2>Recorded connections without JavaScript</h2><p>Open an endpoint for its original quantities, or the owning record for the relationship evidence.</p>
+    <ConnectionsWorkspace client:load items={explorerItems} catalog={recordedConnections} inputs={numericalInputs} base={base} />
+    <noscript><section class="connections-static"><h2>Recorded connections without JavaScript</h2><p>Open an endpoint for its original quantities, or the owning record for the relationship evidence. Numerical comparison requires JavaScript and does not create recorded links.</p>
       <ul>{recordedConnections.edges.map((edge) => <li><strong>{edge.type.replaceAll("_", " ")}</strong> ({edge.category}):
         <a href={`${base}phenomena/${encodeURIComponent(edge.sourceId)}/`}>{explorerItems.find((item) => item.id === edge.sourceId)?.name}</a> →
         <a href={`${base}phenomena/${encodeURIComponent(edge.targetId)}/`}>{explorerItems.find((item) => item.id === edge.targetId)?.name}</a> ·
