@@ -29,7 +29,8 @@
 .flight-overview-shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 15px; }
 .flight-overview-shortcuts button { display: flex; align-items: center; gap: 7px; min-width: 0; min-height: 46px; padding: 8px; text-align: left; border: 1px solid #d9e1d2; border-radius: 8px; background: #f7f9f1; color: #315447; }
 .flight-overview-shortcuts button:hover { border-color: #64866b; background: #eaf2e1; }
-.flight-overview-shortcuts .phenomenon-symbol { flex: 0 0 25px; width: 25px; height: 27px; }
+.flight-overview-shortcuts .phenomenon-symbol { display: flex; align-items: center; justify-content: center; flex: 0 0 25px; width: 25px; height: 27px; }
+.flight-overview-shortcuts .phenomenon-symbol svg { width: 100%; height: 100%; max-width: 100%; }
 .flight-overview-shortcuts button > span { min-width: 0; }
 .flight-overview-shortcuts strong { display: block; font-size: 11px; line-height: 15px; font-weight: 600; }
 .flight-overview-shortcuts small { display: block; font-size: 9px; line-height: 13px; margin-top: 2px; color: #70806a; }
