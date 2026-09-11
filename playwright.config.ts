@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const flightBrowserTests = ["**/flight.spec.ts", "**/flight-review.spec.ts", "**/flight-orientation.spec.ts", "**/flight-journeys.spec.ts"];
+const flightBrowserTests = ["**/flight.spec.ts", "**/flight-review.spec.ts", "**/flight-orientation.spec.ts", "**/flight-journeys.spec.ts", "**/flight-connection.spec.ts"];
 
 export default defineConfig({
   testDir: "tests/visual",

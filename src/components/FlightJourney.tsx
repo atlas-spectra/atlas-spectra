@@ -51,7 +51,7 @@ export function FlightJourneyConnection({ journey, stageId, base }: { journey: F
   const index = Math.max(0, journey.steps.findIndex((step) => step.recordId === stageId));
   const hopIndex = Math.max(0, index - 1), hop = journey.hops[hopIndex];
   if (!hop) return null;
-  return <section className="flight-journey-connection" aria-label="Journey connection evidence" data-edge-id={hop.id} data-owner-id={hop.ownerId}>
+  return <section id={`flight-journey-edge-${hop.id}`} tabIndex={-1} className="flight-journey-connection" aria-label="Journey connection evidence" data-edge-id={hop.id} data-owner-id={hop.ownerId}>
     <h3>{index === 0 ? "Next connection" : "Connection into this stage"}</h3>
     <p className="flight-journey-pair"><strong>{journey.steps[hopIndex].label}</strong><span aria-hidden="true"> → </span><strong>{journey.steps[hopIndex + 1].label}</strong></p>
     <p className="flight-journey-edge-type">{readable(hop.type)} · {readable(hop.category)}</p>
