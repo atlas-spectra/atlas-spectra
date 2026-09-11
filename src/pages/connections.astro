@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import RecordedConnections from "../components/RecordedConnections";
+import { explorerItems } from "../lib/corpus";
+import { recordedConnections } from "../lib/recorded-connections-data";
+import "../styles/recorded-connections.css";
+const base = import.meta.env.BASE_URL;
+---
+<BaseLayout title="Recorded connections" description="Explore why Atlas Spectra observations are connected, with original relationship types, quantities and source evidence.">
+  <section class="connections-page">
+    <header class="connections-intro"><p class="eyebrow">Explore the recorded graph</p><h1>Why are these connected?</h1>
+      <p>Start with something familiar. Follow its recorded links, compare the observations, and see what the evidence actually says.</p></header>
+    <RecordedConnections client:load items={explorerItems} catalog={recordedConnections} base={base} />
+    <noscript><section class="connections-static"><h2>Recorded connections without JavaScript</h2><p>Open an endpoint for its original quantities, or the owning record for the relationship evidence.</p>
+      <ul>{recordedConnections.edges.map((edge) => <li><strong>{edge.type.replaceAll("_", " ")}</strong> ({edge.category}):
+        <a href={`${base}phenomena/${encodeURIComponent(edge.sourceId)}/`}>{explorerItems.find((item) => item.id === edge.sourceId)?.name}</a> →
+        <a href={`${base}phenomena/${encodeURIComponent(edge.targetId)}/`}>{explorerItems.find((item) => item.id === edge.targetId)?.name}</a> ·
+        <a href={`${base}phenomena/${encodeURIComponent(edge.ownerId)}/`}>Original relationship evidence</a></li>)}</ul>
+      {recordedConnections.nodeEdges.length > 0 && <><h3>Node-level relationships</h3><ul>{recordedConnections.nodeEdges.map((edge) => <li><a href={`${base}phenomena/${encodeURIComponent(edge.ownerId)}/`}>{edge.id} — {edge.ownerName}</a></li>)}</ul></>}
+    </section></noscript>
+  </section>
+</BaseLayout>

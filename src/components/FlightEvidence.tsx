@@ -20,9 +20,10 @@ function EvidenceDetails({ evidence, item }: { evidence?: Evidence; item: Explor
 }
 
 /** Never summarize evidence for unrelated targets under one generic badge. */
-export default function FlightEvidence({ item }: { item: ExplorerItem }) {
+export default function FlightEvidence({ item, connectionsLink = true }: { item: ExplorerItem; connectionsLink?: boolean }) {
   const reference = item.display?.referenceClaim;
   return <>
+    {connectionsLink && item.relationships.length > 0 && <p className="recorded-connections-link"><a href={`${import.meta.env.BASE_URL}connections/?${new URLSearchParams({ entity: item.id })}`}>Explore recorded connections →</a></p>}
     {item.display?.mode === "claim-reference" && <section aria-label="Reference coordinate evidence"
       data-claim-id={reference?.id} data-evidence-target={reference?.target}>
       <h3>Reference coordinate evidence</h3>
